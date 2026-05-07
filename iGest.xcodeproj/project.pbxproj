@@ -8,24 +8,16 @@
 
 /* Begin PBXBuildFile section */
 		004339C08409569FE942015A /* MainStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71DDC9AA61D7AD62C8C52E2B /* MainStatusView.swift */; };
-		01655D376AEEE63403B9B893 /* GazeCollector.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2FE595A554822F542918F7F /* GazeCollector.swift */; };
 		090999F86B8B3278A283E88E /* TrackingCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16343A495D74CB1E64F34357 /* TrackingCoordinator.swift */; };
-		0F5E1433A6F1639C04D2C576 /* SmoothingFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EC70E94E17595C2E0021344 /* SmoothingFilter.swift */; };
 		160CFCD4C532CACCD6CBEA4B /* HandTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5181F2F9DCE7E6AEDFE10EE /* HandTracker.swift */; };
 		4A01E036E7F3A711CED8215D /* CalibrationEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8390621B7BDDE2F2793DE731 /* CalibrationEngineTests.swift */; };
 		5DEC2B57C28AA54A4FE7165F /* CursorControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E43891FACEF5E967E956C813 /* CursorControllerTests.swift */; };
-		5FF026B51F6C65F0BDA0950D /* PolynomialMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F972AC038E1179A9A59B365 /* PolynomialMapper.swift */; };
 		60B04DCE10E8569CF107FC1F /* PolynomialMapperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B19769FDFA740698F1791330 /* PolynomialMapperTests.swift */; };
 		61B71CF5425F343B8181C8D5 /* CameraManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF45DFBC9DDBCA40FD578EFC /* CameraManager.swift */; };
 		73BA82819408812D0AD51D76 /* CursorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB5818C4D4C7B261B23B7454 /* CursorController.swift */; };
-		8A04FD0483705E0CE66F9DCB /* CalibrationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03441BF0C29B4AF87CE9663C /* CalibrationEngine.swift */; };
-		935CE939CC218FED3E0A0917 /* CalibrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C7D21AF0C584A6B2B71B54A /* CalibrationView.swift */; };
-		9E3A7C2F5530AE5D9BD7E79D /* GazeOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33439030C23DD2963AFC22B1 /* GazeOverlay.swift */; };
 		ACEC32CD37764831E2800C87 /* TrackingState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FE7E8BC878EE4B4BAD2951F /* TrackingState.swift */; };
-		BC8BE95205A468BBE703F41A /* CalibrationWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B9FE514E98277257847929C /* CalibrationWindowController.swift */; };
 		BDA92E077463B35987495C5C /* SmoothingFilterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5016AE842BCE4CD6E958AA34 /* SmoothingFilterTests.swift */; };
 		E9469D7166CAE4C3A62195ED /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8641C413CDC0DDCA379C3211 /* AppState.swift */; };
-		EB9FC0C513E298C79CC0115D /* GazeTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBFAC2C195063A0B34B5C023 /* GazeTracker.swift */; };
 		F802A2D1828E3CA924822867 /* iGestApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCC098C1DEBB89B3D07FBC59 /* iGestApp.swift */; };
 		F834DE5E7BF184F8C2E3BDCB /* HandTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BF8125852CFEB90BB837284 /* HandTrackerTests.swift */; };
 /* End PBXBuildFile section */
@@ -41,20 +33,14 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		03441BF0C29B4AF87CE9663C /* CalibrationEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalibrationEngine.swift; sourceTree = "<group>"; };
 		16343A495D74CB1E64F34357 /* TrackingCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackingCoordinator.swift; sourceTree = "<group>"; };
 		3019DBF26AF89CE7601EBD96 /* iGestTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iGestTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		33439030C23DD2963AFC22B1 /* GazeOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GazeOverlay.swift; sourceTree = "<group>"; };
-		3B9FE514E98277257847929C /* CalibrationWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalibrationWindowController.swift; sourceTree = "<group>"; };
-		3F972AC038E1179A9A59B365 /* PolynomialMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PolynomialMapper.swift; sourceTree = "<group>"; };
 		5016AE842BCE4CD6E958AA34 /* SmoothingFilterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmoothingFilterTests.swift; sourceTree = "<group>"; };
 		6BF8125852CFEB90BB837284 /* HandTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandTrackerTests.swift; sourceTree = "<group>"; };
 		71DDC9AA61D7AD62C8C52E2B /* MainStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainStatusView.swift; sourceTree = "<group>"; };
 		8390621B7BDDE2F2793DE731 /* CalibrationEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalibrationEngineTests.swift; sourceTree = "<group>"; };
 		8641C413CDC0DDCA379C3211 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		8FE7E8BC878EE4B4BAD2951F /* TrackingState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackingState.swift; sourceTree = "<group>"; };
-		9C7D21AF0C584A6B2B71B54A /* CalibrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalibrationView.swift; sourceTree = "<group>"; };
-		9EC70E94E17595C2E0021344 /* SmoothingFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmoothingFilter.swift; sourceTree = "<group>"; };
 		AB5818C4D4C7B261B23B7454 /* CursorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CursorController.swift; sourceTree = "<group>"; };
 		B1381C8D8192323D5B876BE3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		B19769FDFA740698F1791330 /* PolynomialMapperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PolynomialMapperTests.swift; sourceTree = "<group>"; };
@@ -64,8 +50,6 @@
 		BF45DFBC9DDBCA40FD578EFC /* CameraManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraManager.swift; sourceTree = "<group>"; };
 		C71EFEE2FCA72CC65B9C6D4A /* iGest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iGest.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E43891FACEF5E967E956C813 /* CursorControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CursorControllerTests.swift; sourceTree = "<group>"; };
-		F2FE595A554822F542918F7F /* GazeCollector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GazeCollector.swift; sourceTree = "<group>"; };
-		FBFAC2C195063A0B34B5C023 /* GazeTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GazeTracker.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -73,8 +57,6 @@
 			isa = PBXGroup;
 			children = (
 				AB5818C4D4C7B261B23B7454 /* CursorController.swift */,
-				33439030C23DD2963AFC22B1 /* GazeOverlay.swift */,
-				9EC70E94E17595C2E0021344 /* SmoothingFilter.swift */,
 			);
 			path = Cursor;
 			sourceTree = "<group>";
@@ -113,7 +95,6 @@
 				BCC098C1DEBB89B3D07FBC59 /* iGestApp.swift */,
 				B1381C8D8192323D5B876BE3 /* Info.plist */,
 				71DDC9AA61D7AD62C8C52E2B /* MainStatusView.swift */,
-				8349B5E308F58DA88CD5570A /* Calibration */,
 				6D5391C857C7334D08C57740 /* Camera */,
 				2B748FE0E9377A2B8083E199 /* Cursor */,
 				F8C878EFBEB465E2535C3D12 /* Tracking */,
@@ -135,22 +116,9 @@
 			path = Tests/iGestTests;
 			sourceTree = "<group>";
 		};
-		8349B5E308F58DA88CD5570A /* Calibration */ = {
-			isa = PBXGroup;
-			children = (
-				03441BF0C29B4AF87CE9663C /* CalibrationEngine.swift */,
-				9C7D21AF0C584A6B2B71B54A /* CalibrationView.swift */,
-				3B9FE514E98277257847929C /* CalibrationWindowController.swift */,
-				F2FE595A554822F542918F7F /* GazeCollector.swift */,
-				3F972AC038E1179A9A59B365 /* PolynomialMapper.swift */,
-			);
-			path = Calibration;
-			sourceTree = "<group>";
-		};
 		F8C878EFBEB465E2535C3D12 /* Tracking */ = {
 			isa = PBXGroup;
 			children = (
-				FBFAC2C195063A0B34B5C023 /* GazeTracker.swift */,
 				B5181F2F9DCE7E6AEDFE10EE /* HandTracker.swift */,
 				16343A495D74CB1E64F34357 /* TrackingCoordinator.swift */,
 				8FE7E8BC878EE4B4BAD2951F /* TrackingState.swift */,
@@ -233,18 +201,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				E9469D7166CAE4C3A62195ED /* AppState.swift in Sources */,
-				8A04FD0483705E0CE66F9DCB /* CalibrationEngine.swift in Sources */,
-				935CE939CC218FED3E0A0917 /* CalibrationView.swift in Sources */,
-				BC8BE95205A468BBE703F41A /* CalibrationWindowController.swift in Sources */,
 				61B71CF5425F343B8181C8D5 /* CameraManager.swift in Sources */,
 				73BA82819408812D0AD51D76 /* CursorController.swift in Sources */,
-				01655D376AEEE63403B9B893 /* GazeCollector.swift in Sources */,
-				9E3A7C2F5530AE5D9BD7E79D /* GazeOverlay.swift in Sources */,
-				EB9FC0C513E298C79CC0115D /* GazeTracker.swift in Sources */,
 				160CFCD4C532CACCD6CBEA4B /* HandTracker.swift in Sources */,
 				004339C08409569FE942015A /* MainStatusView.swift in Sources */,
-				5FF026B51F6C65F0BDA0950D /* PolynomialMapper.swift in Sources */,
-				0F5E1433A6F1639C04D2C576 /* SmoothingFilter.swift in Sources */,
 				090999F86B8B3278A283E88E /* TrackingCoordinator.swift in Sources */,
 				ACEC32CD37764831E2800C87 /* TrackingState.swift in Sources */,
 				F802A2D1828E3CA924822867 /* iGestApp.swift in Sources */,

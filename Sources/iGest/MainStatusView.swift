@@ -3,7 +3,6 @@ import SwiftUI
 struct MainStatusView: View {
     @Bindable var appState: AppState
     var onToggle: () -> Void
-    var onRecalibrate: () -> Void
 
     var body: some View {
         VStack(spacing: 16) {
@@ -14,27 +13,24 @@ struct MainStatusView: View {
             Text(statusText)
                 .font(.headline)
 
-            HStack(spacing: 12) {
-                Button(appState.isEnabled ? "Disable" : "Enable") {
-                    onToggle()
-                }
-                .buttonStyle(.borderedProminent)
+            Text("Works with macOS Head Pointer")
+                .font(.caption)
+                .foregroundStyle(.secondary)
 
-                Button("Recalibrate") {
-                    onRecalibrate()
-                }
-                .disabled(!appState.isEnabled)
+            Button(appState.isEnabled ? "Disable" : "Enable") {
+                onToggle()
             }
+            .buttonStyle(.borderedProminent)
         }
         .padding(24)
-        .frame(width: 320, height: 200)
+        .frame(width: 300, height: 180)
     }
 
     private var statusIcon: String {
-        guard appState.isEnabled else { return "eye.slash" }
+        guard appState.isEnabled else { return "hand.point.up" }
         switch appState.trackingState {
-        case .inactive: return "eye"
-        case .tracking: return "eye.fill"
+        case .inactive: return "hand.raised"
+        case .tracking: return "hand.raised.fill"
         case .pinching: return "hand.pinch.fill"
         }
     }
@@ -51,9 +47,9 @@ struct MainStatusView: View {
     private var statusText: String {
         guard appState.isEnabled else { return "Disabled" }
         switch appState.trackingState {
-        case .inactive: return "Ready — waiting for hand"
-        case .tracking: return "Tracking gaze"
-        case .pinching: return "Pinching — click!"
+        case .inactive: return "Waiting for hand..."
+        case .tracking: return "Hand detected"
+        case .pinching: return "Click!"
         }
     }
 }

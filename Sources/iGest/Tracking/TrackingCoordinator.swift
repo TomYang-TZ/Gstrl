@@ -1,37 +1,30 @@
 import Foundation
+import Vision
 import AppKit
 
 final class TrackingCoordinator {
-    private let gazeTracker: GazeTracker
+    private let cameraManager = CameraManager()
+    private let handTracker = HandTracker()
     private let cursorController: CursorController
-    private let smoothingFilter: SmoothingFilter
     private let appState: AppState
-    private let gazeOverlay = GazeOverlay()
-    private var pollTimer: Timer?
 
-    init(appState: AppState, mapper: PolynomialMapper) {
+    init(appState: AppState) {
         self.appState = appState
-        self.gazeTracker = GazeTracker(mapper: mapper)
         self.cursorController = CursorController()
-        self.smoothingFilter = SmoothingFilter(alpha: appState.sensitivity.alpha)
+
+        cameraManager.onFrame = { [weak self] pixelBuffer in
+            self?.processFrame(pixelBuffer)
+        }
     }
 
     func start() {
-        DispatchQueue.main.async { [weak self] in
-            self?.gazeOverlay.show()
-            self?.startPolling()
-        }
+        cameraManager.start()
     }
 
     func stop() {
-        pollTimer?.invalidate()
-        pollTimer = nil
+        cameraManager.stop()
         cursorController.emergencyKill()
         cursorController.reenable()
-        smoothingFilter.reset()
-        DispatchQueue.main.async { [weak self] in
-            self?.gazeOverlay.hide()
-        }
     }
 
     func emergencyKill() {
@@ -41,56 +34,39 @@ final class TrackingCoordinator {
         }
     }
 
-    func updateSensitivity() {
-        smoothingFilter.alpha = appState.sensitivity.alpha
-    }
+    private func processFrame(_ pixelBuffer: CVPixelBuffer) {
+        let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, options: [:])
+        let handRequest = VNDetectHumanHandPoseRequest()
+        handRequest.maximumHandCount = 1
 
-    private func startPolling() {
-        pollTimer = Timer.scheduledTimer(withTimeInterval: 1.0/30.0, repeats: true) { [weak self] _ in
-            self?.tick()
+        do {
+            try handler.perform([handRequest])
+        } catch {
+            return
         }
-    }
 
-    private func tick() {
-        let trackingState = gazeTracker.latestHandState
-        appState.trackingState = trackingState
+        let handObservation = handRequest.results?.first
+        let handLandmarks = handObservation.flatMap { handTracker.processObservation($0) }
+        let trackingState = handTracker.classify(handLandmarks: handLandmarks)
 
-        let rawGaze = gazeTracker.latestGaze
-        // Skip (0.5, 0.5) = no detection
-        guard rawGaze.x != 0.5 || rawGaze.y != 0.5 else { return }
-        // Skip vertical outliers
-        guard rawGaze.y < 0.95 else { return }
+        DispatchQueue.main.async { [weak self] in
+            self?.appState.trackingState = trackingState
+        }
 
-        // Map raw gaze ratios directly to screen pixels
-        // Raw gaze from GazeTracking: x and y are 0-1 ratios
-        // Use MacBook built-in display (1512 x 982 logical)
-        let screenW: CGFloat = 1512
-        let screenH: CGFloat = 982
+        // Get current cursor position (wherever Head Pointer has moved it)
+        let cursorPos = NSEvent.mouseLocation
+        let screenHeight = NSScreen.main?.frame.height ?? 1080
+        // Convert from NSEvent (bottom-left) to CGEvent (top-left)
+        let cgPoint = CGPoint(x: cursorPos.x, y: screenHeight - cursorPos.y)
 
-        // Fixed mapping: stretch observed gaze range to full screen
-        let hMin: CGFloat = 0.55
-        let hMax: CGFloat = 0.76
-        let vMin: CGFloat = 0.50
-        let vMax: CGFloat = 0.80
-
-        var normX = (rawGaze.x - hMin) / (hMax - hMin)
-        var normY = (rawGaze.y - vMin) / (vMax - vMin)
-
-        normX = max(0.0, min(1.0, normX))
-        normY = max(0.0, min(1.0, normY))
-
-        // Screen pixel position (top-left origin for CGEvent)
-        let screenPoint = smoothingFilter.apply(CGPoint(
-            x: normX * screenW,
-            y: normY * screenH
-        ))
-
-        gazeOverlay.moveTo(screenPoint)
-
-        if trackingState == .tracking || trackingState == .pinching {
-            cursorController.update(state: trackingState, gazePoint: screenPoint)
-        } else {
-            cursorController.update(state: .inactive, gazePoint: .zero)
+        // Post click events at current cursor position
+        switch trackingState {
+        case .pinching:
+            cursorController.update(state: .pinching, gazePoint: cgPoint)
+        case .tracking:
+            cursorController.update(state: .tracking, gazePoint: cgPoint)
+        case .inactive:
+            cursorController.update(state: .inactive, gazePoint: cgPoint)
         }
     }
 }

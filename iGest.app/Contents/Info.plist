@@ -37,6 +37,10 @@
 	<key>LSUIElement</key>
 	<false/>
 	<key>NSCameraUsageDescription</key>
-	<string>iGest uses your camera to track eye gaze and hand gestures for cursor control.</string>
+	<string>iGest uses your camera to track hand gestures for cursor control.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>iGest uses your microphone for speech-to-text input.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>iGest uses speech recognition to type text by voice.</string>
 </dict>
 </plist>

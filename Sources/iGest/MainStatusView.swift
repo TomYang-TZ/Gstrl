@@ -7,7 +7,7 @@ struct MainStatusView: View {
     var body: some View {
         VStack(spacing: 12) {
             Image(systemName: statusIcon)
-                .font(.system(size: 40))
+                .font(.system(size: 36))
                 .foregroundStyle(statusColor)
 
             Text(statusText)
@@ -16,7 +16,7 @@ struct MainStatusView: View {
             if appState.isEnabled {
                 HStack(spacing: 20) {
                     VStack {
-                        Text("Left (click)")
+                        Text("Left (click/keys)")
                             .font(.caption)
                         Image(systemName: appState.leftHandDetected ? "hand.raised.fill" : "hand.raised.slash")
                             .foregroundStyle(appState.leftHandDetected ? .orange : .gray)
@@ -26,6 +26,22 @@ struct MainStatusView: View {
                             .font(.caption)
                         Image(systemName: appState.rightHandDetected ? "hand.raised.fill" : "hand.raised.slash")
                             .foregroundStyle(appState.rightHandDetected ? .blue : .gray)
+                    }
+                }
+
+                if !appState.gestureLabel.isEmpty {
+                    VStack(spacing: 4) {
+                        Text(appState.gestureLabel)
+                            .font(.system(size: 32, weight: .bold, design: .rounded))
+                        if appState.gestureProgress > 0 {
+                            let remaining = 1.0 * (1.0 - appState.gestureProgress)
+                            Text(String(format: "%.1fs", remaining))
+                                .font(.system(.caption, design: .monospaced))
+                                .foregroundStyle(.orange)
+                            ProgressView(value: appState.gestureProgress)
+                                .tint(.orange)
+                                .frame(width: 150)
+                        }
                     }
                 }
 
@@ -40,7 +56,7 @@ struct MainStatusView: View {
             .buttonStyle(.borderedProminent)
         }
         .padding(20)
-        .frame(width: 320, height: 240)
+        .frame(width: 320, height: 280)
     }
 
     private var statusIcon: String {

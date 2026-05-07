@@ -17,11 +17,21 @@ final class TrackingCoordinator {
     private var cursorAnchor: CGPoint?
     private let sensitivity: CGFloat = 2.5
 
-    // Left hand number/gesture hold detection
+    // Left hand gesture hold detection
     private var leftGestureStartTime: Date?
-    private var leftGestureValue: Int = -1  // -1 = none, 0 = fist, 1-4 = fingers
+    private var leftGestureValue: Int = -1
     private var leftGestureFired: Bool = false
-    private let holdDuration: TimeInterval = 0.5
+    private let holdDuration: TimeInterval = 1.0
+
+    // Wave detection
+    private var wavePositions: [(x: CGFloat, time: Date)] = []
+    private var lastWaveTime: Date = .distantPast
+
+    // Speech
+    private let speechEngine = SpeechEngine()
+    private var bothFistsStartTime: Date?
+    private var speechActive = false
+    private var lastTypedLength = 0
 
     init(appState: AppState) {
         self.appState = appState
@@ -60,12 +70,16 @@ final class TrackingCoordinator {
             return
         }
 
-        guard let results = handRequest.results, !results.isEmpty else {
+        let results = handRequest.results ?? []
+
+        if results.isEmpty {
             DispatchQueue.main.async { [weak self] in
                 self?.appState.trackingState = .inactive
                 self?.appState.handsCount = 0
                 self?.appState.leftHandDetected = false
                 self?.appState.rightHandDetected = false
+                self?.appState.gestureLabel = ""
+                self?.appState.gestureProgress = 0
             }
             resetLeftGesture()
             rightHandAnchor = nil
@@ -94,20 +108,59 @@ final class TrackingCoordinator {
             }
         }
 
+        let lFingers = leftHand != nil ? countExtendedFingers(leftHand!) : -1
+        let rFingers = rightHand != nil ? countExtendedFingers(rightHand!) : -1
+
         DispatchQueue.main.async { [weak self] in
             self?.appState.handsCount = results.count
             self?.appState.leftHandDetected = leftHand != nil
             self?.appState.rightHandDetected = rightHand != nil
+            self?.appState.debugInfo = "L:\(lFingers)f R:\(rFingers)f"
+        }
+
+        // === SPEECH: both fists = start, no hands = stop ===
+        let bothFists = leftHand != nil && rightHand != nil
+            && countExtendedFingers(leftHand!) == 0 && countExtendedFingers(rightHand!) == 0
+            && !isPinching(leftHand!) && !isPinching(rightHand!)
+
+        if bothFists {
+            if bothFistsStartTime == nil { bothFistsStartTime = Date() }
+            if let start = bothFistsStartTime, Date().timeIntervalSince(start) > 1.0 && !speechActive {
+                speechActive = true
+                lastTypedLength = 0
+                speechEngine.onResult = { [weak self] text in
+                    guard let self else { return }
+                    let newChars = String(text.dropFirst(self.lastTypedLength))
+                    if !newChars.isEmpty {
+                        self.speechEngine.typeText(newChars)
+                        self.lastTypedLength = text.count
+                    }
+                    DispatchQueue.main.async { self.appState.gestureLabel = "🎤 \(text)" }
+                }
+                speechEngine.startListening()
+                DispatchQueue.main.async { [weak self] in
+                    self?.appState.gestureLabel = "🎤 Listening..."
+                }
+            }
+            return
+        } else {
+            bothFistsStartTime = nil
+            if speechActive {
+                // Stop speech when both fists are released (any other gesture)
+                speechActive = false
+                speechEngine.stopListening()
+                DispatchQueue.main.async { [weak self] in
+                    self?.appState.gestureLabel = ""
+                    self?.appState.gestureProgress = 0
+                }
+            }
         }
 
         // === RIGHT HAND: pinch to drag cursor (relative) ===
         if let rh = rightHand {
-            let rhPinching = isPinching(rh)
-
-            if rhPinching {
+            if isPinching(rh) {
                 if let wrist = try? rh.recognizedPoint(.wrist), wrist.confidence > 0.3 {
                     let currentWrist = CGPoint(x: wrist.location.x, y: wrist.location.y)
-
                     if rightHandAnchor == nil {
                         rightHandAnchor = currentWrist
                         cursorAnchor = CGEvent(source: nil)?.location ?? .zero
@@ -128,10 +181,12 @@ final class TrackingCoordinator {
             cursorAnchor = nil
         }
 
-        // === LEFT HAND: pinch = click, fingers = number, fist = enter ===
+        // === LEFT HAND ===
         if let lh = leftHand {
+            // Thumb+pinky (🤙) detected — treat as gestureValue -2 (Escape) below
+
+            // Pinch = click
             if isPinching(lh) {
-                // Pinch = click
                 resetLeftGesture()
                 let now = Date()
                 if now.timeIntervalSince(lastClickTime) > 0.5 {
@@ -140,94 +195,119 @@ final class TrackingCoordinator {
                 }
                 DispatchQueue.main.async { [weak self] in
                     self?.appState.trackingState = .pinching
+                    self?.appState.gestureLabel = "👆 Click"
                 }
             } else {
-                // Count extended fingers (excluding thumb)
+                // Finger counting
                 let fingerCount = countExtendedFingers(lh)
-                let thumbUp = isThumbExtended(lh)
 
+                let gestureValue: Int
+                if isThumbPinky(lh) {
+                    gestureValue = -2  // Escape (🤙)
+                } else if fingerCount >= 4 {
+                    gestureValue = -1  // idle
+                } else if fingerCount == 0 {
+                    gestureValue = 0   // Enter (fist)
+                } else {
+                    gestureValue = fingerCount  // 1-3
+                }
+
+                // Update label
                 DispatchQueue.main.async { [weak self] in
                     self?.appState.trackingState = .tracking
-                    if fingerCount == 0 && !thumbUp {
-                        self?.appState.debugInfo = "Left: FIST (hold for Enter)"
-                    } else if thumbUp && fingerCount == 0 {
-                        self?.appState.debugInfo = "Left: THUMB (hold for Esc)"
+                    if gestureValue == -1 {
+                        self?.appState.gestureLabel = ""
+                        self?.appState.gestureProgress = 0
+                    } else if gestureValue == -2 {
+                        self?.appState.gestureLabel = "🤙 Esc"
+                    } else if gestureValue == 0 {
+                        self?.appState.gestureLabel = "⏎ Enter"
                     } else {
-                        self?.appState.debugInfo = "Left: \(fingerCount) fingers (hold for '\(fingerCount)')"
+                        self?.appState.gestureLabel = "\(gestureValue)"
                     }
                 }
 
-                // Determine gesture value
-                let gestureValue: Int
-                if thumbUp && fingerCount == 0 {
-                    gestureValue = -2  // Escape
-                } else if fingerCount == 0 && !thumbUp {
-                    gestureValue = 0   // Enter (fist)
-                } else {
-                    gestureValue = fingerCount  // 1-4
-                }
-
-                // Hold detection
-                if gestureValue == leftGestureValue {
+                // Hold detection (skip idle)
+                if gestureValue == -1 {
+                    resetLeftGesture()
+                } else if gestureValue == leftGestureValue {
                     if !leftGestureFired, let start = leftGestureStartTime {
-                        if Date().timeIntervalSince(start) >= holdDuration {
+                        let elapsed = Date().timeIntervalSince(start)
+                        let progress = min(1.0, elapsed / holdDuration)
+                        DispatchQueue.main.async { [weak self] in
+                            self?.appState.gestureProgress = progress
+                        }
+                        if elapsed >= holdDuration {
                             leftGestureFired = true
                             fireGesture(gestureValue)
+                            DispatchQueue.main.async { [weak self] in
+                                self?.appState.gestureLabel = "✓"
+                                self?.appState.gestureProgress = 0
+                            }
                         }
                     }
                 } else {
                     leftGestureValue = gestureValue
                     leftGestureStartTime = Date()
                     leftGestureFired = false
+                    DispatchQueue.main.async { [weak self] in
+                        self?.appState.gestureProgress = 0
+                    }
                 }
             }
         } else {
             resetLeftGesture()
             DispatchQueue.main.async { [weak self] in
                 self?.appState.trackingState = .inactive
+                self?.appState.gestureLabel = ""
+                self?.appState.gestureProgress = 0
             }
         }
     }
 
-    // MARK: - Gesture helpers
+    // MARK: - Helpers
 
     private func isPinching(_ obs: VNHumanHandPoseObservation) -> Bool {
         guard let thumb = try? obs.recognizedPoint(.thumbTip),
               let index = try? obs.recognizedPoint(.indexTip),
               thumb.confidence > 0.3, index.confidence > 0.3 else { return false }
-        let dist = hypot(thumb.location.x - index.location.x, thumb.location.y - index.location.y)
-        return dist < 0.06
+        return hypot(thumb.location.x - index.location.x, thumb.location.y - index.location.y) < 0.06
     }
 
     private func countExtendedFingers(_ obs: VNHumanHandPoseObservation) -> Int {
         var count = 0
         let pairs: [(VNHumanHandPoseObservation.JointName, VNHumanHandPoseObservation.JointName)] = [
-            (.indexTip, .indexPIP),
-            (.middleTip, .middlePIP),
-            (.ringTip, .ringPIP),
-            (.littleTip, .littlePIP)
+            (.indexTip, .indexPIP), (.middleTip, .middlePIP),
+            (.ringTip, .ringPIP), (.littleTip, .littlePIP)
         ]
         for (tip, pip) in pairs {
-            if let t = try? obs.recognizedPoint(tip),
-               let p = try? obs.recognizedPoint(pip),
-               t.confidence > 0.3, p.confidence > 0.3 {
-                if t.location.y > p.location.y {
-                    count += 1
-                }
+            if let t = try? obs.recognizedPoint(tip), let p = try? obs.recognizedPoint(pip),
+               t.confidence > 0.3, p.confidence > 0.3, t.location.y > p.location.y {
+                count += 1
             }
         }
         return count
     }
 
-    private func isThumbExtended(_ obs: VNHumanHandPoseObservation) -> Bool {
+    private func isThumbPinky(_ obs: VNHumanHandPoseObservation) -> Bool {
+        // Thumb and pinky extended, other fingers closed
         guard let thumbTip = try? obs.recognizedPoint(.thumbTip),
               let thumbIP = try? obs.recognizedPoint(.thumbIP),
-              let wrist = try? obs.recognizedPoint(.wrist),
-              thumbTip.confidence > 0.3 else { return false }
-        // Thumb is extended if tip is far from wrist relative to IP
-        let tipDist = hypot(thumbTip.location.x - wrist.location.x, thumbTip.location.y - wrist.location.y)
-        let ipDist = hypot(thumbIP.location.x - wrist.location.x, thumbIP.location.y - wrist.location.y)
-        return tipDist > ipDist * 1.3
+              let littleTip = try? obs.recognizedPoint(.littleTip),
+              let littlePIP = try? obs.recognizedPoint(.littlePIP),
+              let indexTip = try? obs.recognizedPoint(.indexTip),
+              let indexPIP = try? obs.recognizedPoint(.indexPIP),
+              let middleTip = try? obs.recognizedPoint(.middleTip),
+              let middlePIP = try? obs.recognizedPoint(.middlePIP),
+              thumbTip.confidence > 0.3, littleTip.confidence > 0.3 else { return false }
+
+        let pinkyExtended = littleTip.location.y > littlePIP.location.y
+        let indexClosed = indexTip.location.y <= indexPIP.location.y
+        let middleClosed = middleTip.location.y <= middlePIP.location.y
+        let thumbExtended = hypot(thumbTip.location.x - thumbIP.location.x,
+                                  thumbTip.location.y - thumbIP.location.y) > 0.03
+
+        return thumbExtended && pinkyExtended && indexClosed && middleClosed
     }
 
     private func resetLeftGesture() {
@@ -236,30 +316,14 @@ final class TrackingCoordinator {
         leftGestureFired = false
     }
 
-    // MARK: - Actions
-
     private func fireGesture(_ value: Int) {
         switch value {
-        case -2:
-            NSLog("iGest: ESCAPE")
-            pressKey(keyCode: UInt16(kVK_Escape))
-        case 0:
-            NSLog("iGest: ENTER")
-            pressKey(keyCode: UInt16(kVK_Return))
-        case 1:
-            NSLog("iGest: press '1'")
-            pressKey(keyCode: UInt16(kVK_ANSI_1))
-        case 2:
-            NSLog("iGest: press '2'")
-            pressKey(keyCode: UInt16(kVK_ANSI_2))
-        case 3:
-            NSLog("iGest: press '3'")
-            pressKey(keyCode: UInt16(kVK_ANSI_3))
-        case 4:
-            NSLog("iGest: press '4'")
-            pressKey(keyCode: UInt16(kVK_ANSI_4))
-        default:
-            break
+        case -2: pressKey(keyCode: UInt16(kVK_Escape))
+        case 0: pressKey(keyCode: UInt16(kVK_Return))
+        case 1: pressKey(keyCode: UInt16(kVK_ANSI_1))
+        case 2: pressKey(keyCode: UInt16(kVK_ANSI_2))
+        case 3: pressKey(keyCode: UInt16(kVK_ANSI_3))
+        default: break
         }
     }
 

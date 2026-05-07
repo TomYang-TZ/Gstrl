@@ -14,6 +14,7 @@
 		5DEC2B57C28AA54A4FE7165F /* CursorControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E43891FACEF5E967E956C813 /* CursorControllerTests.swift */; };
 		60B04DCE10E8569CF107FC1F /* PolynomialMapperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B19769FDFA740698F1791330 /* PolynomialMapperTests.swift */; };
 		61B71CF5425F343B8181C8D5 /* CameraManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF45DFBC9DDBCA40FD578EFC /* CameraManager.swift */; };
+		71140648B6D981D60E10AEA0 /* SpeechEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F3DE79899DF6BEE6D84CD4 /* SpeechEngine.swift */; };
 		73BA82819408812D0AD51D76 /* CursorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB5818C4D4C7B261B23B7454 /* CursorController.swift */; };
 		ACEC32CD37764831E2800C87 /* TrackingState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FE7E8BC878EE4B4BAD2951F /* TrackingState.swift */; };
 		BDA92E077463B35987495C5C /* SmoothingFilterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5016AE842BCE4CD6E958AA34 /* SmoothingFilterTests.swift */; };
@@ -34,6 +35,7 @@
 
 /* Begin PBXFileReference section */
 		16343A495D74CB1E64F34357 /* TrackingCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackingCoordinator.swift; sourceTree = "<group>"; };
+		27F3DE79899DF6BEE6D84CD4 /* SpeechEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechEngine.swift; sourceTree = "<group>"; };
 		3019DBF26AF89CE7601EBD96 /* iGestTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iGestTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5016AE842BCE4CD6E958AA34 /* SmoothingFilterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmoothingFilterTests.swift; sourceTree = "<group>"; };
 		6BF8125852CFEB90BB837284 /* HandTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandTrackerTests.swift; sourceTree = "<group>"; };
@@ -53,6 +55,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
+		1CDB488BDF1EE2CC923C5954 /* Speech */ = {
+			isa = PBXGroup;
+			children = (
+				27F3DE79899DF6BEE6D84CD4 /* SpeechEngine.swift */,
+			);
+			path = Speech;
+			sourceTree = "<group>";
+		};
 		2B748FE0E9377A2B8083E199 /* Cursor */ = {
 			isa = PBXGroup;
 			children = (
@@ -97,6 +107,7 @@
 				71DDC9AA61D7AD62C8C52E2B /* MainStatusView.swift */,
 				6D5391C857C7334D08C57740 /* Camera */,
 				2B748FE0E9377A2B8083E199 /* Cursor */,
+				1CDB488BDF1EE2CC923C5954 /* Speech */,
 				F8C878EFBEB465E2535C3D12 /* Tracking */,
 			);
 			name = iGest;
@@ -205,6 +216,7 @@
 				73BA82819408812D0AD51D76 /* CursorController.swift in Sources */,
 				160CFCD4C532CACCD6CBEA4B /* HandTracker.swift in Sources */,
 				004339C08409569FE942015A /* MainStatusView.swift in Sources */,
+				71140648B6D981D60E10AEA0 /* SpeechEngine.swift in Sources */,
 				090999F86B8B3278A283E88E /* TrackingCoordinator.swift in Sources */,
 				ACEC32CD37764831E2800C87 /* TrackingState.swift in Sources */,
 				F802A2D1828E3CA924822867 /* iGestApp.swift in Sources */,

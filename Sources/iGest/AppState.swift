@@ -10,6 +10,8 @@ final class AppState {
     var rightHandDetected: Bool = false
     var handsCount: Int = 0
     var debugInfo: String = ""
+    var gestureLabel: String = ""
+    var gestureProgress: Double = 0.0
 
     enum Sensitivity: String, CaseIterable, Equatable {
         case low, medium, high

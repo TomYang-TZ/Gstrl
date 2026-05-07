@@ -1,6 +1,8 @@
 import AppKit
 import SwiftUI
 import Carbon.HIToolbox
+import AVFoundation
+import Speech
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
@@ -17,6 +19,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         buildMenu()
         createMainWindow()
+        requestAllPermissions()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -30,9 +33,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return true
     }
 
+    private func requestAllPermissions() {
+        AVCaptureDevice.requestAccess(for: .video) { _ in }
+        AVCaptureDevice.requestAccess(for: .audio) { _ in }
+        SFSpeechRecognizer.requestAuthorization { _ in }
+    }
+
     private func createMainWindow() {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 300, height: 180),
+            contentRect: NSRect(x: 0, y: 0, width: 320, height: 280),
             styleMask: [.titled, .closable, .miniaturizable],
             backing: .buffered,
             defer: false
@@ -95,12 +104,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func registerGlobalHotkey() {
-        NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            if event.keyCode == UInt16(kVK_Escape) {
-                self?.coordinator?.emergencyKill()
-                self?.updateIcon()
-            }
-        }
+        // Only kill when iGest is focused
         NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             if event.keyCode == UInt16(kVK_Escape) {
                 self?.coordinator?.emergencyKill()
@@ -130,5 +134,3 @@ struct iGestMain {
         app.run()
     }
 }
-
-

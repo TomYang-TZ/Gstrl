@@ -27,6 +27,10 @@ final class TrackingCoordinator {
     private var wavePositions: [(x: CGFloat, time: Date)] = []
     private var lastWaveTime: Date = .distantPast
 
+    // Right hand swipe detection
+    private var rightIndexHistory: [(pos: CGPoint, time: Date)] = []
+    private var lastSwipeTime: Date = .distantPast
+
     // Speech
     private let speechEngine = SpeechEngine()
     private var bothFistsStartTime: Date?

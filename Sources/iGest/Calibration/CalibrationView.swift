@@ -9,6 +9,7 @@ struct CalibrationView: View {
     let onComplete: () -> Void
 
     @State private var timer: Timer?
+    @State private var samplesThisPoint: Int = 0
 
     var body: some View {
         ZStack {
@@ -22,8 +23,14 @@ struct CalibrationView: View {
                     Text("Calibration Complete")
                         .font(.title)
                         .foregroundColor(.white)
-                    Button("Done") { onComplete() }
-                        .buttonStyle(.borderedProminent)
+                    Text("Press any key or click to dismiss")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                }
+                .onAppear {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                        onComplete()
+                    }
                 }
             } else if let target = engine.currentTarget {
                 VStack {
@@ -31,6 +38,12 @@ struct CalibrationView: View {
                         .font(.headline)
                         .foregroundColor(.white)
                         .padding(.top, 40)
+
+                    Text("Samples: \(samplesThisPoint)")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                        .padding(.top, 8)
+
                     Spacer()
                 }
 
@@ -61,6 +74,7 @@ struct CalibrationView: View {
                let result = gazeTracker.processFrame(pixelBuffer, faceObservation: faceObs) {
                 DispatchQueue.main.async {
                     gazeCollector.add(result.rawGazeVector)
+                    self.samplesThisPoint += 1
                 }
             }
         }
@@ -72,18 +86,37 @@ struct CalibrationView: View {
     }
 
     private func startFixationTimer() {
-        timer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
+        timer = Timer.scheduledTimer(withTimeInterval: 2.5, repeats: true) { _ in
             DispatchQueue.main.async {
-                if let avgGaze = gazeCollector.average() {
-                    engine.recordGazeVector(avgGaze)
-                }
-                gazeCollector.reset()
-
-                if engine.isComplete {
-                    timer?.invalidate()
-                    stopGazeCollection()
-                }
+                advancePoint()
             }
+        }
+    }
+
+    private func advancePoint() {
+        let gazeVector: CGPoint
+        if let avg = gazeCollector.average() {
+            gazeVector = avg
+        } else {
+            // Fallback: use the normalized screen position of the target as a stand-in
+            let screenSize = NSScreen.main?.frame.size ?? CGSize(width: 1920, height: 1080)
+            if let target = engine.currentTarget {
+                gazeVector = CGPoint(
+                    x: target.x / screenSize.width,
+                    y: target.y / screenSize.height
+                )
+            } else {
+                gazeVector = CGPoint(x: 0.5, y: 0.5)
+            }
+        }
+
+        engine.recordGazeVector(gazeVector)
+        gazeCollector.reset()
+        samplesThisPoint = 0
+
+        if engine.isComplete {
+            timer?.invalidate()
+            stopGazeCollection()
         }
     }
 }

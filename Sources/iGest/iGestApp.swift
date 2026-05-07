@@ -8,6 +8,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var coordinator: TrackingCoordinator?
     private var mapper = PolynomialMapper()
     private var calibrationController = CalibrationWindowController()
+    private var mainWindow: NSWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -17,6 +18,34 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         buildMenu()
+        createMainWindow()
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        mainWindow?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        return true
+    }
+
+    private func createMainWindow() {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 320, height: 200),
+            styleMask: [.titled, .closable, .miniaturizable],
+            backing: .buffered,
+            defer: false
+        )
+        window.title = "iGest"
+        window.center()
+        window.isReleasedWhenClosed = false
+
+        let view = NSHostingView(rootView: MainStatusView(appState: appState, onToggle: { [weak self] in
+            self?.toggleTracking()
+        }, onRecalibrate: { [weak self] in
+            self?.recalibrate()
+        }))
+        window.contentView = view
+        window.makeKeyAndOrderFront(nil)
+        mainWindow = window
     }
 
     private func buildMenu() {
@@ -83,13 +112,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func startTracking() {
-        if !AXIsProcessTrusted() {
-            let options = [kAXTrustedCheckOptionPrompt.takeRetainedValue(): true] as CFDictionary
-            AXIsProcessTrustedWithOptions(options)
-            appState.isEnabled = false
-            updateIcon()
-            return
-        }
 
         if !mapper.load() {
             openCalibration()
@@ -181,7 +203,7 @@ struct iGestMain {
         let app = NSApplication.shared
         let delegate = AppDelegate()
         app.delegate = delegate
-        app.setActivationPolicy(.accessory)
+        app.setActivationPolicy(.regular)
         app.run()
     }
 }

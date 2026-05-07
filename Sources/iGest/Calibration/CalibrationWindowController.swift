@@ -1,6 +1,11 @@
 import AppKit
 import SwiftUI
 
+final class KeyableWindow: NSWindow {
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { true }
+}
+
 final class CalibrationWindowController {
     private var window: NSWindow?
 
@@ -20,7 +25,7 @@ final class CalibrationWindowController {
             }
         )
 
-        let win = NSWindow(
+        let win = KeyableWindow(
             contentRect: NSScreen.main?.frame ?? .zero,
             styleMask: [.borderless],
             backing: .buffered,
@@ -29,8 +34,10 @@ final class CalibrationWindowController {
         win.level = .screenSaver
         win.isOpaque = true
         win.backgroundColor = .black
+        win.collectionBehavior = [.fullScreenAuxiliary, .canJoinAllSpaces]
         win.contentView = NSHostingView(rootView: calibrationView)
         win.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
         window = win
     }
 

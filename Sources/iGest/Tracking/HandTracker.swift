@@ -22,7 +22,7 @@ final class HandTracker {
 
     @discardableResult
     func classify(handLandmarks: HandLandmarks?, elapsed: TimeInterval = 0.033) -> TrackingState {
-        guard let landmarks = handLandmarks, landmarks.confidence > 0.7 else {
+        guard let landmarks = handLandmarks, landmarks.confidence > 0.3 else {
             return applyDebounce(.inactive, elapsed: elapsed)
         }
 
@@ -31,15 +31,14 @@ final class HandTracker {
             landmarks.thumbTip.y - landmarks.indexTip.y
         )
 
-        if pinchDistance < 0.05 {
+        if pinchDistance < 0.08 {
             return applyDebounce(.pinching, elapsed: elapsed)
         }
 
         // In Vision coordinates, y increases upward. Extended fingers have tip.y > PIP.y
+        // Only require index + middle extended (more lenient — don't require all 4)
         let fingersExtended = landmarks.indexTip.y > landmarks.indexPIP.y
             && landmarks.middleTip.y > landmarks.middlePIP.y
-            && landmarks.ringTip.y > landmarks.ringPIP.y
-            && landmarks.littleTip.y > landmarks.littlePIP.y
 
         if fingersExtended {
             return applyDebounce(.tracking, elapsed: elapsed)

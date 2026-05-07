@@ -18,6 +18,14 @@ final class TrackingCoordinator {
     }
 
     func start() {
+        // Check accessibility permission — required for CGEvent click posting
+        if !AXIsProcessTrusted() {
+            NSLog("iGest: Accessibility NOT granted — requesting...")
+            let options = [kAXTrustedCheckOptionPrompt.takeRetainedValue(): true] as CFDictionary
+            AXIsProcessTrustedWithOptions(options)
+        } else {
+            NSLog("iGest: Accessibility granted ✓")
+        }
         cameraManager.start()
     }
 
@@ -53,17 +61,24 @@ final class TrackingCoordinator {
             self?.appState.trackingState = trackingState
         }
 
-        // Get current cursor position (wherever Head Pointer has moved it)
-        let cursorPos = NSEvent.mouseLocation
-        let screenHeight = NSScreen.main?.frame.height ?? 1080
-        // Convert from NSEvent (bottom-left) to CGEvent (top-left)
-        let cgPoint = CGPoint(x: cursorPos.x, y: screenHeight - cursorPos.y)
+        // Get current cursor position for clicking
+        // CGEvent uses global display coordinates (top-left origin of primary display)
+        guard let event = CGEvent(source: nil) else { return }
+        let cgPoint = event.location
 
         // Post click events at current cursor position
+        let prevState = cursorController.currentState
         switch trackingState {
         case .pinching:
+            if prevState != .pinching {
+                NSLog("iGest: PINCH DETECTED → clicking at (\(cgPoint.x), \(cgPoint.y))")
+                NSSound.beep()
+            }
             cursorController.update(state: .pinching, gazePoint: cgPoint)
         case .tracking:
+            if prevState != .tracking {
+                NSLog("iGest: Hand open → tracking")
+            }
             cursorController.update(state: .tracking, gazePoint: cgPoint)
         case .inactive:
             cursorController.update(state: .inactive, gazePoint: cgPoint)

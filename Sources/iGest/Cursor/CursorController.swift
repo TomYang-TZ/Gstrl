@@ -8,6 +8,7 @@ final class CursorController {
         case leftMouseUp
     }
 
+    private(set) var currentState: TrackingState = .inactive
     private var previousState: TrackingState = .inactive
     private var isKilled = false
     private let postEvent: (EventType, CGPoint) -> Void
@@ -41,6 +42,7 @@ final class CursorController {
         }
 
         previousState = state
+        currentState = state
     }
 
     func emergencyKill() {

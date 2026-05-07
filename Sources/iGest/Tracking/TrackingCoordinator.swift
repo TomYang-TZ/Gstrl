@@ -61,28 +61,28 @@ final class TrackingCoordinator {
         // Skip vertical outliers
         guard rawGaze.y < 0.95 else { return }
 
-        let screenSize = NSScreen.main?.frame.size ?? CGSize(width: 1920, height: 1080)
+        // Map raw gaze ratios directly to screen pixels
+        // Raw gaze from GazeTracking: x and y are 0-1 ratios
+        // Use MacBook built-in display (1512 x 982 logical)
+        let screenW: CGFloat = 1512
+        let screenH: CGFloat = 982
 
-        // Fixed mapping based on observed ranges:
-        //   H: 0.56 (looking right on screen) → 0.75 (looking left on screen)
-        //   V: 0.55 (looking up) → 0.80 (looking down)
-        // Map to full screen with these as the endpoints
+        // Fixed mapping: stretch observed gaze range to full screen
         let hMin: CGFloat = 0.55
         let hMax: CGFloat = 0.76
         let vMin: CGFloat = 0.50
         let vMax: CGFloat = 0.80
 
-        // Normalize within range
         var normX = (rawGaze.x - hMin) / (hMax - hMin)
         var normY = (rawGaze.y - vMin) / (vMax - vMin)
 
-        // Clamp
         normX = max(0.0, min(1.0, normX))
         normY = max(0.0, min(1.0, normY))
 
+        // Screen pixel position (top-left origin for CGEvent)
         let screenPoint = smoothingFilter.apply(CGPoint(
-            x: normX * screenSize.width,
-            y: normY * screenSize.height
+            x: normX * screenW,
+            y: normY * screenH
         ))
 
         gazeOverlay.moveTo(screenPoint)

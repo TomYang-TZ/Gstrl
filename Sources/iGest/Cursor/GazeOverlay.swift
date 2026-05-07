@@ -2,14 +2,18 @@ import AppKit
 
 final class GazeOverlay {
     private var window: NSWindow?
-    private var dotView: NSView?
 
     deinit {
         hide()
     }
 
     func show() {
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async { self.show() }
+            return
+        }
         guard window == nil else { return }
+
         let dot = NSView(frame: NSRect(x: 0, y: 0, width: 24, height: 24))
         dot.wantsLayer = true
         dot.layer?.backgroundColor = NSColor.systemCyan.withAlphaComponent(0.7).cgColor
@@ -32,19 +36,25 @@ final class GazeOverlay {
         win.orderFront(nil)
 
         window = win
-        dotView = dot
     }
 
     func moveTo(_ point: CGPoint) {
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async { self.moveTo(point) }
+            return
+        }
         guard let window else { return }
-        // Convert from top-left origin (CGEvent) to bottom-left origin (NSWindow)
         let screenHeight = NSScreen.main?.frame.height ?? 1080
         let flipped = NSPoint(x: point.x - 12, y: screenHeight - point.y - 12)
         window.setFrameOrigin(flipped)
     }
 
     func hide() {
-        window?.close()
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async { self.hide() }
+            return
+        }
+        window?.orderOut(nil)
         window = nil
     }
 }

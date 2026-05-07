@@ -4,7 +4,7 @@ import Foundation
 final class HandTracker {
     private var lastState: TrackingState = .inactive
     private var lastTransitionTime: TimeInterval = 0
-    private let debounceInterval: TimeInterval = 0.05
+    private let debounceInterval: TimeInterval = 0.15
 
     struct HandLandmarks {
         let thumbTip: CGPoint
@@ -31,12 +31,17 @@ final class HandTracker {
             landmarks.thumbTip.y - landmarks.indexTip.y
         )
 
-        if pinchDistance < 0.08 {
-            return applyDebounce(.pinching, elapsed: elapsed)
+        // Hysteresis: enter pinch at < 0.06, exit pinch at > 0.10
+        if lastState == .pinching {
+            if pinchDistance < 0.10 {
+                return applyDebounce(.pinching, elapsed: elapsed)
+            }
+        } else {
+            if pinchDistance < 0.06 {
+                return applyDebounce(.pinching, elapsed: elapsed)
+            }
         }
 
-        // In Vision coordinates, y increases upward. Extended fingers have tip.y > PIP.y
-        // Only require index + middle extended (more lenient — don't require all 4)
         let fingersExtended = landmarks.indexTip.y > landmarks.indexPIP.y
             && landmarks.middleTip.y > landmarks.middlePIP.y
 

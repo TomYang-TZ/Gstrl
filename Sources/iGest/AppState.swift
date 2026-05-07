@@ -6,6 +6,10 @@ final class AppState {
     var trackingState: TrackingState = .inactive
     var sensitivity: Sensitivity = .medium
     var isCalibrated: Bool = false
+    var leftHandDetected: Bool = false
+    var rightHandDetected: Bool = false
+    var handsCount: Int = 0
+    var debugInfo: String = ""
 
     enum Sensitivity: String, CaseIterable, Equatable {
         case low, medium, high

@@ -5,25 +5,42 @@ struct MainStatusView: View {
     var onToggle: () -> Void
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 12) {
             Image(systemName: statusIcon)
-                .font(.system(size: 48))
+                .font(.system(size: 40))
                 .foregroundStyle(statusColor)
 
             Text(statusText)
                 .font(.headline)
 
-            Text("Works with macOS Head Pointer")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            if appState.isEnabled {
+                HStack(spacing: 20) {
+                    VStack {
+                        Text("Left (click)")
+                            .font(.caption)
+                        Image(systemName: appState.leftHandDetected ? "hand.raised.fill" : "hand.raised.slash")
+                            .foregroundStyle(appState.leftHandDetected ? .orange : .gray)
+                    }
+                    VStack {
+                        Text("Right (cursor)")
+                            .font(.caption)
+                        Image(systemName: appState.rightHandDetected ? "hand.raised.fill" : "hand.raised.slash")
+                            .foregroundStyle(appState.rightHandDetected ? .blue : .gray)
+                    }
+                }
+
+                Text(appState.debugInfo)
+                    .font(.system(.caption2, design: .monospaced))
+                    .foregroundStyle(.secondary)
+            }
 
             Button(appState.isEnabled ? "Disable" : "Enable") {
                 onToggle()
             }
             .buttonStyle(.borderedProminent)
         }
-        .padding(24)
-        .frame(width: 300, height: 180)
+        .padding(20)
+        .frame(width: 320, height: 240)
     }
 
     private var statusIcon: String {

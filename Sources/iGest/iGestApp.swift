@@ -21,6 +21,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         createMainWindow()
     }
 
+    func applicationWillTerminate(_ notification: Notification) {
+        coordinator?.stop()
+        coordinator = nil
+        // Kill the Python vision server
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/usr/bin/pkill")
+        task.arguments = ["-f", "gaze_server.py"]
+        try? task.run()
+    }
+
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         mainWindow?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
@@ -128,11 +138,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func openCalibration() {
         let tempGazeTracker = GazeTracker(mapper: mapper)
-        let tempCamera = CameraManager()
         calibrationController.show(
             mapper: mapper,
-            gazeTracker: tempGazeTracker,
-            cameraManager: tempCamera
+            gazeTracker: tempGazeTracker
         ) { [weak self] in
             guard let self else { return }
             self.appState.isCalibrated = true

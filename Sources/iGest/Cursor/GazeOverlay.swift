@@ -4,11 +4,18 @@ final class GazeOverlay {
     private var window: NSWindow?
     private var dotView: NSView?
 
+    deinit {
+        hide()
+    }
+
     func show() {
+        guard window == nil else { return }
         let dot = NSView(frame: NSRect(x: 0, y: 0, width: 24, height: 24))
         dot.wantsLayer = true
-        dot.layer?.backgroundColor = NSColor.red.withAlphaComponent(0.6).cgColor
+        dot.layer?.backgroundColor = NSColor.systemCyan.withAlphaComponent(0.7).cgColor
         dot.layer?.cornerRadius = 12
+        dot.layer?.borderWidth = 2
+        dot.layer?.borderColor = NSColor.white.withAlphaComponent(0.8).cgColor
 
         let win = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 24, height: 24),

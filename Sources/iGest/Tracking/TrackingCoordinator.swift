@@ -1,36 +1,31 @@
-import Vision
 import Foundation
+import AppKit
 
 final class TrackingCoordinator {
-    private let cameraManager = CameraManager()
-    private let handTracker = HandTracker()
     private let gazeTracker: GazeTracker
     private let cursorController: CursorController
     private let smoothingFilter: SmoothingFilter
     private let appState: AppState
     private let gazeOverlay = GazeOverlay()
-    private var frameCount = 0
+    private var pollTimer: Timer?
 
     init(appState: AppState, mapper: PolynomialMapper) {
         self.appState = appState
         self.gazeTracker = GazeTracker(mapper: mapper)
         self.cursorController = CursorController()
         self.smoothingFilter = SmoothingFilter(alpha: appState.sensitivity.alpha)
-
-        cameraManager.onFrame = { [weak self] pixelBuffer in
-            self?.processFrame(pixelBuffer)
-        }
     }
 
     func start() {
-        cameraManager.start()
         DispatchQueue.main.async { [weak self] in
             self?.gazeOverlay.show()
+            self?.startPolling()
         }
     }
 
     func stop() {
-        cameraManager.stop()
+        pollTimer?.invalidate()
+        pollTimer = nil
         cursorController.emergencyKill()
         cursorController.reenable()
         smoothingFilter.reset()
@@ -50,65 +45,52 @@ final class TrackingCoordinator {
         smoothingFilter.alpha = appState.sensitivity.alpha
     }
 
-    private func processFrame(_ pixelBuffer: CVPixelBuffer) {
-        frameCount += 1
-        let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, options: [:])
-
-        let faceRequest = VNDetectFaceLandmarksRequest()
-        let handRequest = VNDetectHumanHandPoseRequest()
-        handRequest.maximumHandCount = 1
-
-        do {
-            try handler.perform([faceRequest, handRequest])
-        } catch {
-            if frameCount % 30 == 0 { NSLog("iGest: Vision perform failed: \(error)") }
-            return
+    private func startPolling() {
+        pollTimer = Timer.scheduledTimer(withTimeInterval: 1.0/30.0, repeats: true) { [weak self] _ in
+            self?.tick()
         }
+    }
 
-        // Debug: log detection results every 30 frames (~1 second)
-        if frameCount % 30 == 0 {
-            let faceCount = faceRequest.results?.count ?? 0
-            let handCount = handRequest.results?.count ?? 0
-            NSLog("iGest: frame \(frameCount) — faces: \(faceCount), hands: \(handCount)")
-        }
+    private func tick() {
+        let trackingState = gazeTracker.latestHandState
+        appState.trackingState = trackingState
 
-        let handObservation = handRequest.results?.first
-        let handLandmarks = handObservation.flatMap { handTracker.processObservation($0) }
-        let trackingState = handTracker.classify(handLandmarks: handLandmarks)
+        let rawGaze = gazeTracker.latestGaze
+        // Skip (0.5, 0.5) = no detection
+        guard rawGaze.x != 0.5 || rawGaze.y != 0.5 else { return }
+        // Skip vertical outliers
+        guard rawGaze.y < 0.95 else { return }
 
-        if frameCount % 30 == 0 {
-            if let landmarks = handLandmarks {
-                let pinchDist = hypot(landmarks.thumbTip.x - landmarks.indexTip.x,
-                                     landmarks.thumbTip.y - landmarks.indexTip.y)
-                NSLog("iGest: hand detected — pinchDist: \(String(format: "%.3f", pinchDist)), confidence: \(landmarks.confidence), state: \(trackingState)")
-            }
-        }
+        let screenSize = NSScreen.main?.frame.size ?? CGSize(width: 1920, height: 1080)
 
-        DispatchQueue.main.async { [weak self] in
-            self?.appState.trackingState = trackingState
-        }
+        // Fixed mapping based on observed ranges:
+        //   H: 0.56 (looking right on screen) → 0.75 (looking left on screen)
+        //   V: 0.55 (looking up) → 0.80 (looking down)
+        // Map to full screen with these as the endpoints
+        let hMin: CGFloat = 0.55
+        let hMax: CGFloat = 0.76
+        let vMin: CGFloat = 0.50
+        let vMax: CGFloat = 0.80
 
-        // Always try to get gaze point for the overlay (even when inactive)
-        var gazePoint: CGPoint = .zero
-        if let faceObservation = faceRequest.results?.first {
-            if let result = gazeTracker.processFrame(pixelBuffer, faceObservation: faceObservation) {
-                gazePoint = smoothingFilter.apply(result.screenPoint)
-            }
-        }
+        // Normalize within range
+        var normX = (rawGaze.x - hMin) / (hMax - hMin)
+        var normY = (rawGaze.y - vMin) / (vMax - vMin)
 
-        // Move the overlay dot to show where gaze is pointing
-        if gazePoint != .zero {
-            DispatchQueue.main.async { [weak self] in
-                self?.gazeOverlay.moveTo(gazePoint)
-            }
-        }
+        // Clamp
+        normX = max(0.0, min(1.0, normX))
+        normY = max(0.0, min(1.0, normY))
 
-        // Only move actual cursor when hand is active
-        guard trackingState == .tracking || trackingState == .pinching else {
+        let screenPoint = smoothingFilter.apply(CGPoint(
+            x: normX * screenSize.width,
+            y: normY * screenSize.height
+        ))
+
+        gazeOverlay.moveTo(screenPoint)
+
+        if trackingState == .tracking || trackingState == .pinching {
+            cursorController.update(state: trackingState, gazePoint: screenPoint)
+        } else {
             cursorController.update(state: .inactive, gazePoint: .zero)
-            return
         }
-
-        cursorController.update(state: trackingState, gazePoint: gazePoint)
     }
 }

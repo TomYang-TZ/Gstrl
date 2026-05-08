@@ -10,19 +10,28 @@ Control your computer using hand gestures through your webcam. No special hardwa
 ✋ LEFT HAND                         🤚 RIGHT HAND
 ───────────────                      ───────────────
 👌 Pinch        → Click              👌 Pinch+move  → Move cursor
-☝️ 1-3 fingers  → Type 1/2/3         🤙 Thumb+pinky → Delete (accelerates)
-✊ Fist          → Enter              👆 Swipe ↑↓←→  → Arrow keys
-🤙 Thumb+pinky  → Escape
+☝️ 1-3 fingers  → Type 1/2/3         🤙 Thumb+pinky → Delete
+✊ Fist          → Enter                 (hold: chars → words → lines → select all)
+🤙 Thumb+pinky  → Escape             👆 Swipe ↑↓←→  → Arrow keys
 
 🙌 BOTH HANDS
 ───────────────
 🖐🖐 Both open    → Speech-to-text
 🖐+👆 Open+swipe  → Tab / Shift+Tab
-🤙🤙 Both 🤙      → Delete lines (fast)
+🤙🤙 Both 🤙      → Delete by line (escalates to select all)
 ✕  Fingers cross → Ctrl+C (cancel)
 ```
 
-All hold gestures need 1 second to activate. You'll see a progress bar.
+All hold gestures need 1 second to activate. Delete accelerates the longer you hold — the UI warns you before each escalation.
+
+## Dynamic Island
+
+A floating notch at the top of your screen shows what iGest is doing in real time:
+- Which hands are detected (orange = left, blue = right)
+- Current gesture and countdown progress
+- Escalation warnings before destructive actions
+
+Always visible, never steals focus.
 
 ## Quick Start
 

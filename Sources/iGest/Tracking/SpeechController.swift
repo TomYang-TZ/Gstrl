@@ -10,7 +10,9 @@ final class SpeechController {
     // Debounce: wait for recognizer to settle before typing
     private var pendingText = ""
     private var debounceWork: DispatchWorkItem?
+    private var flushedPrefix: String?
     private static let debounceDelay: TimeInterval = 0.3
+    private static let partialWaitDelay: TimeInterval = 0.8
 
     var onLabelUpdate: ((String) -> Void)?
 
@@ -19,6 +21,7 @@ final class SpeechController {
             startTime = nil
             committedLen = 0
             pendingText = ""
+            flushedPrefix = nil
             debounceWork?.cancel()
             debounceWork = nil
             if isActive {
@@ -91,6 +94,21 @@ final class SpeechController {
             return
         }
 
+        // If we previously flushed a prefix as text, check if this delta completes the command
+        if let prefix = flushedPrefix {
+            let combined = prefix + " " + delta.trimmingCharacters(in: .whitespaces)
+            if case .command(let action, _, let displayName) = VoiceCommandParser.parse(newText: combined) {
+                // Undo the flushed prefix text and fire the command
+                speechEngine.deleteChars(prefix.count)
+                InputDispatch.perform(action)
+                committedLen = text.count
+                flushedPrefix = nil
+                flashCommandFeedback(displayName)
+                return
+            }
+            flushedPrefix = nil
+        }
+
         // Parse the entire uncommitted delta for commands
         switch VoiceCommandParser.parse(newText: delta) {
         case .command(let action, let wordCount, let displayName):
@@ -103,12 +121,12 @@ final class SpeechController {
             committedLen = text.count
             flashCommandFeedback(displayName)
         case .partial(_, _):
-            // Still waiting for keyword — don't commit yet, extend debounce
+            // Still waiting for keyword — extend with longer timeout
             let work = DispatchWorkItem { [weak self] in
                 self?.flushPartialAsText()
             }
             debounceWork = work
-            DispatchQueue.main.asyncAfter(deadline: .now() + Self.debounceDelay, execute: work)
+            DispatchQueue.main.asyncAfter(deadline: .now() + Self.partialWaitDelay, execute: work)
             onLabelUpdate?("⌨️ \(delta.trimmingCharacters(in: .whitespaces)) ...?")
         case .text:
             speechEngine.typeText(delta)
@@ -123,6 +141,7 @@ final class SpeechController {
         let delta = String(text.dropFirst(committedLen))
         guard !delta.isEmpty else { return }
         speechEngine.typeText(delta)
+        flushedPrefix = delta.trimmingCharacters(in: .whitespaces)
         committedLen = text.count
         onLabelUpdate?("🎤 \(text)")
     }

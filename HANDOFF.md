@@ -92,11 +92,24 @@ Requires Accessibility permission — app prompts on first enable.
 - Speech partial results can occasionally repeat (mitigated by lastTypedLength tracking)
 - Scroll sensitivity may need per-app tuning (1500 is aggressive)
 
+## Completed
+
+- **Rename to Gstrl** — repo, bundle ID, all source references
+- **Dynamic Island Liquid Glass** — native `.glassEffect(.clear)` on macOS 26+, thinMaterial fallback for older versions
+- **Circle-to-screenshot** — pinch + draw circle captures region, shows 3s preview thumbnail, copies to clipboard
+- **Voice commands** — "press down/up/left/right", "command z/c/v/tab" during speech mode
+- **Palm center tracking** — cursor follows MCP knuckle average instead of wrist
+- **Velocity-based scroll** — joystick-style with time acceleration (1x → 3x over 5s)
+- **Improved swipe detection** — requires open hand, displacement + deceleration, stable finger count gating
+- **Long pinch right-click** — hold pinch 1s for right-click, quick release for left-click
+- **Settings UI** — configurable FPS (30/60/90/120), cursor sensitivity, scroll sensitivity
+- **60fps camera support** — via AVCaptureConnection frame duration (default 30fps for battery)
+- **Notch-safe positioning** — island detects safeAreaInsets and offsets only on notch screens
+- **Permission auto-prompts** — accessibility + screen recording settings pages open on launch
+- **SEO** — GitHub Pages landing page with structured data, optimized README keywords
+- **Augmentation messaging** — positioned as "augment, not replace" your keyboard and mouse
+
 ## Next Steps
 
-- ~~**SEO for GitHub search** — add relevant topics/tags to the repo (hand-tracking, gesture-control, macos, accessibility, vision-framework, hands-free), write a compelling repo description, add social preview image~~
-- ~~**SEO for Google search** — optimize README with searchable keywords (e.g. "control mac with hand gestures", "hands-free mac cursor", "webcam gesture recognition macos"), add a GitHub Pages landing page with structured data, submit to macOS tool directories and HN/Product Hunt~~
-- **Two-finger directional hold** — point index+middle in a direction to fire accelerating arrow key repeats. Attempted but detection was unreliable (conflicts with swipe, hard to distinguish from 1-finger or fist in various orientations). Needs a fundamentally different approach — possibly using wrist angle + finger count, or a dedicated ML classifier trained on pointing poses
-- ~~**Voice commands during speech mode** — when speech-to-text is active, recognize command keywords and execute them instead of typing.~~
-- ~~**Dynamic Island visual redesign** — redesigned with Apple Liquid Glass (.glassEffect on macOS 26+, thinMaterial fallback). SF Symbols for hand indicators, adaptive colors for glass/dark backgrounds.~~
-- ~~**Circle-to-screenshot gesture** — right-hand pinch + draw a circle captures the enclosed screen region. Shows floating preview thumbnail for 3s, then copies to clipboard.~~
+- **App icon** — design a distinctive, recognizable icon for Gstrl. Should convey gesture/hand/control at a glance, work at small sizes (menu bar, dock, Finder), and feel native to macOS. Consider: abstract hand silhouette, gesture trail/arc, or a stylized "G" with motion lines.
+- **Two-finger directional hold** — point index+middle to fire accelerating arrow key repeats. Detection was unreliable; needs wrist angle + ML classifier approach.

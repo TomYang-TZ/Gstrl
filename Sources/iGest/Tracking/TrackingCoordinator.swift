@@ -48,6 +48,15 @@ final class TrackingCoordinator {
     private var rightHandEntryFrames: Int = 0
     private let handEntryGraceFrames: Int = 5
 
+    // Crossed fingers (X) = Ctrl+C (hold for double)
+    private var fingersCrossedStartTime: Date?
+    private var fingersCrossedCount: Int = 0
+
+    // Both hands 🤙 = aggressive delete (lines → select all)
+    private var bothThumbPinkyStartTime: Date?
+    private var bothThumbPinkyLastRepeat: Date = .distantPast
+    private var bothThumbPinkyCount: Int = 0
+
     // Speech
     private let speechEngine = SpeechEngine()
     private var bothFistsStartTime: Date?
@@ -138,6 +147,99 @@ final class TrackingCoordinator {
             self?.appState.rightHandDetected = rightHand != nil
             self?.appState.debugInfo = leftHand != nil || rightHand != nil
                 ? "L:\(lFingers)f R:\(rFingers)f" : ""
+        }
+
+        // === CROSSED INDEX FINGERS (X) = Ctrl+C ×2 ===
+        if let lh = leftHand, let rh = rightHand, isFingersCrossed(lh, rh) {
+            if fingersCrossedStartTime == nil {
+                fingersCrossedStartTime = Date()
+                fingersCrossedCount = 0
+            }
+            let elapsed = Date().timeIntervalSince(fingersCrossedStartTime!)
+
+            if fingersCrossedCount == 0 {
+                let progress = min(1.0, elapsed / holdDuration)
+                DispatchQueue.main.async { [weak self] in
+                    self?.appState.progressMode = .countdown
+                    self?.appState.gestureLabel = "✕ Cancel"
+                    self?.appState.gestureProgress = progress
+                }
+                if elapsed >= holdDuration {
+                    fingersCrossedCount = 1
+                    pressKeyWithModifiers(keyCode: UInt16(kVK_ANSI_C), control: true)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+                        self?.pressKeyWithModifiers(keyCode: UInt16(kVK_ANSI_C), control: true)
+                    }
+                    DispatchQueue.main.async { [weak self] in
+                        self?.appState.gestureLabel = "✕ Ctrl+C ×2"
+                        self?.appState.gestureProgress = 0
+                    }
+                    startSwipeCooldownProgress()
+                }
+            }
+            return
+        } else {
+            fingersCrossedStartTime = nil
+            fingersCrossedCount = 0
+        }
+
+        // === BOTH HANDS 🤙 = aggressive delete (lines, then select all) ===
+        let bothThumbPinky = leftHand != nil && rightHand != nil
+            && isThumbPinky(leftHand!) && isThumbPinky(rightHand!)
+
+        if bothThumbPinky {
+            if bothThumbPinkyStartTime == nil {
+                bothThumbPinkyStartTime = Date()
+                bothThumbPinkyCount = 0
+            }
+            let now = Date()
+            let elapsed = now.timeIntervalSince(bothThumbPinkyStartTime!)
+
+            // 1s countdown before firing
+            if elapsed < holdDuration {
+                let progress = min(1.0, elapsed / holdDuration)
+                DispatchQueue.main.async { [weak self] in
+                    self?.appState.progressMode = .countdown
+                    self?.appState.gestureLabel = "🗑🗑 Lines"
+                    self?.appState.gestureProgress = progress
+                }
+                return
+            }
+
+            // After countdown: delete lines, then escalate to select-all after 5s
+            let activeElapsed = elapsed - holdDuration
+            let isSelectAll = activeElapsed >= 5.0
+            let interval: TimeInterval = isSelectAll ? 0.5 : 0.4
+
+            // Warning countdown — tell user ALL is coming
+            if !isSelectAll {
+                let warningProgress = min(1.0, activeElapsed / 5.0)
+                DispatchQueue.main.async { [weak self] in
+                    self?.appState.progressMode = .countdown
+                    self?.appState.gestureProgress = warningProgress
+                    self?.appState.gestureLabel = "⚠️ Line → ALL"
+                }
+            }
+
+            if now.timeIntervalSince(bothThumbPinkyLastRepeat) >= interval {
+                bothThumbPinkyLastRepeat = now
+                bothThumbPinkyCount += 1
+                if isSelectAll {
+                    pressKeyWithModifiers(keyCode: UInt16(kVK_ANSI_A), command: true)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
+                        self?.pressKey(keyCode: UInt16(kVK_Delete))
+                    }
+                    DispatchQueue.main.async { [weak self] in
+                        self?.appState.gestureLabel = "⚠️ DELETE ALL"
+                        self?.appState.gestureProgress = 0
+                    }
+                } else {
+                    pressKeyWithModifiers(keyCode: UInt16(kVK_Delete), command: true)
+                }
+            }
+            return
+        } else {
+            bothThumbPinkyStartTime = nil
         }
 
         // === SPEECH: both hands open (5 fingers) = start ===
@@ -254,24 +356,39 @@ final class TrackingCoordinator {
                 } else if rightDeleteFired {
                     let elapsed = now.timeIntervalSince(rightDeleteStartTime ?? now)
                     let interval: TimeInterval
-                    let deleteType: Int // 0=char, 1=word, 2=line
+                    let deleteType: Int // 0=char, 1=word, 2=line, 3=all
+                    let warningProgress: Double
 
                     if elapsed < 5.0 {
-                        // Phase 1: char by char, accelerate 0.5→0.1
                         interval = max(0.1, 0.5 - Double(deleteRepeatCount) * 0.1)
                         deleteType = 0
+                        warningProgress = elapsed / 5.0  // progress toward word phase
                     } else if elapsed < 8.0 {
-                        // Phase 2: word by word
                         interval = 0.3
                         deleteType = 1
+                        warningProgress = (elapsed - 5.0) / 3.0  // progress toward line phase
                     } else if elapsed < 11.0 {
-                        // Phase 3: line by line
                         interval = 0.4
                         deleteType = 2
+                        warningProgress = (elapsed - 8.0) / 3.0  // progress toward ALL
                     } else {
-                        // Phase 4: select all + delete
                         interval = 0.5
                         deleteType = 3
+                        warningProgress = 0
+                    }
+
+                    // Show warning progress — tell user what's coming next
+                    DispatchQueue.main.async { [weak self] in
+                        self?.appState.progressMode = .countdown
+                        let label: String
+                        switch deleteType {
+                        case 0: label = "🗑 Char → Word"
+                        case 1: label = "🗑 Word → Line"
+                        case 2: label = "⚠️ Line → ALL"
+                        default: label = "⚠️ DELETE ALL"
+                        }
+                        self?.appState.gestureLabel = label
+                        self?.appState.gestureProgress = warningProgress
                     }
 
                     if now.timeIntervalSince(rightDeleteLastRepeat) >= interval {
@@ -279,7 +396,6 @@ final class TrackingCoordinator {
                         deleteRepeatCount += 1
                         switch deleteType {
                         case 3:
-                            // Select all + delete
                             pressKeyWithModifiers(keyCode: UInt16(kVK_ANSI_A), command: true)
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
                                 self?.pressKey(keyCode: UInt16(kVK_Delete))
@@ -290,10 +406,6 @@ final class TrackingCoordinator {
                             pressKeyWithModifiers(keyCode: UInt16(kVK_Delete), option: true)
                         default:
                             pressKey(keyCode: UInt16(kVK_Delete))
-                        }
-                        DispatchQueue.main.async { [weak self] in
-                            let label = deleteType == 3 ? "🗑 ALL" : deleteType == 2 ? "🗑 Line..." : deleteType == 1 ? "🗑 Word..." : "🗑 Delete..."
-                            self?.appState.gestureLabel = label
                         }
                     }
                 }
@@ -439,6 +551,24 @@ final class TrackingCoordinator {
             }
         }
         return count
+    }
+
+    private func isFingersCrossed(_ left: VNHumanHandPoseObservation, _ right: VNHumanHandPoseObservation) -> Bool {
+        guard let lTip = try? left.recognizedPoint(.indexTip),
+              let rTip = try? right.recognizedPoint(.indexTip),
+              let lPIP = try? left.recognizedPoint(.indexPIP),
+              let rPIP = try? right.recognizedPoint(.indexPIP),
+              lTip.confidence > 0.3, rTip.confidence > 0.3,
+              lPIP.confidence > 0.3, rPIP.confidence > 0.3 else { return false }
+
+        // Tips must be close together
+        let tipDistance = hypot(lTip.location.x - rTip.location.x, lTip.location.y - rTip.location.y)
+        guard tipDistance < 0.1 else { return false }
+
+        // Fingers must point in opposing horizontal directions (forming an X)
+        let lDir = lTip.location.x - lPIP.location.x
+        let rDir = rTip.location.x - rPIP.location.x
+        return lDir * rDir < 0  // opposite signs = crossing
     }
 
     private func isThumbPinky(_ obs: VNHumanHandPoseObservation) -> Bool {

@@ -27,7 +27,7 @@ Raise both hands. Single-hand gestures are suppressed — only these combos fire
 🖐🖐 Both open    → Speech-to-text
 🖐+👆 Open+swipe  → Tab / Shift+Tab
 🤙🤙 Both thumb+pinky → Delete lines (escalates to select all)
-✕  Fingers cross → Ctrl+C (cancel)
+✕  Fingers cross → Ctrl+C ×2 (cancel/kill)
 ```
 
 ### Delete Behavior

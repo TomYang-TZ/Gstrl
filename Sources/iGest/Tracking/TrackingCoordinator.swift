@@ -10,6 +10,7 @@ final class TrackingCoordinator {
     private let speechController = SpeechController()
     private let cursorDrag = CursorDragController()
     private let scrollController = ScrollController()
+    private let pointingController = PointingController()
     private var lastClickTime: Date = .distantPast
 
     // Left hand gesture hold detection
@@ -249,11 +250,31 @@ final class TrackingCoordinator {
                     rightHandLabelActive = false
                 }
                 swipeDetector.process(rh, leftHand: leftHand)
+
+                if leftHand == nil && GestureClassifier.countExtendedFingers(rh) == 1 {
+                    if let status = pointingController.process(rh) {
+                        rightHandLabelActive = true
+                        DispatchQueue.main.async { [weak self] in
+                            self?.appState.gestureLabel = status.label
+                            if status.fired {
+                                self?.appState.gestureProgress = 0
+                            } else {
+                                self?.appState.progressMode = .countdown
+                                self?.appState.gestureProgress = status.progress
+                            }
+                        }
+                    } else {
+                        pointingController.reset()
+                    }
+                } else {
+                    pointingController.reset()
+                }
             }
         } else {
             deleteController.reset()
             cursorDrag.reset()
             swipeDetector.reset()
+            pointingController.reset()
             if Date() >= rightHandLabelUntil {
                 rightHandLabelActive = false
             }

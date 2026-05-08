@@ -77,17 +77,25 @@ struct DynamicIslandView: View {
             .padding(.horizontal, 16)
 
             if appState.gestureProgress > 0 {
-                GeometryReader { geo in
-                    RoundedRectangle(cornerRadius: 1.5)
-                        .fill(.white.opacity(0.12))
-                        .overlay(alignment: .leading) {
-                            RoundedRectangle(cornerRadius: 1.5)
-                                .fill(.white.opacity(0.85))
-                                .frame(width: geo.size.width * appState.gestureProgress)
-                                .animation(.linear(duration: 0.1), value: appState.gestureProgress)
-                        }
+                HStack(spacing: 4) {
+                    Text(appState.progressMode == .countdown ? "HOLD" : "COOL")
+                        .font(.system(size: 7, weight: .bold, design: .monospaced))
+                        .foregroundStyle(appState.progressMode == .countdown ? .orange.opacity(0.8) : .green.opacity(0.8))
+
+                    GeometryReader { geo in
+                        let barColor: Color = appState.progressMode == .countdown ? .orange : .green
+                        RoundedRectangle(cornerRadius: 1.5)
+                            .fill(.white.opacity(0.12))
+                            .overlay(alignment: appState.progressMode == .countdown ? .leading : .trailing) {
+                                RoundedRectangle(cornerRadius: 1.5)
+                                    .fill(barColor.opacity(0.9))
+                                    .frame(width: geo.size.width * appState.gestureProgress)
+                                    .animation(.linear(duration: 0.1), value: appState.gestureProgress)
+                            }
+                    }
+                    .frame(height: 3)
                 }
-                .frame(width: 180, height: 3)
+                .frame(width: 180)
             }
         }
     }

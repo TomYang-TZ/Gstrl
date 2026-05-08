@@ -12,6 +12,12 @@ final class AppState {
     var debugInfo: String = ""
     var gestureLabel: String = ""
     var gestureProgress: Double = 0.0
+    var progressMode: ProgressMode = .countdown
+
+    enum ProgressMode {
+        case countdown  // filling up to activate
+        case cooldown   // draining after action fired
+    }
 
     enum Sensitivity: String, CaseIterable, Equatable {
         case low, medium, high

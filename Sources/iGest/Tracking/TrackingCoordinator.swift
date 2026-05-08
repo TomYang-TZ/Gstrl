@@ -22,12 +22,14 @@ final class TrackingCoordinator {
     private var rightDeleteFired: Bool = false
     private var rightDeleteLastRepeat: Date = .distantPast
     private var deleteRepeatCount: Int = 0
+    private var rightThumbPinkyFrames: Int = 0
 
     // Left hand gesture hold detection
     private var leftGestureStartTime: Date?
     private var leftGestureValue: Int = -1
     private var leftGestureFired: Bool = false
     private let holdDuration: TimeInterval = 1.0
+    private var leftHandEntryFrames: Int = 0
 
     // Wave detection
     private var wavePositions: [(x: CGFloat, time: Date)] = []
@@ -43,6 +45,8 @@ final class TrackingCoordinator {
     private var rightHandLabelUntil: Date = .distantPast
     private var swipeVelocityAccum: CGPoint = .zero
     private var swipeAccumFrames: Int = 0
+    private var rightHandEntryFrames: Int = 0
+    private let handEntryGraceFrames: Int = 5
 
     // Speech
     private let speechEngine = SpeechEngine()
@@ -150,6 +154,7 @@ final class TrackingCoordinator {
                 if !speechActive {
                     let progress = min(1.0, elapsed / speechHoldDuration)
                     DispatchQueue.main.async { [weak self] in
+                        self?.appState.progressMode = .countdown
                         self?.appState.gestureLabel = "🎤 Speech"
                         self?.appState.gestureProgress = progress
                     }
@@ -193,6 +198,8 @@ final class TrackingCoordinator {
             let rThumbPinky = isThumbPinky(rh) && leftHand == nil
 
             if isPinching(rh) {
+                rightThumbPinkyFrames = 0
+                rightHandEntryFrames = 0
                 rightIndexPrev = nil
                 swipeVelocityAccum = .zero
                 swipeAccumFrames = 0
@@ -212,11 +219,15 @@ final class TrackingCoordinator {
                     }
                 }
             } else if rThumbPinky {
+                rightThumbPinkyFrames += 1
+                rightHandEntryFrames = 0
                 rightHandAnchor = nil
                 cursorAnchor = nil
                 rightIndexPrev = nil
                 swipeVelocityAccum = .zero
                 swipeAccumFrames = 0
+                // Require 5 consecutive frames to confirm it's intentional (not a swipe artifact)
+                guard rightThumbPinkyFrames >= 5 else { return }
                 rightHandLabelActive = true
                 if rightDeleteStartTime == nil {
                     rightDeleteStartTime = Date()
@@ -226,6 +237,7 @@ final class TrackingCoordinator {
                     let elapsed = now.timeIntervalSince(start)
                     let progress = min(1.0, elapsed / holdDuration)
                     DispatchQueue.main.async { [weak self] in
+                        self?.appState.progressMode = .countdown
                         self?.appState.gestureLabel = "🗑 Delete"
                         self?.appState.gestureProgress = progress
                     }
@@ -286,6 +298,7 @@ final class TrackingCoordinator {
                     }
                 }
             } else {
+                rightThumbPinkyFrames = 0
                 rightHandAnchor = nil
                 cursorAnchor = nil
                 rightDeleteStartTime = nil
@@ -296,11 +309,13 @@ final class TrackingCoordinator {
                 detectSwipe(rh, leftHand: leftHand)
             }
         } else {
+            rightThumbPinkyFrames = 0
             rightHandAnchor = nil
             cursorAnchor = nil
             rightIndexPrev = nil
             swipeVelocityAccum = .zero
             swipeAccumFrames = 0
+            rightHandEntryFrames = 0
             rightDeleteStartTime = nil
             rightDeleteFired = false
             if Date() >= rightHandLabelUntil {
@@ -310,7 +325,9 @@ final class TrackingCoordinator {
 
         // === LEFT HAND ===
         if let lh = leftHand {
-            // Pinch = click (only when right hand is NOT detected)
+            leftHandEntryFrames += 1
+            guard leftHandEntryFrames > handEntryGraceFrames else { return }
+
             if isPinching(lh) {
                 resetLeftGesture()
                 let now = Date()
@@ -366,6 +383,7 @@ final class TrackingCoordinator {
                         let elapsed = Date().timeIntervalSince(start)
                         let progress = min(1.0, elapsed / holdDuration)
                         DispatchQueue.main.async { [weak self] in
+                            self?.appState.progressMode = .countdown
                             self?.appState.gestureProgress = progress
                         }
                         if elapsed >= holdDuration {
@@ -387,6 +405,7 @@ final class TrackingCoordinator {
                 }
             }
         } else {
+            leftHandEntryFrames = 0
             resetLeftGesture()
             let rightLabelActive = self.rightHandLabelActive
             DispatchQueue.main.async { [weak self] in
@@ -488,10 +507,14 @@ final class TrackingCoordinator {
         let leftOpen = leftHand != nil && countExtendedFingers(leftHand!) >= 4
 
         // Only allow swipes when: no left hand, or left hand is open (for Tab combo)
-        // Block swipes when left hand is doing something else (fist, fingers, etc.)
         if leftHand != nil && !leftOpen { return }
 
-        // Use wrist as fallback anchor — index tip confidence drops during fast downward motion
+        // Grace period: ignore first few frames when hand enters view
+        rightHandEntryFrames += 1
+        if rightHandEntryFrames <= handEntryGraceFrames {
+            return
+        }
+
         guard let indexTip = try? obs.recognizedPoint(.indexTip),
               indexTip.confidence > 0.15 else { return }
 
@@ -616,6 +639,7 @@ final class TrackingCoordinator {
         let duration = swipeCooldown
         rightHandLabelUntil = startTime.addingTimeInterval(duration)
         DispatchQueue.main.async { [weak self] in
+            self?.appState.progressMode = .cooldown
             self?.appState.gestureProgress = 1.0
         }
         func tick() {

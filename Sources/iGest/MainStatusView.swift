@@ -34,10 +34,15 @@ struct MainStatusView: View {
                         Text(appState.gestureLabel)
                             .font(.system(size: 32, weight: .bold, design: .rounded))
                         if appState.gestureProgress > 0 {
-                            ProgressView(value: appState.gestureProgress)
-                                .tint(.orange)
-                                .frame(width: 150)
-                                .animation(.linear(duration: 0.1), value: appState.gestureProgress)
+                            HStack(spacing: 4) {
+                                Text(appState.progressMode == .countdown ? "HOLD" : "COOL")
+                                    .font(.system(size: 8, weight: .bold, design: .monospaced))
+                                    .foregroundStyle(appState.progressMode == .countdown ? .orange : .green)
+                                ProgressView(value: appState.gestureProgress)
+                                    .tint(appState.progressMode == .countdown ? .orange : .green)
+                                    .frame(width: 120)
+                                    .animation(.linear(duration: 0.1), value: appState.gestureProgress)
+                            }
                         }
                     }
                 }

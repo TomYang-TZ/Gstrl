@@ -88,7 +88,7 @@ final class SpeechController {
 
             let combined = bufferedPrefix! + " " + newChars
             switch VoiceCommandParser.parse(newText: combined) {
-            case .command(let action, _):
+            case .command(let action, _, let displayName):
                 InputDispatch.perform(action)
                 lastTypedLength = text.count
                 // Type any text that was before the prefix
@@ -96,7 +96,7 @@ final class SpeechController {
                     speechEngine.typeText(textBefore)
                 }
                 cancelBuffer()
-                self.onLabelUpdate?("🎤 \(text)")
+                flashCommandFeedback(displayName)
                 return
             case .partial(_, _):
                 // Still partial — re-buffer with updated state
@@ -117,7 +117,7 @@ final class SpeechController {
 
         // No buffer active — normal parsing
         switch VoiceCommandParser.parse(newText: newChars) {
-        case .command(let action, let wordCount):
+        case .command(let action, let wordCount, let displayName):
             // Type any text before the command words
             let words = newChars.split(separator: " ", omittingEmptySubsequences: true)
             if words.count > wordCount {
@@ -126,7 +126,7 @@ final class SpeechController {
             }
             InputDispatch.perform(action)
             lastTypedLength = text.count
-            self.onLabelUpdate?("🎤 \(text)")
+            flashCommandFeedback(displayName)
         case .partial(let prefix, let wordCount):
             // Buffer the prefix, type any text before it
             let words = newChars.split(separator: " ", omittingEmptySubsequences: true)
@@ -145,6 +145,13 @@ final class SpeechController {
             speechEngine.typeText(newChars)
             lastTypedLength = text.count
             self.onLabelUpdate?("🎤 \(text)")
+        }
+    }
+
+    private func flashCommandFeedback(_ displayName: String) {
+        onLabelUpdate?("⌨️ \(displayName)")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            self?.onLabelUpdate?("🎤 Listening...")
         }
     }
 

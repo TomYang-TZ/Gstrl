@@ -2,7 +2,7 @@ import Foundation
 import Carbon.HIToolbox
 
 enum VoiceCommandResult {
-    case command(GestureAction, wordCount: Int)
+    case command(GestureAction, wordCount: Int, displayName: String)
     case partial(prefix: String, wordCount: Int)
     case text
 }
@@ -27,7 +27,37 @@ enum VoiceCommandParser {
         "a": 0,
     ]
 
+    private static let pressDisplayNames: [String: String] = [
+        "up": "↑ Up Arrow",
+        "down": "↓ Down Arrow",
+        "left": "← Left Arrow",
+        "right": "→ Right Arrow",
+        "delete": "⌫ Delete",
+        "enter": "↵ Enter",
+        "tab": "⇥ Tab",
+        "escape": "⎋ Escape",
+    ]
+
+    private static let commandDisplayNames: [String: String] = [
+        "tab": "⌘⇥ Cmd+Tab",
+        "z": "⌘Z Undo",
+        "c": "⌘C Copy",
+        "v": "⌘V Paste",
+        "a": "⌘A Select All",
+    ]
+
     private static let prefixes: Set<String> = ["press", "command"]
+
+    static func displayName(prefix: String, keyword: String) -> String? {
+        let p = prefix.lowercased()
+        let k = keyword.lowercased()
+        if p == "press" {
+            return pressDisplayNames[k]
+        } else if p == "command" {
+            return commandDisplayNames[k]
+        }
+        return nil
+    }
 
     static func parse(newText: String) -> VoiceCommandResult {
         let words = newText.split(separator: " ", omittingEmptySubsequences: true)
@@ -39,11 +69,13 @@ enum VoiceCommandParser {
             let keyword = words[words.count - 1].lowercased()
 
             if prefix == "press", let keyCode = pressCommands[keyword] {
-                return .command(.pressKey(keyCode), wordCount: 2)
+                let name = pressDisplayNames[keyword] ?? keyword
+                return .command(.pressKey(keyCode), wordCount: 2, displayName: name)
             }
 
             if prefix == "command", let keyCode = commandKeys[keyword] {
-                return .command(.pressModifiedKey(keyCode, shift: false, control: false, option: false, command: true), wordCount: 2)
+                let name = commandDisplayNames[keyword] ?? keyword
+                return .command(.pressModifiedKey(keyCode, shift: false, control: false, option: false, command: true), wordCount: 2, displayName: name)
             }
         }
 

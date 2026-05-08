@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="Sources/Gstrl/Resources/AppIcon.iconset/icon_256x256.png" width="128" alt="Gstrl icon">
+  <img src="docs/banner.png" width="300" alt="Gstrl icon">
 </p>
 
 # Gstrl 🤌

@@ -44,11 +44,15 @@ While speech-to-text is active, say "press" + keyword to execute actions instead
 
 | Command | Action |
 |---------|--------|
-| press down/up/left/right | Arrow keys |
-| press enter / press tab | Enter / Tab |
-| press delete / press escape | Backspace / Escape |
-| command tab/z/c/v/a | Cmd+Tab / Undo / Copy / Paste / Select All |
-| command click | Cmd+Click (at current cursor position) |
+| press up/down/left/right | Arrow keys |
+| press enter / press tab / press escape | Enter / Tab / Escape |
+| press delete / press click | Backspace / Click |
+| command [any letter] | Cmd+key (e.g. command t, command w) |
+| command click | Cmd+Click |
+| shift left/right/up/down | Select text |
+| option left/right/delete | Jump/delete by word |
+| command shift [key] | Cmd+Shift+key (e.g. command shift z = redo) |
+| shift option [key] | Shift+Option+key |
 
 ### "Pro" tip: Keyboard + Gesture
 

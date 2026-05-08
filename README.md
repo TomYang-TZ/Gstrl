@@ -6,30 +6,26 @@ iGest turns your webcam into a gesture interface for controlling AI agents. Pinc
 
 Built with Apple Vision's real-time hand pose detection. No special hardware required.
 
-## How It Works
+## Gestures
 
-### Single Hand (left or right alone)
+```
+LEFT HAND 🖐                          RIGHT HAND 🖐
+─────────────────────────────         ─────────────────────────────
+👌 Pinch         → Click              👌 Pinch+move   → Drag cursor
+☝️ 1-3 fingers   → Number 1-3         🤙 Thumb+pinky  → Delete ⌫
+✊ Fist           → Enter ⏎               (accelerates: char→word→line→all)
+🤙 Thumb+pinky   → Escape ⎋           👆 Swipe ↑↓     → Arrow Up/Down
+                                      👆 Swipe ←→     → Arrow Left/Right
 
-| Gesture | Action |
-|---------|--------|
-| **Left pinch** (thumb + index) | Click |
-| **Right pinch + move** | Drag cursor (relative) |
-| **Left 1-3 fingers** (hold 1s) | Press number key 1-3 |
-| **Left fist** (hold 1s) | Enter |
-| **Left 🤙** thumb+pinky (hold 1s) | Escape |
-| **Right 🤙** thumb+pinky (hold 1s) | Delete (accelerates: chars → words → lines → select all) |
-| **Right swipe ↑↓** | Up/Down arrow |
-| **Right swipe ←→** | Left/Right arrow |
+BOTH HANDS 🖐🖐
+─────────────────────────────
+🖐+👆 Left open + Right swipe ←→  → Tab / Shift+Tab
+🖐🖐  Both open (hold 1s)          → Speech-to-text 🎤
+     Change gesture                → Stop speech
+```
 
-### Two Hands
-
-| Gesture | Action |
-|---------|--------|
-| **Left open + right swipe ←→** | Shift+Tab / Tab |
-| **Both hands open** (hold 1s) | Speech-to-text |
-| **Change gesture** | Stop speech |
-
-Single-hand hold gestures (numbers, enter, escape) are disabled when both hands are detected to prevent accidental triggers.
+> **Hold gestures** require 1s to activate (progress bar fills up).
+> Single-hand holds are disabled when both hands are visible.
 
 ## Dynamic Island
 

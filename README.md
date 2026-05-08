@@ -4,7 +4,7 @@
 
 **Gstrl** adds gesture and voice control to macOS. **Pinch to move cursor. Swipe for arrows. Circle to screenshot. Speak to run commands.** All on-device via Apple Vision + SFSpeechRecognizer.
 
-For when you're lying back, presenting, or just tired of reaching across your desk.
+For when you're lying back, presenting, tired of gripping a mouse all day, or just tired of reaching across your desk.
 
 ## Gestures & Voice
 

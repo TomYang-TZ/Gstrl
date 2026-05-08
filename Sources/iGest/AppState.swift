@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 @Observable
 final class AppState {
@@ -13,6 +14,7 @@ final class AppState {
     var gestureLabel: String = ""
     var gestureProgress: Double = 0.0
     var progressMode: ProgressMode = .countdown
+    var screenshotPreview: NSImage? = nil
 
     enum ProgressMode {
         case countdown  // filling up to activate

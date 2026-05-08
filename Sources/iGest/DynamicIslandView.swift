@@ -15,41 +15,39 @@ struct DynamicIslandView: View {
     }
 
     var body: some View {
+        VStack(spacing: 8) {
+            islandContent
+                .onTapGesture { onToggle() }
+
+            if let preview = appState.screenshotPreview {
+                screenshotThumbnail(preview)
+                    .transition(.scale.combined(with: .opacity))
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .animation(.spring(response: 0.4, dampingFraction: 0.82), value: isExpanded)
+        .animation(.spring(response: 0.35, dampingFraction: 0.8), value: appState.screenshotPreview != nil)
+    }
+
+    private func screenshotThumbnail(_ image: NSImage) -> some View {
+        Image(nsImage: image)
+            .resizable()
+            .aspectRatio(contentMode: .fit)
+            .frame(maxWidth: 240, maxHeight: 160)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .modifier(LiquidGlassModifier())
+            .padding(4)
+    }
+
+    private var islandContent: some View {
         ZStack {
-            islandBackground
             compactContent
                 .opacity(isExpanded ? 0 : 1)
             expandedContent
                 .opacity(isExpanded ? 1 : 0)
         }
         .frame(width: contentSize.width, height: contentSize.height)
-        .clipShape(Capsule())
-        .shadow(color: .black.opacity(0.4), radius: 12, y: 4)
-        .shadow(color: .black.opacity(0.15), radius: 2, y: 1)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .animation(.spring(response: 0.4, dampingFraction: 0.82), value: isExpanded)
-        .onTapGesture { onToggle() }
-    }
-
-    private var islandBackground: some View {
-        ZStack {
-            // Deep black base matching Apple's Dynamic Island
-            Color.black
-
-            // Subtle inner glow at edges when active
-            Capsule()
-                .strokeBorder(
-                    LinearGradient(
-                        colors: [
-                            .white.opacity(appState.isEnabled ? 0.12 : 0.06),
-                            .white.opacity(0.02)
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    ),
-                    lineWidth: 0.5
-                )
-        }
+        .modifier(LiquidGlassModifier())
     }
 
     private var compactContent: some View {
@@ -76,24 +74,20 @@ struct DynamicIslandView: View {
             Circle()
                 .fill(appState.isEnabled
                     ? Color.green
-                    : Color.white.opacity(0.25))
+                    : Color.secondary.opacity(0.4))
                 .frame(width: 6, height: 6)
-                .shadow(color: appState.isEnabled ? .green.opacity(0.6) : .clear, radius: 4)
 
-            if appState.isEnabled {
-                Text("ON")
-                    .font(.system(size: 9, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.7))
-            }
+            Text(appState.isEnabled ? "ON" : "OFF")
+                .font(.system(size: 9, weight: .bold, design: .rounded))
+                .foregroundStyle(.primary.opacity(0.7))
         }
         .animation(.easeInOut(duration: 0.25), value: appState.isEnabled)
     }
 
     private func handIndicator(detected: Bool, symbol: String, color: Color) -> some View {
         Image(systemName: detected ? symbol : "hand.raised")
-            .font(.system(size: 12, weight: .medium))
-            .foregroundStyle(detected ? color : .white.opacity(0.2))
-            .shadow(color: detected ? color.opacity(0.5) : .clear, radius: 3)
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundStyle(detected ? color : .primary.opacity(0.35))
             .animation(.easeInOut(duration: 0.2), value: detected)
     }
 
@@ -108,7 +102,7 @@ struct DynamicIslandView: View {
 
                 Text(appState.gestureLabel)
                     .font(.system(size: 15, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(.primary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
                     .frame(maxWidth: .infinity)
@@ -153,3 +147,22 @@ struct DynamicIslandView: View {
         .frame(width: 200, height: 3)
     }
 }
+
+struct LiquidGlassModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(macOS 26.0, *) {
+            content.glassEffect(.regular, in: .capsule)
+        } else {
+            content
+                .environment(\.colorScheme, .dark)
+                .background {
+                    ZStack {
+                        Rectangle().fill(.thinMaterial)
+                        Color.black.opacity(0.5)
+                    }
+                }
+                .clipShape(Capsule())
+        }
+    }
+}
+

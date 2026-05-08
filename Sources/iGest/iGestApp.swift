@@ -80,9 +80,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             .ignoresCycle
         ]
 
-        let hostView = NSHostingView(rootView: DynamicIslandView(appState: appState, onToggle: { [weak self] in
-            self?.toggleTracking()
-        }))
+        let hostView = NSHostingView(rootView:
+            DynamicIslandView(appState: appState, onToggle: { [weak self] in
+                self?.toggleTracking()
+            })
+        )
         hostView.frame = panel.contentView?.bounds ?? .zero
         hostView.autoresizingMask = [.width, .height]
         panel.contentView?.addSubview(hostView)

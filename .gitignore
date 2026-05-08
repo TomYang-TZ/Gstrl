@@ -6,6 +6,6 @@ DerivedData/
 .swiftpm/
 .superpowers/
 .venv/
-iGest.app/
-iGest.xcodeproj/
+Gstrl.app/
+*.xcodeproj/
 default.profraw

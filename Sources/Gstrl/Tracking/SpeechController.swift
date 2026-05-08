@@ -15,6 +15,7 @@ final class SpeechController {
     private static let partialWaitDelay: TimeInterval = 0.8
 
     var onLabelUpdate: ((String) -> Void)?
+    private var commandFlashUntil: Date = .distantPast
 
     func reset() {
         if startTime != nil || isActive {
@@ -72,9 +73,9 @@ final class SpeechController {
         pendingText = text
         debounceWork?.cancel()
 
-        // Show preview in Dynamic Island immediately
+        // Show preview in Dynamic Island (skip if command flash is active)
         let delta = String(text.dropFirst(committedLen))
-        if !delta.trimmingCharacters(in: .whitespaces).isEmpty {
+        if !delta.trimmingCharacters(in: .whitespaces).isEmpty && Date() > commandFlashUntil {
             onLabelUpdate?("🎤 \(text)")
         }
 
@@ -147,8 +148,9 @@ final class SpeechController {
     }
 
     private func flashCommandFeedback(_ displayName: String) {
+        commandFlashUntil = Date().addingTimeInterval(1.0)
         onLabelUpdate?("⌨️ \(displayName)")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             self?.onLabelUpdate?("🎤 Listening...")
         }
     }

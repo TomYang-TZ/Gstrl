@@ -79,14 +79,21 @@ enum VoiceCommandParser {
         "click": "⌘ Cmd+Click",
     ]
 
-    private static let modifiers: Set<String> = ["shift", "option", "alt"]
+    private static let shiftAliases: Set<String> = ["shift", "shipped", "chef", "shaft", "swift"]
+    private static let optionAliases: Set<String> = ["option", "optional", "alt", "opt"]
 
     private static func isModifier(_ word: String) -> Bool {
-        modifiers.contains(word)
+        shiftAliases.contains(word) || optionAliases.contains(word)
     }
 
-    private static let pressAliases: Set<String> = ["press", "pres", "prex"]
-    private static let commandAliases: Set<String> = ["command", "commend", "commence", "come and", "comet"]
+    private static func normalizeModifier(_ word: String) -> String? {
+        if shiftAliases.contains(word) { return "shift" }
+        if optionAliases.contains(word) { return "option" }
+        return nil
+    }
+
+    private static let pressAliases: Set<String> = ["press", "pres", "prex", "breast", "rest"]
+    private static let commandAliases: Set<String> = ["command", "commend", "commence", "comet", "comment", "come in", "come on", "common"]
 
     private static func normalizePrefix(_ word: String) -> String? {
         let w = word.lowercased()
@@ -119,9 +126,9 @@ enum VoiceCommandParser {
             if normalizePrefix(w1) == "command" && isModifier(w2) {
                 let keyCode = pressCommands[keyword] ?? commandKeyCode(keyword)
                 if let keyCode, keyCode != 0xFF {
-                    var shift = false, option = false
-                    if w2 == "shift" { shift = true }
-                    if w2 == "option" || w2 == "alt" { option = true }
+                    let mod = normalizeModifier(w2)
+                    let shift = mod == "shift"
+                    let option = mod == "option"
                     let name = "⌘\(shift ? "⇧" : "")\(option ? "⌥" : "")\(keyword)"
                     return .command(.pressModifiedKey(keyCode, shift: shift, control: false, option: option, command: true), wordCount: 3, displayName: name)
                 }

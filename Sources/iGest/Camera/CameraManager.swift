@@ -43,6 +43,16 @@ final class CameraManager: NSObject, @unchecked Sendable {
         if captureSession.canAddOutput(output) {
             captureSession.addOutput(output)
         }
+
+        // Target 60fps via connection (device-level setting crashes on DAL devices)
+        if let connection = output.connection(with: .video) {
+            if connection.isVideoMinFrameDurationSupported {
+                connection.videoMinFrameDuration = CMTime(value: 1, timescale: 60)
+            }
+            if connection.isVideoMaxFrameDurationSupported {
+                connection.videoMaxFrameDuration = CMTime(value: 1, timescale: 60)
+            }
+        }
     }
 }
 

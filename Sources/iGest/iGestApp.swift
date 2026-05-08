@@ -14,7 +14,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         createMainWindow()
         createIslandPanel()
-        createMenuBarItem()
         requestAllPermissions()
     }
 
@@ -33,6 +32,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         AVCaptureDevice.requestAccess(for: .video) { _ in }
         AVCaptureDevice.requestAccess(for: .audio) { _ in }
         SFSpeechRecognizer.requestAuthorization { _ in }
+
+        if !CGPreflightScreenCaptureAccess() {
+            CGRequestScreenCaptureAccess()
+        }
+
+        if !AXIsProcessTrusted() {
+            let options = [kAXTrustedCheckOptionPrompt.takeRetainedValue(): true] as CFDictionary
+            AXIsProcessTrustedWithOptions(options)
+        }
     }
 
     private func createMainWindow() {
@@ -95,7 +103,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func createMenuBarItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        statusItem?.button?.image = NSImage(systemSymbolName: "hand.raised", accessibilityDescription: "iGest")
+        statusItem?.button?.image = NSImage(systemSymbolName: "dot.radiowaves.left.and.right", accessibilityDescription: "iGest")
 
         let menu = NSMenu()
         menu.addItem(NSMenuItem(title: "Toggle", action: #selector(toggleTracking), keyEquivalent: ""))

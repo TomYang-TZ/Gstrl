@@ -189,6 +189,15 @@ enum VoiceCommandParser {
             }
         }
 
+        // Check for partial: "command shift" / "command option" waiting for keyword
+        if words.count >= 2 {
+            let secondLast = words[words.count - 2].lowercased()
+            let last = words[words.count - 1].lowercased()
+            if normalizePrefix(secondLast) == "command" && isModifier(last) {
+                return .partial(prefix: "\(secondLast) \(last)", wordCount: 2)
+            }
+        }
+
         // Check for partial prefix at end (just "press" or "command" with no keyword yet)
         let lastWord = words[words.count - 1].lowercased()
         if normalizePrefix(lastWord) != nil {

@@ -15,7 +15,7 @@ final class SpeechController {
     private static let partialWaitDelay: TimeInterval = 0.8
 
     var onLabelUpdate: ((String) -> Void)?
-    private var commandFlashUntil: Date = .distantPast
+    var commandFlashUntil: Date = .distantPast
 
     func reset() {
         if startTime != nil || isActive {

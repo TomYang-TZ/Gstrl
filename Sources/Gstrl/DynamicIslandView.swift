@@ -8,8 +8,15 @@ struct DynamicIslandView: View {
         !appState.gestureLabel.isEmpty
     }
 
+    private var isSpeechMode: Bool {
+        appState.gestureLabel.contains("🎤") || appState.gestureLabel.contains("⌨️")
+    }
+
     private var contentSize: CGSize {
-        isExpanded
+        if isSpeechMode {
+            return CGSize(width: 320, height: 60)
+        }
+        return isExpanded
             ? CGSize(width: 280, height: 60)
             : CGSize(width: 160, height: 36)
     }

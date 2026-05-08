@@ -269,9 +269,13 @@ final class TrackingCoordinator {
         if bothFists {
             let status = speechController.process()
             DispatchQueue.main.async { [weak self] in
-                self?.appState.progressMode = status.progressMode
-                self?.appState.gestureLabel = status.label
-                self?.appState.gestureProgress = status.progress
+                guard let self else { return }
+                self.appState.progressMode = status.progressMode
+                self.appState.gestureProgress = status.progress
+                // Don't overwrite command flash display
+                if Date() > self.speechController.commandFlashUntil {
+                    self.appState.gestureLabel = status.label
+                }
             }
             return
         } else {

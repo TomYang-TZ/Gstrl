@@ -47,7 +47,8 @@ While speech-to-text is active, say "press" + keyword to execute actions instead
 | press down/up/left/right | Arrow keys |
 | press enter / press tab | Enter / Tab |
 | press delete / press escape | Backspace / Escape |
-| command tab/z/c/v | Cmd+Tab / Undo / Copy / Paste |
+| command tab/z/c/v/a | Cmd+Tab / Undo / Copy / Paste / Select All |
+| command click | Cmd+Click (at current cursor position) |
 
 ### Keyboard + Gesture Combos
 
@@ -55,10 +56,10 @@ Hold any modifier key on your keyboard and gesture actions inherit it automatica
 
 | Hold on keyboard | Gesture | Result |
 |-----------------|---------|--------|
-| Cmd | Pinch (click) | Cmd+Click |
 | Shift | Swipe right | Shift+Right (select text) |
 | Cmd | Swipe left | Cmd+Left (back in browser) |
-| Option | Pinch (click) | Option+Click |
+| Cmd+Option | Swipe down | Cmd+Option+Down |
+| Shift | Swipe down | Shift+Down (select line) |
 
 ## Dynamic Island
 

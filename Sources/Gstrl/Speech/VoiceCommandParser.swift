@@ -36,6 +36,7 @@ enum VoiceCommandParser {
         "v": 9,
         "a": 0,
         "delete": UInt16(kVK_Delete),
+        "click": 0xFF,
     ]
 
     private static let pressDisplayNames: [String: String] = [
@@ -66,6 +67,7 @@ enum VoiceCommandParser {
         "v": "⌘V Paste",
         "a": "⌘A Select All",
         "delete": "⌘⌫ Cmd+Delete",
+        "click": "⌘ Cmd+Click",
     ]
 
     private static let pressAliases: Set<String> = ["press", "pres", "prex"]
@@ -103,8 +105,12 @@ enum VoiceCommandParser {
                     let name = pressDisplayNames[keyword] ?? keyword
                     return .command(.pressKey(keyCode), wordCount: 2, displayName: name)
                 }
-                if normalized == "command", let keyCode = commandKeys[keyword] {
+                if normalized == "command", commandKeys[keyword] != nil {
                     let name = commandDisplayNames[keyword] ?? keyword
+                    if keyword == "click" {
+                        return .command(.commandClick, wordCount: 2, displayName: name)
+                    }
+                    let keyCode = commandKeys[keyword]!
                     return .command(.pressModifiedKey(keyCode, shift: false, control: false, option: false, command: true), wordCount: 2, displayName: name)
                 }
             }

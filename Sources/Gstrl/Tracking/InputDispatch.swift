@@ -7,6 +7,7 @@ enum GestureAction {
     case pressModifiedKey(UInt16, shift: Bool, control: Bool, option: Bool, command: Bool)
     case click
     case rightClick
+    case commandClick
 }
 
 enum InputDispatch {
@@ -31,6 +32,8 @@ enum InputDispatch {
             postClick(button: .left, modifiers: mods)
         case .rightClick:
             postClick(button: .right, modifiers: mods)
+        case .commandClick:
+            postClick(button: .left, modifiers: mods.union(.maskCommand))
         }
     }
 

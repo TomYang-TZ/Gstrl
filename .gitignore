@@ -3,5 +3,8 @@
 xcuserdata/
 DerivedData/
 *.xcworkspace
+.swiftpm/
 .superpowers/
 .venv/
+iGest.app/
+iGest.xcodeproj/

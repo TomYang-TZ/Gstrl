@@ -73,11 +73,7 @@ final class SpeechController {
         pendingText = text
         debounceWork?.cancel()
 
-        // Show preview in Dynamic Island (skip if command flash is active)
         let delta = String(text.dropFirst(committedLen))
-        if !delta.trimmingCharacters(in: .whitespaces).isEmpty && Date() > commandFlashUntil {
-            onLabelUpdate?("🎤 \(text)")
-        }
 
         let work = DispatchWorkItem { [weak self] in
             self?.commitPendingText()
@@ -132,7 +128,6 @@ final class SpeechController {
         case .text:
             speechEngine.typeText(delta)
             committedLen = text.count
-            onLabelUpdate?("🎤 \(text)")
         }
     }
 
@@ -144,7 +139,6 @@ final class SpeechController {
         speechEngine.typeText(delta)
         flushedPrefix = delta.trimmingCharacters(in: .whitespaces)
         committedLen = text.count
-        onLabelUpdate?("🎤 \(text)")
     }
 
     private func flashCommandFeedback(_ displayName: String) {

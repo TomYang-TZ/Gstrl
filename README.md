@@ -64,6 +64,3 @@ Or manually:
 - CGEvent for input simulation
 - Velocity-based swipe detection with return-to-origin filtering
 
-## Keywords
-
-hand gesture recognition macOS, webcam hand tracking, hands-free computer control, touchless Mac input, accessibility gesture control, Apple Vision hand pose, gesture-to-keyboard, air gesture mouse control, RSI-friendly input, macOS hand gesture app

@@ -53,7 +53,11 @@ struct MainStatusView: View {
 
                 Divider()
 
-                gestureReferenceView
+                DisclosureGroup("Gestures") {
+                    gestureReferenceView
+                }
+                .font(.caption.bold())
+                .foregroundStyle(.secondary)
             }
 
             Button(appState.isEnabled ? "Disable" : "Enable") {
@@ -67,10 +71,6 @@ struct MainStatusView: View {
 
     private var gestureReferenceView: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Gestures")
-                .font(.caption.bold())
-                .foregroundStyle(.secondary)
-
             Group {
                 Text("LEFT HAND").font(.system(.caption2, design: .monospaced)).foregroundStyle(.orange)
                 gestureRow("👌 Pinch", "Click")

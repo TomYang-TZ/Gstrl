@@ -5,10 +5,11 @@ import AppKit
 
 final class SpeechEngine {
     private var recognizer: SFSpeechRecognizer?
-    private var audioEngine = AVAudioEngine()
+    private var audioEngine: AVAudioEngine?
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var recognitionTask: SFSpeechRecognitionTask?
     private(set) var isListening = false
+    private let queue = DispatchQueue(label: "com.igest.speech")
     var onResult: ((String) -> Void)?
 
     init() {
@@ -16,6 +17,10 @@ final class SpeechEngine {
     }
 
     func startListening() {
+        queue.sync { self._startListening() }
+    }
+
+    private func _startListening() {
         guard !isListening else { return }
         guard let recognizer, recognizer.isAvailable else {
             NSLog("iGest: Speech recognizer not available")
@@ -23,24 +28,38 @@ final class SpeechEngine {
         }
 
         isListening = true
-        NSLog("iGest: Speech listening started")
+
+        let engine = AVAudioEngine()
+        self.audioEngine = engine
 
         recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
-        guard let request = recognitionRequest else { return }
+        guard let request = recognitionRequest else {
+            isListening = false
+            return
+        }
         request.shouldReportPartialResults = true
 
-        let inputNode = audioEngine.inputNode
+        let inputNode = engine.inputNode
         let format = inputNode.outputFormat(forBus: 0)
+
+        guard format.sampleRate > 0 && format.channelCount > 0 else {
+            NSLog("iGest: Audio input format invalid (rate=%.0f ch=%d) — no mic available?", format.sampleRate, format.channelCount)
+            isListening = false
+            return
+        }
+
+        NSLog("iGest: Speech starting — input: %.0fHz, %d ch", format.sampleRate, format.channelCount)
 
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, _ in
             request.append(buffer)
         }
 
-        audioEngine.prepare()
+        engine.prepare()
         do {
-            try audioEngine.start()
+            try engine.start()
         } catch {
             NSLog("iGest: Audio engine failed: \(error)")
+            inputNode.removeTap(onBus: 0)
             isListening = false
             return
         }
@@ -57,11 +76,18 @@ final class SpeechEngine {
     }
 
     func stopListening() {
+        queue.sync { self._stopListening() }
+    }
+
+    private func _stopListening() {
         guard isListening else { return }
         isListening = false
 
-        audioEngine.stop()
-        audioEngine.inputNode.removeTap(onBus: 0)
+        if let engine = audioEngine {
+            engine.stop()
+            engine.inputNode.removeTap(onBus: 0)
+        }
+        audioEngine = nil
         recognitionRequest?.endAudio()
         recognitionTask?.cancel()
         recognitionRequest = nil

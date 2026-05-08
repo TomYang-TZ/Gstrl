@@ -1,28 +1,15 @@
 import Foundation
 import Vision
-import AppKit
 import Carbon.HIToolbox
 
 final class TrackingCoordinator {
     private let cameraManager = CameraManager()
-    private let handTracker = HandTracker()
     private let appState: AppState
+    private let swipeDetector = SwipeDetector()
+    private let deleteController = DeleteController()
+    private let speechController = SpeechController()
+    private let cursorDrag = CursorDragController()
     private var lastClickTime: Date = .distantPast
-
-    private let screenW: CGFloat
-    private let screenH: CGFloat
-
-    // Right hand relative cursor movement
-    private var rightHandAnchor: CGPoint?
-    private var cursorAnchor: CGPoint?
-    private let sensitivity: CGFloat = 2.5
-
-    // Right hand 🤙 (thumb+pinky) = Delete (repeats with acceleration)
-    private var rightDeleteStartTime: Date?
-    private var rightDeleteFired: Bool = false
-    private var rightDeleteLastRepeat: Date = .distantPast
-    private var deleteRepeatCount: Int = 0
-    private var rightThumbPinkyFrames: Int = 0
 
     // Left hand gesture hold detection
     private var leftGestureStartTime: Date?
@@ -30,47 +17,33 @@ final class TrackingCoordinator {
     private var leftGestureFired: Bool = false
     private let holdDuration: TimeInterval = 1.0
     private var leftHandEntryFrames: Int = 0
-
-    // Wave detection
-    private var wavePositions: [(x: CGFloat, time: Date)] = []
-    private var lastWaveTime: Date = .distantPast
-
-    // Right hand swipe detection (velocity-based)
-    private var rightIndexPrev: (pos: CGPoint, time: Date)?
-    private var lastSwipeTime: Date = .distantPast
-    private let swipeCooldown: TimeInterval = 1.0
-    private let velocityThreshold: CGFloat = 0.6  // normalized units per second
-    private var swipeReturnIgnoreUntil: Date = .distantPast
-    private var rightHandLabelActive: Bool = false
-    private var rightHandLabelUntil: Date = .distantPast
-    private var swipeVelocityAccum: CGPoint = .zero
-    private var swipeAccumFrames: Int = 0
-    private var rightHandEntryFrames: Int = 0
     private let handEntryGraceFrames: Int = 5
 
-    // Crossed fingers (X) = Ctrl+C (hold for double)
+    // Crossed fingers (X) = Ctrl+C
     private var fingersCrossedStartTime: Date?
     private var fingersCrossedCount: Int = 0
 
-    // Both hands 🤙 = aggressive delete (lines → select all)
-    private var bothThumbPinkyStartTime: Date?
-    private var bothThumbPinkyLastRepeat: Date = .distantPast
-    private var bothThumbPinkyCount: Int = 0
-
-    // Speech
-    private let speechEngine = SpeechEngine()
-    private var bothFistsStartTime: Date?
-    private var speechActive = false
-    private var lastTypedLength = 0
+    // UI label management
+    private var rightHandLabelActive: Bool = false
+    private var rightHandLabelUntil: Date = .distantPast
 
     init(appState: AppState) {
         self.appState = appState
-        let screen = NSScreen.main?.frame.size ?? CGSize(width: 1512, height: 982)
-        self.screenW = screen.width
-        self.screenH = screen.height
 
         cameraManager.onFrame = { [weak self] pixelBuffer in
             self?.processFrame(pixelBuffer)
+        }
+
+        swipeDetector.onSwipe = { [weak self] direction, leftOpen in
+            self?.handleSwipe(direction, leftOpen: leftOpen)
+        }
+
+        deleteController.onKeyPress = { keyCode, shift, control, option, command in
+            InputDispatch.perform(.pressModifiedKey(keyCode, shift: shift, control: control, option: option, command: command))
+        }
+
+        speechController.onLabelUpdate = { [weak self] label in
+            DispatchQueue.main.async { self?.appState.gestureLabel = label }
         }
     }
 
@@ -112,12 +85,10 @@ final class TrackingCoordinator {
                 self?.appState.gestureProgress = 0
             }
             resetLeftGesture()
-            rightHandAnchor = nil
-            cursorAnchor = nil
+            cursorDrag.reset()
             return
         }
 
-        // Separate hands
         var leftHand: VNHumanHandPoseObservation?
         var rightHand: VNHumanHandPoseObservation?
 
@@ -138,8 +109,8 @@ final class TrackingCoordinator {
             }
         }
 
-        let lFingers = leftHand != nil ? countExtendedFingers(leftHand!) : 0
-        let rFingers = rightHand != nil ? countExtendedFingers(rightHand!) : 0
+        let lFingers = leftHand != nil ? GestureClassifier.countExtendedFingers(leftHand!) : 0
+        let rFingers = rightHand != nil ? GestureClassifier.countExtendedFingers(rightHand!) : 0
 
         DispatchQueue.main.async { [weak self] in
             self?.appState.handsCount = results.count
@@ -150,7 +121,7 @@ final class TrackingCoordinator {
         }
 
         // === CROSSED INDEX FINGERS (X) = Ctrl+C ×2 ===
-        if let lh = leftHand, let rh = rightHand, isFingersCrossed(lh, rh) {
+        if let lh = leftHand, let rh = rightHand, GestureClassifier.isFingersCrossed(lh, rh) {
             if fingersCrossedStartTime == nil {
                 fingersCrossedStartTime = Date()
                 fingersCrossedCount = 0
@@ -166,15 +137,15 @@ final class TrackingCoordinator {
                 }
                 if elapsed >= holdDuration {
                     fingersCrossedCount = 1
-                    pressKeyWithModifiers(keyCode: UInt16(kVK_ANSI_C), control: true)
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-                        self?.pressKeyWithModifiers(keyCode: UInt16(kVK_ANSI_C), control: true)
+                    InputDispatch.perform(.pressModifiedKey(UInt16(kVK_ANSI_C), shift: false, control: true, option: false, command: false))
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        InputDispatch.perform(.pressModifiedKey(UInt16(kVK_ANSI_C), shift: false, control: true, option: false, command: false))
                     }
                     DispatchQueue.main.async { [weak self] in
                         self?.appState.gestureLabel = "✕ Ctrl+C ×2"
                         self?.appState.gestureProgress = 0
                     }
-                    startSwipeCooldownProgress()
+                    startCooldownProgress()
                 }
             }
             return
@@ -183,253 +154,81 @@ final class TrackingCoordinator {
             fingersCrossedCount = 0
         }
 
-        // === BOTH HANDS 🤙 = aggressive delete (lines, then select all) ===
+        // === BOTH HANDS 🤙 = aggressive delete ===
         let bothThumbPinky = leftHand != nil && rightHand != nil
-            && isThumbPinky(leftHand!) && isThumbPinky(rightHand!)
+            && GestureClassifier.isThumbPinky(leftHand!) && GestureClassifier.isThumbPinky(rightHand!)
 
         if bothThumbPinky {
-            if bothThumbPinkyStartTime == nil {
-                bothThumbPinkyStartTime = Date()
-                bothThumbPinkyCount = 0
-            }
-            let now = Date()
-            let elapsed = now.timeIntervalSince(bothThumbPinkyStartTime!)
-
-            // 1s countdown before firing
-            if elapsed < holdDuration {
-                let progress = min(1.0, elapsed / holdDuration)
+            if let status = deleteController.processBothHands() {
                 DispatchQueue.main.async { [weak self] in
-                    self?.appState.progressMode = .countdown
-                    self?.appState.gestureLabel = "🗑🗑 Lines"
-                    self?.appState.gestureProgress = progress
-                }
-                return
-            }
-
-            // After countdown: delete lines, then escalate to select-all after 5s
-            let activeElapsed = elapsed - holdDuration
-            let isSelectAll = activeElapsed >= 5.0
-            let interval: TimeInterval = isSelectAll ? 0.5 : 0.4
-
-            // Warning countdown — tell user ALL is coming
-            if !isSelectAll {
-                let warningProgress = min(1.0, activeElapsed / 5.0)
-                DispatchQueue.main.async { [weak self] in
-                    self?.appState.progressMode = .countdown
-                    self?.appState.gestureProgress = warningProgress
-                    self?.appState.gestureLabel = "⚠️ Line → ALL"
-                }
-            }
-
-            if now.timeIntervalSince(bothThumbPinkyLastRepeat) >= interval {
-                bothThumbPinkyLastRepeat = now
-                bothThumbPinkyCount += 1
-                if isSelectAll {
-                    pressKeyWithModifiers(keyCode: UInt16(kVK_ANSI_A), command: true)
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
-                        self?.pressKey(keyCode: UInt16(kVK_Delete))
-                    }
-                    DispatchQueue.main.async { [weak self] in
-                        self?.appState.gestureLabel = "⚠️ DELETE ALL"
-                        self?.appState.gestureProgress = 0
-                    }
-                } else {
-                    pressKeyWithModifiers(keyCode: UInt16(kVK_Delete), command: true)
+                    self?.appState.progressMode = status.progressMode
+                    self?.appState.gestureLabel = status.label
+                    self?.appState.gestureProgress = status.progress
                 }
             }
             return
         } else {
-            bothThumbPinkyStartTime = nil
+            deleteController.resetBothHands()
         }
 
-        // === SPEECH: both hands open (5 fingers) = start ===
+        // === SPEECH: both hands open ===
         let bothOpen = leftHand != nil && rightHand != nil
-            && countExtendedFingers(leftHand!) >= 4 && countExtendedFingers(rightHand!) >= 4
-            && !isPinching(leftHand!) && !isPinching(rightHand!)
-
-        let speechHoldDuration: TimeInterval = 1.0
+            && GestureClassifier.countExtendedFingers(leftHand!) >= 4
+            && GestureClassifier.countExtendedFingers(rightHand!) >= 4
+            && !GestureClassifier.isPinching(leftHand!) && !GestureClassifier.isPinching(rightHand!)
 
         if bothOpen {
-            if bothFistsStartTime == nil { bothFistsStartTime = Date() }
-            if let start = bothFistsStartTime {
-                let elapsed = Date().timeIntervalSince(start)
-                if !speechActive {
-                    let progress = min(1.0, elapsed / speechHoldDuration)
-                    DispatchQueue.main.async { [weak self] in
-                        self?.appState.progressMode = .countdown
-                        self?.appState.gestureLabel = "🎤 Speech"
-                        self?.appState.gestureProgress = progress
-                    }
-                }
-                if elapsed >= speechHoldDuration && !speechActive {
-                    speechActive = true
-                    lastTypedLength = 0
-                    speechEngine.onResult = { [weak self] text in
-                        guard let self else { return }
-                        let newChars = String(text.dropFirst(self.lastTypedLength))
-                        if !newChars.isEmpty {
-                            self.speechEngine.typeText(newChars)
-                            self.lastTypedLength = text.count
-                        }
-                        DispatchQueue.main.async { self.appState.gestureLabel = "🎤 \(text)" }
-                    }
-                    speechEngine.startListening()
-                    DispatchQueue.main.async { [weak self] in
-                        self?.appState.gestureLabel = "🎤 Listening..."
-                        self?.appState.gestureProgress = 0
-                    }
-                }
+            let status = speechController.process()
+            DispatchQueue.main.async { [weak self] in
+                self?.appState.progressMode = status.progressMode
+                self?.appState.gestureLabel = status.label
+                self?.appState.gestureProgress = status.progress
             }
             return
         } else {
-            if bothFistsStartTime != nil || speechActive {
-                bothFistsStartTime = nil
-                if speechActive {
-                    speechActive = false
-                    speechEngine.stopListening()
-                }
+            if speechController.isActive {
+                speechController.reset()
                 DispatchQueue.main.async { [weak self] in
                     self?.appState.gestureLabel = ""
                     self?.appState.gestureProgress = 0
                 }
+            } else {
+                speechController.reset()
             }
         }
 
-        // === RIGHT HAND: pinch to drag, 🤙 to delete, open hand swipe for nav ===
+        // === RIGHT HAND ===
         if let rh = rightHand {
-            let rThumbPinky = isThumbPinky(rh) && leftHand == nil
+            let rThumbPinky = GestureClassifier.isThumbPinky(rh) && leftHand == nil
 
-            if isPinching(rh) {
-                rightThumbPinkyFrames = 0
-                rightHandEntryFrames = 0
-                rightIndexPrev = nil
-                swipeVelocityAccum = .zero
-                swipeAccumFrames = 0
-                rightDeleteStartTime = nil
-                rightDeleteFired = false
-                if let wrist = try? rh.recognizedPoint(.wrist), wrist.confidence > 0.3 {
-                    let currentWrist = CGPoint(x: wrist.location.x, y: wrist.location.y)
-                    if rightHandAnchor == nil {
-                        rightHandAnchor = currentWrist
-                        cursorAnchor = CGEvent(source: nil)?.location ?? .zero
-                    } else if let anchor = rightHandAnchor, let curAnchor = cursorAnchor {
-                        let deltaX = -(currentWrist.x - anchor.x) * screenW * sensitivity
-                        let deltaY = -(currentWrist.y - anchor.y) * screenH * sensitivity
-                        let newX = max(0, min(screenW, curAnchor.x + deltaX))
-                        let newY = max(0, min(screenH, curAnchor.y + deltaY))
-                        CGWarpMouseCursorPosition(CGPoint(x: newX, y: newY))
-                    }
-                }
+            if GestureClassifier.isPinching(rh) {
+                deleteController.reset()
+                swipeDetector.resetEntryFrames()
+                swipeDetector.reset()
+                cursorDrag.process(rh)
             } else if rThumbPinky {
-                rightThumbPinkyFrames += 1
-                rightHandEntryFrames = 0
-                rightHandAnchor = nil
-                cursorAnchor = nil
-                rightIndexPrev = nil
-                swipeVelocityAccum = .zero
-                swipeAccumFrames = 0
-                // Require 5 consecutive frames to confirm it's intentional (not a swipe artifact)
-                guard rightThumbPinkyFrames >= 5 else { return }
+                cursorDrag.reset()
+                swipeDetector.reset()
                 rightHandLabelActive = true
-                if rightDeleteStartTime == nil {
-                    rightDeleteStartTime = Date()
-                }
-                let now = Date()
-                if !rightDeleteFired, let start = rightDeleteStartTime {
-                    let elapsed = now.timeIntervalSince(start)
-                    let progress = min(1.0, elapsed / holdDuration)
+                if let status = deleteController.processSingleHand() {
                     DispatchQueue.main.async { [weak self] in
-                        self?.appState.progressMode = .countdown
-                        self?.appState.gestureLabel = "🗑 Delete"
-                        self?.appState.gestureProgress = progress
-                    }
-                    if elapsed >= holdDuration {
-                        rightDeleteFired = true
-                        rightDeleteLastRepeat = now
-                        deleteRepeatCount = 0
-                        pressKey(keyCode: UInt16(kVK_Delete))
-                        DispatchQueue.main.async { [weak self] in
-                            self?.appState.gestureLabel = "🗑 Delete..."
-                            self?.appState.gestureProgress = 0
-                        }
-                    }
-                } else if rightDeleteFired {
-                    let elapsed = now.timeIntervalSince(rightDeleteStartTime ?? now)
-                    let interval: TimeInterval
-                    let deleteType: Int // 0=char, 1=word, 2=line, 3=all
-                    let warningProgress: Double
-
-                    if elapsed < 5.0 {
-                        interval = max(0.1, 0.5 - Double(deleteRepeatCount) * 0.1)
-                        deleteType = 0
-                        warningProgress = elapsed / 5.0  // progress toward word phase
-                    } else if elapsed < 8.0 {
-                        interval = 0.3
-                        deleteType = 1
-                        warningProgress = (elapsed - 5.0) / 3.0  // progress toward line phase
-                    } else if elapsed < 11.0 {
-                        interval = 0.4
-                        deleteType = 2
-                        warningProgress = (elapsed - 8.0) / 3.0  // progress toward ALL
-                    } else {
-                        interval = 0.5
-                        deleteType = 3
-                        warningProgress = 0
-                    }
-
-                    // Show warning progress — tell user what's coming next
-                    DispatchQueue.main.async { [weak self] in
-                        self?.appState.progressMode = .countdown
-                        let label: String
-                        switch deleteType {
-                        case 0: label = "🗑 Char → Word"
-                        case 1: label = "🗑 Word → Line"
-                        case 2: label = "⚠️ Line → ALL"
-                        default: label = "⚠️ DELETE ALL"
-                        }
-                        self?.appState.gestureLabel = label
-                        self?.appState.gestureProgress = warningProgress
-                    }
-
-                    if now.timeIntervalSince(rightDeleteLastRepeat) >= interval {
-                        rightDeleteLastRepeat = now
-                        deleteRepeatCount += 1
-                        switch deleteType {
-                        case 3:
-                            pressKeyWithModifiers(keyCode: UInt16(kVK_ANSI_A), command: true)
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
-                                self?.pressKey(keyCode: UInt16(kVK_Delete))
-                            }
-                        case 2:
-                            pressKeyWithModifiers(keyCode: UInt16(kVK_Delete), command: true)
-                        case 1:
-                            pressKeyWithModifiers(keyCode: UInt16(kVK_Delete), option: true)
-                        default:
-                            pressKey(keyCode: UInt16(kVK_Delete))
-                        }
+                        self?.appState.progressMode = status.progressMode
+                        self?.appState.gestureLabel = status.label
+                        self?.appState.gestureProgress = status.progress
                     }
                 }
             } else {
-                rightThumbPinkyFrames = 0
-                rightHandAnchor = nil
-                cursorAnchor = nil
-                rightDeleteStartTime = nil
-                rightDeleteFired = false
+                deleteController.reset()
+                cursorDrag.reset()
                 if Date() >= rightHandLabelUntil {
                     rightHandLabelActive = false
                 }
-                detectSwipe(rh, leftHand: leftHand)
+                swipeDetector.process(rh, leftHand: leftHand)
             }
         } else {
-            rightThumbPinkyFrames = 0
-            rightHandAnchor = nil
-            cursorAnchor = nil
-            rightIndexPrev = nil
-            swipeVelocityAccum = .zero
-            swipeAccumFrames = 0
-            rightHandEntryFrames = 0
-            rightDeleteStartTime = nil
-            rightDeleteFired = false
+            deleteController.reset()
+            cursorDrag.reset()
+            swipeDetector.reset()
             if Date() >= rightHandLabelUntil {
                 rightHandLabelActive = false
             }
@@ -440,37 +239,33 @@ final class TrackingCoordinator {
             leftHandEntryFrames += 1
             guard leftHandEntryFrames > handEntryGraceFrames else { return }
 
-            if isPinching(lh) {
+            if GestureClassifier.isPinching(lh) {
                 resetLeftGesture()
                 let now = Date()
                 if now.timeIntervalSince(lastClickTime) > 0.5 {
                     lastClickTime = now
-                    performClick()
+                    InputDispatch.perform(.click)
                 }
                 DispatchQueue.main.async { [weak self] in
                     self?.appState.trackingState = .pinching
                     self?.appState.gestureLabel = "👆 Click"
                 }
             } else {
-                // Finger counting
-                let fingerCount = countExtendedFingers(lh)
+                let fingerCount = GestureClassifier.countExtendedFingers(lh)
 
                 let gestureValue: Int
                 if rightHand != nil {
-                    // Both hands detected — left hand hold gestures disabled
-                    // (left open + right swipe combo still works via detectSwipe)
-                    gestureValue = -1  // idle
-                } else if isThumbPinky(lh) {
-                    gestureValue = -2  // Escape (🤙)
+                    gestureValue = -1
+                } else if GestureClassifier.isThumbPinky(lh) {
+                    gestureValue = -2
                 } else if fingerCount >= 4 {
-                    gestureValue = -1  // idle
+                    gestureValue = -1
                 } else if fingerCount == 0 {
-                    gestureValue = 0   // Enter (fist)
+                    gestureValue = 0
                 } else {
-                    gestureValue = fingerCount  // 1-3
+                    gestureValue = fingerCount
                 }
 
-                // Update label (don't overwrite if swipe label is still showing)
                 let rightLabelActive = self.rightHandLabelActive
                 DispatchQueue.main.async { [weak self] in
                     self?.appState.trackingState = .tracking
@@ -487,7 +282,6 @@ final class TrackingCoordinator {
                     }
                 }
 
-                // Hold detection (skip idle)
                 if gestureValue == -1 {
                     resetLeftGesture()
                 } else if gestureValue == leftGestureValue {
@@ -531,67 +325,6 @@ final class TrackingCoordinator {
 
     // MARK: - Helpers
 
-    private func isPinching(_ obs: VNHumanHandPoseObservation) -> Bool {
-        guard let thumb = try? obs.recognizedPoint(.thumbTip),
-              let index = try? obs.recognizedPoint(.indexTip),
-              thumb.confidence > 0.3, index.confidence > 0.3 else { return false }
-        return hypot(thumb.location.x - index.location.x, thumb.location.y - index.location.y) < 0.06
-    }
-
-    private func countExtendedFingers(_ obs: VNHumanHandPoseObservation) -> Int {
-        var count = 0
-        let pairs: [(VNHumanHandPoseObservation.JointName, VNHumanHandPoseObservation.JointName)] = [
-            (.indexTip, .indexPIP), (.middleTip, .middlePIP),
-            (.ringTip, .ringPIP), (.littleTip, .littlePIP)
-        ]
-        for (tip, pip) in pairs {
-            if let t = try? obs.recognizedPoint(tip), let p = try? obs.recognizedPoint(pip),
-               t.confidence > 0.3, p.confidence > 0.3, t.location.y > p.location.y {
-                count += 1
-            }
-        }
-        return count
-    }
-
-    private func isFingersCrossed(_ left: VNHumanHandPoseObservation, _ right: VNHumanHandPoseObservation) -> Bool {
-        guard let lTip = try? left.recognizedPoint(.indexTip),
-              let rTip = try? right.recognizedPoint(.indexTip),
-              let lPIP = try? left.recognizedPoint(.indexPIP),
-              let rPIP = try? right.recognizedPoint(.indexPIP),
-              lTip.confidence > 0.3, rTip.confidence > 0.3,
-              lPIP.confidence > 0.3, rPIP.confidence > 0.3 else { return false }
-
-        // Tips must be close together
-        let tipDistance = hypot(lTip.location.x - rTip.location.x, lTip.location.y - rTip.location.y)
-        guard tipDistance < 0.1 else { return false }
-
-        // Fingers must point in opposing horizontal directions (forming an X)
-        let lDir = lTip.location.x - lPIP.location.x
-        let rDir = rTip.location.x - rPIP.location.x
-        return lDir * rDir < 0  // opposite signs = crossing
-    }
-
-    private func isThumbPinky(_ obs: VNHumanHandPoseObservation) -> Bool {
-        // Thumb and pinky extended, other fingers closed
-        guard let thumbTip = try? obs.recognizedPoint(.thumbTip),
-              let thumbIP = try? obs.recognizedPoint(.thumbIP),
-              let littleTip = try? obs.recognizedPoint(.littleTip),
-              let littlePIP = try? obs.recognizedPoint(.littlePIP),
-              let indexTip = try? obs.recognizedPoint(.indexTip),
-              let indexPIP = try? obs.recognizedPoint(.indexPIP),
-              let middleTip = try? obs.recognizedPoint(.middleTip),
-              let middlePIP = try? obs.recognizedPoint(.middlePIP),
-              thumbTip.confidence > 0.3, littleTip.confidence > 0.3 else { return false }
-
-        let pinkyExtended = littleTip.location.y > littlePIP.location.y
-        let indexClosed = indexTip.location.y <= indexPIP.location.y
-        let middleClosed = middleTip.location.y <= middlePIP.location.y
-        let thumbExtended = hypot(thumbTip.location.x - thumbIP.location.x,
-                                  thumbTip.location.y - thumbIP.location.y) > 0.03
-
-        return thumbExtended && pinkyExtended && indexClosed && middleClosed
-    }
-
     private func resetLeftGesture() {
         leftGestureValue = -1
         leftGestureStartTime = nil
@@ -600,173 +333,48 @@ final class TrackingCoordinator {
 
     private func fireGesture(_ value: Int) {
         switch value {
-        case -2: pressKey(keyCode: UInt16(kVK_Escape))
-        case 0: pressKey(keyCode: UInt16(kVK_Return))
-        case 1: pressKey(keyCode: UInt16(kVK_ANSI_1))
-        case 2: pressKey(keyCode: UInt16(kVK_ANSI_2))
-        case 3: pressKey(keyCode: UInt16(kVK_ANSI_3))
+        case -2: InputDispatch.perform(.pressKey(UInt16(kVK_Escape)))
+        case 0: InputDispatch.perform(.pressKey(UInt16(kVK_Return)))
+        case 1: InputDispatch.perform(.pressKey(UInt16(kVK_ANSI_1)))
+        case 2: InputDispatch.perform(.pressKey(UInt16(kVK_ANSI_2)))
+        case 3: InputDispatch.perform(.pressKey(UInt16(kVK_ANSI_3)))
         default: break
         }
     }
 
-    private func pressKey(keyCode: UInt16) {
-        DispatchQueue.main.async {
-            guard let down = CGEvent(keyboardEventSource: nil, virtualKey: keyCode, keyDown: true),
-                  let up = CGEvent(keyboardEventSource: nil, virtualKey: keyCode, keyDown: false) else { return }
-            down.post(tap: .cghidEventTap)
-            usleep(30000)
-            up.post(tap: .cghidEventTap)
-        }
-    }
-
-    private func performClick() {
-        DispatchQueue.main.async {
-            guard let pos = CGEvent(source: nil)?.location else { return }
-            NSLog("iGest: CLICK at (\(Int(pos.x)), \(Int(pos.y)))")
-            guard let down = CGEvent(mouseEventSource: nil, mouseType: .leftMouseDown, mouseCursorPosition: pos, mouseButton: .left),
-                  let up = CGEvent(mouseEventSource: nil, mouseType: .leftMouseUp, mouseCursorPosition: pos, mouseButton: .left) else { return }
-            down.post(tap: .cghidEventTap)
-            usleep(50000)
-            up.post(tap: .cghidEventTap)
-        }
-    }
-
-    // MARK: - Swipe Detection
-
-    private func detectSwipe(_ obs: VNHumanHandPoseObservation, leftHand: VNHumanHandPoseObservation?) {
-        let leftOpen = leftHand != nil && countExtendedFingers(leftHand!) >= 4
-
-        // Only allow swipes when: no left hand, or left hand is open (for Tab combo)
-        if leftHand != nil && !leftOpen { return }
-
-        // Grace period: ignore first few frames when hand enters view
-        rightHandEntryFrames += 1
-        if rightHandEntryFrames <= handEntryGraceFrames {
-            return
-        }
-
-        guard let indexTip = try? obs.recognizedPoint(.indexTip),
-              indexTip.confidence > 0.15 else { return }
-
-        let now = Date()
-
-        // After a swipe fires, ignore all motion for the cooldown period
-        if now < swipeReturnIgnoreUntil {
-            rightIndexPrev = nil
-            swipeVelocityAccum = .zero
-            swipeAccumFrames = 0
-            return
-        }
-
-        let pos = CGPoint(x: indexTip.location.x, y: indexTip.location.y)
-
-        defer { rightIndexPrev = (pos: pos, time: now) }
-
-        guard let prev = rightIndexPrev else { return }
-        let dt = now.timeIntervalSince(prev.time)
-        guard dt > 0.001 && dt < 0.2 else {
-            swipeVelocityAccum = .zero
-            swipeAccumFrames = 0
-            return
-        }
-
-        // Instantaneous velocity (normalized units per second)
-        let vx = (pos.x - prev.pos.x) / CGFloat(dt)
-        let vy = (pos.y - prev.pos.y) / CGFloat(dt)
-
-        // Accumulate only if velocity is above a minimum (ignore slow wind-up)
-        let speed = hypot(vx, vy)
-        if speed < velocityThreshold * 0.4 {
-            swipeVelocityAccum = .zero
-            swipeAccumFrames = 0
-            return
-        }
-
-        // Accumulate consistent direction frames
-        if swipeAccumFrames > 0 {
-            let dotProduct = vx * swipeVelocityAccum.x + vy * swipeVelocityAccum.y
-            if dotProduct < 0 {
-                // Direction reversed — reset
-                swipeVelocityAccum = .zero
-                swipeAccumFrames = 0
-                return
-            }
-        }
-
-        swipeVelocityAccum = CGPoint(x: swipeVelocityAccum.x + vx, y: swipeVelocityAccum.y + vy)
-        swipeAccumFrames += 1
-
-        // Need at least 2 consistent fast frames to trigger
-        guard swipeAccumFrames >= 2 else { return }
-
-        let avgVx = swipeVelocityAccum.x / CGFloat(swipeAccumFrames)
-        let avgVy = swipeVelocityAccum.y / CGFloat(swipeAccumFrames)
-        let absVx = abs(avgVx)
-        let absVy = abs(avgVy)
-
-        guard max(absVx, absVy) > velocityThreshold else { return }
-        // Reject diagonal
-        guard max(absVx, absVy) > min(absVx, absVy) * 1.5 else { return }
-        guard now.timeIntervalSince(lastSwipeTime) > swipeCooldown else { return }
-
-        // Block vertical swipes when left hand is open (only horizontal Tab allowed)
-        if absVy > absVx && leftOpen { return }
-
-        lastSwipeTime = now
-        swipeVelocityAccum = .zero
-        swipeAccumFrames = 0
-        rightIndexPrev = nil
-        swipeReturnIgnoreUntil = now.addingTimeInterval(swipeCooldown)
+    private func handleSwipe(_ direction: SwipeDetector.SwipeDirection, leftOpen: Bool) {
         rightHandLabelActive = true
-        startSwipeCooldownProgress()
+        startCooldownProgress()
 
-        if absVx > absVy {
+        switch direction {
+        case .left:
             if leftOpen {
-                // Left hand open + horizontal swipe = Tab navigation
-                if avgVx > 0 {
-                    pressKeyWithModifiers(keyCode: UInt16(kVK_Tab), shift: true)
-                    DispatchQueue.main.async { [weak self] in
-                        self?.appState.gestureLabel = "← Shift+Tab"
-                    }
-                } else {
-                    pressKey(keyCode: UInt16(kVK_Tab))
-                    DispatchQueue.main.async { [weak self] in
-                        self?.appState.gestureLabel = "→ Tab"
-                    }
-                }
+                InputDispatch.perform(.pressModifiedKey(UInt16(kVK_Tab), shift: true, control: false, option: false, command: false))
+                DispatchQueue.main.async { [weak self] in self?.appState.gestureLabel = "← Shift+Tab" }
             } else {
-                // Right hand only + horizontal swipe = arrow keys
-                if avgVx > 0 {
-                    pressKey(keyCode: UInt16(kVK_LeftArrow))
-                    DispatchQueue.main.async { [weak self] in
-                        self?.appState.gestureLabel = "← Left"
-                    }
-                } else {
-                    pressKey(keyCode: UInt16(kVK_RightArrow))
-                    DispatchQueue.main.async { [weak self] in
-                        self?.appState.gestureLabel = "→ Right"
-                    }
-                }
+                InputDispatch.perform(.pressKey(UInt16(kVK_LeftArrow)))
+                DispatchQueue.main.async { [weak self] in self?.appState.gestureLabel = "← Left" }
             }
-        } else if !leftOpen {
-            // Vertical swipes only work with right hand alone
-            if avgVy > 0 {
-                pressKey(keyCode: UInt16(kVK_UpArrow))
-                DispatchQueue.main.async { [weak self] in
-                    self?.appState.gestureLabel = "↑ Up"
-                }
+        case .right:
+            if leftOpen {
+                InputDispatch.perform(.pressKey(UInt16(kVK_Tab)))
+                DispatchQueue.main.async { [weak self] in self?.appState.gestureLabel = "→ Tab" }
             } else {
-                pressKey(keyCode: UInt16(kVK_DownArrow))
-                DispatchQueue.main.async { [weak self] in
-                    self?.appState.gestureLabel = "↓ Down"
-                }
+                InputDispatch.perform(.pressKey(UInt16(kVK_RightArrow)))
+                DispatchQueue.main.async { [weak self] in self?.appState.gestureLabel = "→ Right" }
             }
+        case .up:
+            InputDispatch.perform(.pressKey(UInt16(kVK_UpArrow)))
+            DispatchQueue.main.async { [weak self] in self?.appState.gestureLabel = "↑ Up" }
+        case .down:
+            InputDispatch.perform(.pressKey(UInt16(kVK_DownArrow)))
+            DispatchQueue.main.async { [weak self] in self?.appState.gestureLabel = "↓ Down" }
         }
     }
 
-    private func startSwipeCooldownProgress() {
+    private func startCooldownProgress() {
         let startTime = Date()
-        let duration = swipeCooldown
+        let duration: TimeInterval = 1.0
         rightHandLabelUntil = startTime.addingTimeInterval(duration)
         DispatchQueue.main.async { [weak self] in
             self?.appState.progressMode = .cooldown
@@ -790,20 +398,4 @@ final class TrackingCoordinator {
         tick()
     }
 
-    private func pressKeyWithModifiers(keyCode: UInt16, shift: Bool = false, control: Bool = false, option: Bool = false, command: Bool = false) {
-        DispatchQueue.main.async {
-            guard let down = CGEvent(keyboardEventSource: nil, virtualKey: keyCode, keyDown: true),
-                  let up = CGEvent(keyboardEventSource: nil, virtualKey: keyCode, keyDown: false) else { return }
-            var flags: CGEventFlags = []
-            if shift { flags.insert(.maskShift) }
-            if control { flags.insert(.maskControl) }
-            if option { flags.insert(.maskAlternate) }
-            if command { flags.insert(.maskCommand) }
-            down.flags = flags
-            up.flags = flags
-            down.post(tap: .cghidEventTap)
-            usleep(30000)
-            up.post(tap: .cghidEventTap)
-        }
-    }
 }

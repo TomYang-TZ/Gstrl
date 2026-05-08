@@ -6,30 +6,34 @@ Control your computer using hand gestures through your webcam. No special hardwa
 
 ## Gestures
 
-### One Hand Only
+### Left Hand (action hand)
 
-Use your left or right hand alone. These won't fire if the other hand is visible (except click).
+| Gesture | Action |
+|---------|--------|
+| 👌 Pinch (thumb + index) | Click |
+| 👌👌 Two-finger pinch (thumb + index + middle) | Right click |
+| ☝️ Hold 1–3 fingers | Type 1, 2, or 3 |
+| ✊ Hold fist | Enter |
+| 🤙 Hold thumb + pinky | Escape |
 
-```
-✋ LEFT                               🤚 RIGHT
-───────────────                      ───────────────
-👌 Pinch          → Click            👌 Pinch+move  → Move cursor
-👌👌 Two-finger    → Right click      🤙 Thumb+pinky → Delete (escalating)
-☝️ 1-3 fingers    → Type 1/2/3       👆 Swipe ↑↓←→  → Arrow keys
-✊ Fist            → Enter
-🤙 Thumb+pinky    → Escape
-```
+### Right Hand (navigation hand)
 
-### Both Hands
+| Gesture | Action |
+|---------|--------|
+| 👌 Pinch + move | Move cursor |
+| 🤙 Hold thumb + pinky | Delete (chars → words → lines → all) |
+| 👆 Swipe ↑↓←→ | Arrow keys |
 
-```
-👌+👌 L pinch + R pinch+move → Drag and drop
-👌+✊ L pinch + R fist + move → Scroll (left hand up/down)
-🖐🖐 Both open               → Speech-to-text
-🖐+👆 Open + swipe           → Tab / Shift+Tab
-🤙🤙 Both thumb+pinky        → Delete lines (escalates to select all)
-✕  Fingers cross            → Ctrl+C ×2 (cancel/kill)
-```
+### Both Hands (combos)
+
+| Gesture | Action |
+|---------|--------|
+| L pinch + R pinch + move | Drag and drop |
+| L pinch + R fist + move | Scroll up/down |
+| Both hands open | Speech-to-text |
+| L open + R swipe ←→ | Tab / Shift+Tab |
+| Both 🤙 | Delete lines (escalates to select all) |
+| ✕ Cross index fingers | Ctrl+C ×2 (cancel/kill) |
 
 
 ## Dynamic Island

@@ -25,6 +25,7 @@ Use it to control your Mac with hand gestures, move the cursor hands-free, click
 | Gesture | Action |
 |---------|--------|
 | 👌 Pinch + move | Move cursor |
+| 👌 Pinch + draw circle | Screenshot circled area → clipboard |
 | 👆 Swipe ↑↓←→ | Arrow keys |
 | 🤙 Six (hold) | Delete (chars → words → lines → all) |
 
@@ -40,12 +41,23 @@ Use it to control your Mac with hand gestures, move the cursor hands-free, click
 | ✕ Cross index fingers | Ctrl+C ×2 (cancel/kill) |
 
 
+### Voice Commands (during speech mode)
+
+While speech-to-text is active, say "press" + keyword to execute actions instead of typing:
+
+| Command | Action |
+|---------|--------|
+| press down/up/left/right | Arrow keys |
+| press enter / press tab | Enter / Tab |
+| press delete / press escape | Backspace / Escape |
+| command tab / command z / command c / command v | Cmd+Tab / Undo / Copy / Paste |
+
 ## Dynamic Island
 
-A floating notch at the top of your screen shows what iGest is doing in real time:
-- Which hands are detected (orange = left, blue = right)
-- Current gesture and countdown progress
-- Escalation warnings before destructive actions
+A floating pill at the top of your screen with Apple Liquid Glass styling (macOS 26+):
+- SF Symbol hand indicators (orange = left, cyan = right)
+- Current gesture label and progress bar
+- Screenshot preview thumbnail on circle capture
 
 Always visible, never steals focus.
 
@@ -69,7 +81,7 @@ Grant Camera, Microphone, Accessibility, and Speech Recognition permissions when
 
 ## Requirements
 
-- macOS 14+
+- macOS 14+ (Liquid Glass requires macOS 26+, falls back to frosted material on older versions)
 - Webcam
 - Swift 5.9+
 

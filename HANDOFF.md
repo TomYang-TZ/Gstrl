@@ -96,3 +96,4 @@ Requires Accessibility permission — app prompts on first enable.
 
 - **SEO for GitHub search** — add relevant topics/tags to the repo (hand-tracking, gesture-control, macos, accessibility, vision-framework, hands-free), write a compelling repo description, add social preview image
 - **SEO for Google search** — optimize README with searchable keywords (e.g. "control mac with hand gestures", "hands-free mac cursor", "webcam gesture recognition macos"), add a GitHub Pages landing page with structured data, submit to macOS tool directories and HN/Product Hunt
+- **Two-finger directional hold** — point index+middle in a direction to fire accelerating arrow key repeats. Attempted but detection was unreliable (conflicts with swipe, hard to distinguish from 1-finger or fist in various orientations). Needs a fundamentally different approach — possibly using wrist angle + finger count, or a dedicated ML classifier trained on pointing poses

@@ -61,8 +61,12 @@ enum GestureClassifier {
               thumbTip.confidence > 0.3, littleTip.confidence > 0.3 else { return false }
 
         let pinkyExtended = littleTip.location.y > littlePIP.location.y
-        let indexClosed = indexTip.location.y <= indexPIP.location.y
-        let middleClosed = middleTip.location.y <= middlePIP.location.y
+        let indexLength = hypot(indexTip.location.x - indexPIP.location.x,
+                                indexTip.location.y - indexPIP.location.y)
+        let middleLength = hypot(middleTip.location.x - middlePIP.location.x,
+                                 middleTip.location.y - middlePIP.location.y)
+        let indexClosed = indexLength < 0.04
+        let middleClosed = middleLength < 0.04
         let thumbExtended = hypot(thumbTip.location.x - thumbIP.location.x,
                                   thumbTip.location.y - thumbIP.location.y) > 0.03
 

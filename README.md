@@ -13,20 +13,20 @@ Use your left or right hand alone. These won't fire if the other hand is visible
 ```
 ✋ LEFT                               🤚 RIGHT
 ───────────────                      ───────────────
-👌 Pinch        → Click              👌 Pinch+move  → Move cursor
-☝️ 1-3 fingers  → Type 1/2/3         🤙 Thumb+pinky → Delete
-✊ Fist          → Enter                 (hold: chars → words → lines → select all)
-🤙 Thumb+pinky  → Escape             👆 Swipe ↑↓←→  → Arrow keys
+👌 Pinch          → Click            👌 Pinch+move  → Move cursor
+👌👌 Two-finger    → Right click      🤙 Thumb+pinky → Delete (escalating)
+☝️ 1-3 fingers    → Type 1/2/3       👆 Swipe ↑↓←→  → Arrow keys
+✊ Fist            → Enter
+🤙 Thumb+pinky    → Escape
 ```
 
 ### Both Hands
 
-Raise both hands. Single-hand gestures are suppressed — only these combos fire.
-
 ```
-👌+✊ L pinch + R fist + move → Scroll (move left hand up/down)
+👌+👌 L pinch + R pinch+move → Drag and drop
+👌+✊ L pinch + R fist + move → Scroll (left hand up/down)
 🖐🖐 Both open               → Speech-to-text
-🖐+👆 Open+swipe             → Tab / Shift+Tab
+🖐+👆 Open + swipe           → Tab / Shift+Tab
 🤙🤙 Both thumb+pinky        → Delete lines (escalates to select all)
 ✕  Fingers cross            → Ctrl+C ×2 (cancel/kill)
 ```

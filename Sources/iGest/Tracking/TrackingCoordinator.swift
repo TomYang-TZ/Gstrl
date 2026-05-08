@@ -277,14 +277,19 @@ final class TrackingCoordinator {
                 }
             } else if GestureClassifier.isPinching(lh) {
                 resetLeftGesture()
-                let now = Date()
-                if now.timeIntervalSince(lastClickTime) > 0.5 {
-                    lastClickTime = now
-                    InputDispatch.perform(.click)
-                }
-                DispatchQueue.main.async { [weak self] in
-                    self?.appState.trackingState = .pinching
-                    self?.appState.gestureLabel = "👆 Click"
+                let rightIsPinching = rightHand != nil && GestureClassifier.isPinching(rightHand!)
+                if rightIsPinching {
+                    // Drag mode — don't fire click, right-hand section handles it
+                } else {
+                    let now = Date()
+                    if now.timeIntervalSince(lastClickTime) > 0.5 {
+                        lastClickTime = now
+                        InputDispatch.perform(.click)
+                    }
+                    DispatchQueue.main.async { [weak self] in
+                        self?.appState.trackingState = .pinching
+                        self?.appState.gestureLabel = "👆 Click"
+                    }
                 }
             } else {
                 let fingerCount = GestureClassifier.countExtendedFingers(lh)

@@ -50,7 +50,7 @@ While speech-to-text is active, say "press" + keyword to execute actions instead
 | command tab/z/c/v/a | Cmd+Tab / Undo / Copy / Paste / Select All |
 | command click | Cmd+Click (at current cursor position) |
 
-### Pro tip: Keyboard + Gesture
+### "Pro" tip: Keyboard + Gesture
 
 Hold a modifier key while gesturing — they combine. Shift + swipe = select text. Cmd + swipe = jump words. Go wild.
 

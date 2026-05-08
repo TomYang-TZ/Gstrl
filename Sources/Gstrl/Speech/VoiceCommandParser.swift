@@ -174,6 +174,9 @@ enum VoiceCommandParser {
             let keyword = words[words.count - 1].lowercased()
 
             if let normalized = normalizePrefix(rawPrefix) {
+                if normalized == "press" && keyword == "click" {
+                    return .command(.click, wordCount: 2, displayName: "👆 Click")
+                }
                 if normalized == "press", let keyCode = pressCommands[keyword] {
                     let name = pressDisplayNames[keyword] ?? keyword
                     return .command(.pressKey(keyCode), wordCount: 2, displayName: name)

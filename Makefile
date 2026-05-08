@@ -16,14 +16,15 @@ build:
 install: build
 	@rm -rf $(INSTALL_DIR)/$(APP_BUNDLE)
 	@cp -R $(APP_BUNDLE) $(INSTALL_DIR)/$(APP_BUNDLE)
+	@rm -rf $(APP_BUNDLE)
 	@echo "✓ Installed to $(INSTALL_DIR)/$(APP_BUNDLE)"
 
 uninstall:
 	@rm -rf $(INSTALL_DIR)/$(APP_BUNDLE)
 	@echo "✓ Uninstalled"
 
-run: build
-	@open $(APP_BUNDLE)
+run: install
+	@open $(INSTALL_DIR)/$(APP_BUNDLE)
 
 stop:
 	@pkill -f $(APP_NAME) 2>/dev/null && echo "✓ Stopped" || echo "Not running"

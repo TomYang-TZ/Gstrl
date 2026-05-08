@@ -1,0 +1,70 @@
+{
+  "project": "iGest",
+  "branchName": "ralph/voice-commands",
+  "description": "Voice Commands During Speech Mode — intercept spoken command keywords with 'press'/'command' prefix and dispatch as key events instead of typing them literally.",
+  "userStories": [
+    {
+      "id": "VC-001",
+      "title": "Create VoiceCommandParser with command lookup table",
+      "description": "As a developer, I need a module that determines whether new speech text contains a command or is plain dictation.",
+      "acceptanceCriteria": [
+        "New file Sources/iGest/Speech/VoiceCommandParser.swift",
+        "Enum VoiceCommandResult with cases .command(GestureAction, wordCount: Int) and .text",
+        "Recognizes 'press' + keyword: up, down, left, right, delete, enter, tab, escape",
+        "Recognizes 'command' + key: tab, z, c, v, a (maps to Cmd+key)",
+        "All matching is case-insensitive",
+        "Parser checks the END of the new text portion (not full cumulative transcript)",
+        "swift build succeeds"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Key codes: kVK_DownArrow (125), kVK_UpArrow (126), kVK_LeftArrow (123), kVK_RightArrow (124), kVK_Delete (51), kVK_Return (36), kVK_Tab (48), kVK_Escape (53). Use existing GestureAction enum from InputDispatch.swift."
+    },
+    {
+      "id": "VC-002",
+      "title": "Integrate VoiceCommandParser into SpeechController",
+      "description": "As a user, when I say 'press down' during speech mode, the down arrow key fires instead of typing 'press down'.",
+      "acceptanceCriteria": [
+        "SpeechController.onResult passes new text through VoiceCommandParser before typing",
+        "If command detected: call InputDispatch.perform() with the mapped action",
+        "If command detected: do NOT type the command words",
+        "If no command: type text as before (existing behavior preserved)",
+        "lastTypedLength tracking correctly accounts for consumed command words",
+        "swift build succeeds"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "SFSpeechRecognizer delivers cumulative text. Only inspect the delta: text.dropFirst(lastTypedLength). If command words are consumed, advance lastTypedLength past them without typing."
+    },
+    {
+      "id": "VC-003",
+      "title": "Handle partial recognition with disambiguation UI",
+      "description": "As a user, when I say 'press' and the system isn't sure if a command follows, I see feedback in the Dynamic Island rather than the word being typed prematurely.",
+      "acceptanceCriteria": [
+        "When 'press' or 'command' detected at end of new text, hold in buffer instead of typing",
+        "Dynamic Island shows disambiguation indicator (e.g. '⌨️ press ...?') while buffered",
+        "If next partial result completes a valid command within 0.5s, dispatch the action",
+        "If next partial result does NOT complete a command within 0.5s, type buffered word(s) as literal text",
+        "No visible delay for normal dictation that doesn't contain prefix words",
+        "swift build succeeds"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "Use DispatchWorkItem for the 0.5s timeout, cancel it when a new partial arrives. SpeechEngine.onResult fires on background thread — timer must be on main thread."
+    },
+    {
+      "id": "VC-004",
+      "title": "Visual command feedback in Dynamic Island",
+      "description": "As a user, I want brief visual confirmation when a voice command is recognized and executed.",
+      "acceptanceCriteria": [
+        "When a voice command fires, gesture label briefly shows the command (e.g. '⌨️ ↓ Down Arrow') for 0.5s",
+        "Returns to '🎤 Listening...' after the flash",
+        "Normal dictation text display is unchanged",
+        "swift build succeeds"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": "Use the existing onLabelUpdate callback. Flash the command name then schedule revert via DispatchQueue.main.asyncAfter."
+    }
+  ]
+}

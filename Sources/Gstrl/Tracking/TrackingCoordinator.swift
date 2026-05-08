@@ -18,11 +18,14 @@ final class TrackingCoordinator {
     private var leftGestureValue: Int = -1
     private let holdDuration: TimeInterval = 1.0
     private var leftHandEntryFrames: Int = 0
-    private let handEntryGraceFrames: Int = 5
+    private let handEntryGraceFrames: Int = 15
 
     // Crossed fingers (X) = Ctrl+C
     private var fingersCrossedStartTime: Date?
     private var fingersCrossedCount: Int = 0
+
+    // Scroll countdown
+    private var scrollStartTime: Date?
 
     // UI label management
     private var rightHandLabelActive: Bool = false
@@ -150,6 +153,11 @@ final class TrackingCoordinator {
                 ? "L:\(lFingers)f R:\(rFingers)f" : ""
         }
 
+        // === GLOBAL COOLDOWN — no actions during cooldown ===
+        if Date() < rightHandLabelUntil {
+            return
+        }
+
         // === CROSSED INDEX FINGERS (X) = Ctrl+C ×2 ===
         if let lh = leftHand, let rh = rightHand, GestureClassifier.isFingersCrossed(lh, rh) {
             if fingersCrossedStartTime == nil {
@@ -191,15 +199,31 @@ final class TrackingCoordinator {
 
         if scrollActive {
             cursorDrag.reset()
-            scrollController.process(leftHand!)
-            DispatchQueue.main.async { [weak self] in
-                self?.appState.trackingState = .pinching
-                self?.appState.gestureLabel = "↕ Scroll"
-                self?.appState.gestureProgress = 0
+            if scrollStartTime == nil {
+                scrollStartTime = Date()
+            }
+            let elapsed = Date().timeIntervalSince(scrollStartTime!)
+            let countdown: TimeInterval = 0.6
+            if elapsed < countdown {
+                let progress = min(1.0, elapsed / countdown)
+                DispatchQueue.main.async { [weak self] in
+                    self?.appState.trackingState = .pinching
+                    self?.appState.progressMode = .countdown
+                    self?.appState.gestureLabel = "↕ Scroll"
+                    self?.appState.gestureProgress = progress
+                }
+            } else {
+                scrollController.process(leftHand!)
+                DispatchQueue.main.async { [weak self] in
+                    self?.appState.trackingState = .pinching
+                    self?.appState.gestureLabel = "↕ Scrolling"
+                    self?.appState.gestureProgress = 0
+                }
             }
             return
         } else {
             scrollController.reset()
+            scrollStartTime = nil
         }
 
         // === BOTH HANDS 🤙 = aggressive delete ===

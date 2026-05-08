@@ -4,7 +4,8 @@ import AppKit
 
 final class ScrollController {
     private var anchor: CGFloat?
-    private let sensitivity: CGFloat = 1500.0
+    private let deadZone: CGFloat = 0.015
+    private let maxSpeed: CGFloat = 20.0
 
     func reset() {
         anchor = nil
@@ -19,10 +20,18 @@ final class ScrollController {
             return
         }
 
-        let delta = currentY - anchor!
-        let scrollAmount = Int32(delta * sensitivity)
+        let displacement = currentY - anchor!
+
+        // Dead zone — small movements don't scroll
+        guard abs(displacement) > deadZone else { return }
+
+        let sign: CGFloat = displacement > 0 ? 1 : -1
+        let magnitude = abs(displacement) - deadZone
+        let normalized = magnitude / 0.1  // 0.1 units = full speed
+        let speed = min(maxSpeed, normalized * maxSpeed)
+        let scrollAmount = Int32(sign * speed)
+
         if scrollAmount != 0 {
-            anchor = currentY
             if let event = CGEvent(scrollWheelEvent2Source: nil, units: .pixel, wheelCount: 1, wheel1: scrollAmount, wheel2: 0, wheel3: 0) {
                 event.post(tap: .cghidEventTap)
             }

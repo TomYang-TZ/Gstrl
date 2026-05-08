@@ -6,23 +6,24 @@ final class SwipeDetector {
         case left, right, up, down
     }
 
-    private var rightIndexPrev: (pos: CGPoint, time: Date)?
+    private var positions: [(pos: CGPoint, time: Date)] = []
     private var lastSwipeTime: Date = .distantPast
     private let swipeCooldown: TimeInterval = 1.0
-    private let velocityThreshold: CGFloat = 0.6
-    private var swipeReturnIgnoreUntil: Date = .distantPast
-    private var swipeVelocityAccum: CGPoint = .zero
-    private var swipeAccumFrames: Int = 0
     private var rightHandEntryFrames: Int = 0
-    private let handEntryGraceFrames: Int = 5
+    private let handEntryGraceFrames: Int = 15
+    private var swipeModeActive: Bool = false
+
+    // Displacement detection params
+    private let minDisplacement: CGFloat = 0.08
+    private let maxSwipeDuration: TimeInterval = 0.3
+    private let directionRatio: CGFloat = 2.0
 
     var onSwipe: ((_ direction: SwipeDirection, _ leftOpen: Bool) -> Void)?
 
     func reset() {
-        rightIndexPrev = nil
-        swipeVelocityAccum = .zero
-        swipeAccumFrames = 0
+        positions.removeAll()
         rightHandEntryFrames = 0
+        swipeModeActive = false
     }
 
     func resetEntryFrames() {
@@ -32,7 +33,19 @@ final class SwipeDetector {
     func process(_ obs: VNHumanHandPoseObservation, leftHand: VNHumanHandPoseObservation?) {
         let leftOpen = leftHand != nil && GestureClassifier.countExtendedFingers(leftHand!) >= 4
 
+        // Only detect swipes when left hand isn't forming a non-open gesture
         if leftHand != nil && !leftOpen { return }
+
+        // Require open hand to ENTER swipe mode, but stay in mode during motion
+        let rFingers = GestureClassifier.countExtendedFingers(obs)
+        if rFingers >= 4 {
+            swipeModeActive = true
+        } else if positions.isEmpty {
+            // Not in swipe mode and hand isn't open — skip
+            swipeModeActive = false
+            return
+        }
+        // If mid-swipe (positions not empty), keep tracking even if fingers drop
 
         rightHandEntryFrames += 1
         if rightHandEntryFrames <= handEntryGraceFrames {
@@ -40,76 +53,66 @@ final class SwipeDetector {
         }
 
         guard let indexTip = try? obs.recognizedPoint(.indexTip),
-              indexTip.confidence > 0.15 else { return }
+              indexTip.confidence > 0.3 else { return }
 
         let now = Date()
 
-        if now < swipeReturnIgnoreUntil {
-            rightIndexPrev = nil
-            swipeVelocityAccum = .zero
-            swipeAccumFrames = 0
+        guard now.timeIntervalSince(lastSwipeTime) > swipeCooldown else {
+            positions.removeAll()
             return
         }
 
         let pos = CGPoint(x: indexTip.location.x, y: indexTip.location.y)
+        positions.append((pos: pos, time: now))
 
-        defer { rightIndexPrev = (pos: pos, time: now) }
+        // Keep only recent positions within the swipe window
+        positions.removeAll { now.timeIntervalSince($0.time) > maxSwipeDuration }
 
-        guard let prev = rightIndexPrev else { return }
-        let dt = now.timeIntervalSince(prev.time)
-        guard dt > 0.001 && dt < 0.2 else {
-            swipeVelocityAccum = .zero
-            swipeAccumFrames = 0
-            return
+        guard positions.count >= 3 else { return }
+
+        // Check displacement from first to last position
+        let start = positions.first!
+        let end = positions.last!
+        let dt = end.time.timeIntervalSince(start.time)
+        guard dt > 0.03 && dt <= maxSwipeDuration else { return }
+
+        let dx = end.pos.x - start.pos.x
+        let dy = end.pos.y - start.pos.y
+        let absDx = abs(dx)
+        let absDy = abs(dy)
+        let totalDisplacement = max(absDx, absDy)
+
+        guard totalDisplacement > minDisplacement else { return }
+        guard max(absDx, absDy) > min(absDx, absDy) * directionRatio else { return }
+
+        // Check deceleration — last segment should be slower than first
+        if positions.count >= 4 {
+            let mid = positions.count / 2
+            let firstHalfDist = hypot(
+                positions[mid].pos.x - positions[0].pos.x,
+                positions[mid].pos.y - positions[0].pos.y
+            )
+            let secondHalfDist = hypot(
+                positions.last!.pos.x - positions[mid].pos.x,
+                positions.last!.pos.y - positions[mid].pos.y
+            )
+            // First half should have more displacement (decelerating)
+            guard firstHalfDist > secondHalfDist * 0.5 else { return }
         }
 
-        let vx = (pos.x - prev.pos.x) / CGFloat(dt)
-        let vy = (pos.y - prev.pos.y) / CGFloat(dt)
-
-        let speed = hypot(vx, vy)
-        if speed < velocityThreshold * 0.4 {
-            swipeVelocityAccum = .zero
-            swipeAccumFrames = 0
-            return
-        }
-
-        if swipeAccumFrames > 0 {
-            let dotProduct = vx * swipeVelocityAccum.x + vy * swipeVelocityAccum.y
-            if dotProduct < 0 {
-                swipeVelocityAccum = .zero
-                swipeAccumFrames = 0
-                return
-            }
-        }
-
-        swipeVelocityAccum = CGPoint(x: swipeVelocityAccum.x + vx, y: swipeVelocityAccum.y + vy)
-        swipeAccumFrames += 1
-
-        guard swipeAccumFrames >= 2 else { return }
-
-        let avgVx = swipeVelocityAccum.x / CGFloat(swipeAccumFrames)
-        let avgVy = swipeVelocityAccum.y / CGFloat(swipeAccumFrames)
-        let absVx = abs(avgVx)
-        let absVy = abs(avgVy)
-
-        guard max(absVx, absVy) > velocityThreshold else { return }
-        guard max(absVx, absVy) > min(absVx, absVy) * 1.5 else { return }
-        guard now.timeIntervalSince(lastSwipeTime) > swipeCooldown else { return }
-
-        if absVy > absVx && leftOpen { return }
-
+        // Fire swipe
         lastSwipeTime = now
-        swipeVelocityAccum = .zero
-        swipeAccumFrames = 0
-        rightIndexPrev = nil
-        swipeReturnIgnoreUntil = now.addingTimeInterval(swipeCooldown)
+        positions.removeAll()
 
         let direction: SwipeDirection
-        if absVx > absVy {
-            direction = avgVx > 0 ? .left : .right
+        if absDx > absDy {
+            direction = dx > 0 ? .left : .right
         } else {
-            direction = avgVy > 0 ? .up : .down
+            direction = dy > 0 ? .up : .down
         }
+
+        // Block vertical swipes when left hand is open (used for scroll)
+        if absDy > absDx && leftOpen { return }
 
         onSwipe?(direction, leftOpen)
     }

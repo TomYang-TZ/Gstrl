@@ -1,0 +1,56 @@
+# Ralph Progress Log
+Started: Fri May  8 10:23:00 EDT 2026
+---
+
+## Codebase Patterns
+- GestureAction enum lives in InputDispatch.swift — use .pressKey(UInt16) for simple keys, .pressModifiedKey for modifier combos
+- Carbon.HIToolbox provides kVK_* key code constants (e.g. kVK_UpArrow = 126)
+- Speech files go in Sources/iGest/Speech/
+- SpeechEngine.onResult delivers cumulative transcription text (not deltas) — fires on background queue
+- Key codes for letters: a=0, c=8, v=9, z=6
+- SpeechController lives in Sources/iGest/Tracking/, wraps SpeechEngine with UI callbacks (onLabelUpdate)
+- InputDispatch.perform() is a static method — call directly with a GestureAction
+- SpeechController dispatches onResult handling to main thread to avoid race conditions with timers
+- onLabelUpdate callback sets appState.gestureLabel which DynamicIslandView displays
+- VoiceCommandResult.command includes displayName for UI feedback (e.g. "↓ Down Arrow")
+---
+
+## 2026-05-08 - VC-001
+- Implemented VoiceCommandParser with command lookup table
+- Files changed: Sources/iGest/Speech/VoiceCommandParser.swift (new)
+- **Learnings for future iterations:**
+  - Parser checks last 2 words of newText (the delta, not cumulative transcript)
+  - Returns .command with wordCount=2 so caller knows how many words to consume
+  - Case-insensitive matching via .lowercased() on split words
+---
+
+## 2026-05-08 - VC-002
+- Integrated VoiceCommandParser into SpeechController's onResult callback
+- Files changed: Sources/iGest/Tracking/SpeechController.swift
+- **Learnings for future iterations:**
+  - The onResult callback receives cumulative text; delta is `text.dropFirst(lastTypedLength)`
+  - When a command is detected, advance lastTypedLength past it (= text.count) without calling typeText
+  - onLabelUpdate still shows full cumulative text regardless of command detection
+  - SpeechController lives in Tracking/ not Speech/ — it wraps SpeechEngine
+---
+
+## 2026-05-08 - VC-003
+- Implemented partial recognition disambiguation with 0.5s buffer timeout
+- Files changed: Sources/iGest/Speech/VoiceCommandParser.swift, Sources/iGest/Tracking/SpeechController.swift
+- **Learnings for future iterations:**
+  - Added .partial(prefix:, wordCount:) case to VoiceCommandResult for detecting lone "press"/"command" at end
+  - Buffering state lives in SpeechController: bufferedPrefix, bufferedTextBeforePrefix, bufferTimeout (DispatchWorkItem)
+  - All handleSpeechResult logic runs on main thread (dispatched from onResult callback) to avoid races with DispatchWorkItem timeout
+  - When buffer timeout fires, flush prefix as literal text; when next onResult arrives during buffer, cancel timeout and re-evaluate
+  - Dynamic Island shows "⌨️ press ...?" during disambiguation via onLabelUpdate
+---
+
+## 2026-05-08 - VC-004
+- Added visual command feedback: Dynamic Island flashes command name for 0.5s then reverts to "🎤 Listening..."
+- Files changed: Sources/iGest/Speech/VoiceCommandParser.swift, Sources/iGest/Tracking/SpeechController.swift
+- **Learnings for future iterations:**
+  - VoiceCommandResult.command now carries a displayName string (e.g. "↓ Down Arrow", "⌘V Paste")
+  - Display name lookup tables live in VoiceCommandParser alongside key code tables
+  - flashCommandFeedback() uses DispatchQueue.main.asyncAfter for the 0.5s revert — simple fire-and-forget, no cancel needed
+  - onLabelUpdate sets appState.gestureLabel which DynamicIslandView renders with .contentTransition(.numericText())
+---

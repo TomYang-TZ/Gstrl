@@ -77,7 +77,7 @@ make restart   # stop + build + launch
 make stop      # kill running instance
 ```
 
-Grant Camera, Microphone, Accessibility, and Speech Recognition permissions when prompted.
+Grant Camera, Microphone, Accessibility, Screen Recording, and Speech Recognition permissions when prompted (app opens the settings pages automatically on first launch).
 
 ## Requirements
 
@@ -87,7 +87,7 @@ Grant Camera, Microphone, Accessibility, and Speech Recognition permissions when
 
 ## How It Works
 
-Gstrl uses Apple's Vision framework (`VNDetectHumanHandPoseRequest`) to detect hand landmarks at 30fps from your webcam feed. A gesture classifier maps hand poses to actions — pinch detection, finger counting, velocity-based swipe recognition, and two-hand combo tracking. All processing runs locally on-device with zero network dependency.
+Gstrl uses Apple's Vision framework (`VNDetectHumanHandPoseRequest`) to detect hand landmarks at 60fps from your webcam feed. A gesture classifier maps hand poses to actions — pinch detection via palm center tracking, displacement-based swipe recognition (requires open hand pose), and two-hand combo tracking. Scroll uses velocity-based joystick control. All processing runs locally on-device with zero network dependency.
 
 ## License
 

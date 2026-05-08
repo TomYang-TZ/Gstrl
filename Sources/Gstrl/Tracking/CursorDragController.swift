@@ -34,9 +34,9 @@ final class CursorDragController {
     }
 
     func process(_ obs: VNHumanHandPoseObservation, holdingClick: Bool) {
-        guard let wrist = try? obs.recognizedPoint(.wrist), wrist.confidence > 0.3 else { return }
+        guard let palmCenter = palmPosition(obs) else { return }
 
-        let currentWrist = CGPoint(x: wrist.location.x, y: wrist.location.y)
+        let currentWrist = palmCenter
         if anchor == nil {
             anchor = currentWrist
             cursorAnchor = CGEvent(source: nil)?.location ?? .zero
@@ -65,6 +65,24 @@ final class CursorDragController {
         if !holdingClick && isDragging {
             releaseMouseDown()
         }
+    }
+
+    private func palmPosition(_ obs: VNHumanHandPoseObservation) -> CGPoint? {
+        let joints: [VNHumanHandPoseObservation.JointName] = [
+            .indexMCP, .middleMCP, .ringMCP, .littleMCP
+        ]
+        var sumX: CGFloat = 0
+        var sumY: CGFloat = 0
+        var count: CGFloat = 0
+        for joint in joints {
+            if let pt = try? obs.recognizedPoint(joint), pt.confidence > 0.3 {
+                sumX += pt.location.x
+                sumY += pt.location.y
+                count += 1
+            }
+        }
+        guard count >= 2 else { return nil }
+        return CGPoint(x: sumX / count, y: sumY / count)
     }
 
     private func detectCircleRegion() -> CGRect? {

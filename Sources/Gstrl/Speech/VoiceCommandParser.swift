@@ -70,6 +70,12 @@ enum VoiceCommandParser {
         "click": "⌘ Cmd+Click",
     ]
 
+    private static let modifiers: Set<String> = ["shift", "option", "alt"]
+
+    private static func isModifier(_ word: String) -> Bool {
+        modifiers.contains(word)
+    }
+
     private static let pressAliases: Set<String> = ["press", "pres", "prex"]
     private static let commandAliases: Set<String> = ["command", "commend", "commence", "come and", "comet"]
 
@@ -94,6 +100,24 @@ enum VoiceCommandParser {
     static func parse(newText: String) -> VoiceCommandResult {
         let words = newText.split(separator: " ", omittingEmptySubsequences: true)
         guard !words.isEmpty else { return .text }
+
+        // Check for multi-modifier command (e.g. "command shift z", "command option left")
+        if words.count >= 3 {
+            let w1 = words[words.count - 3].lowercased()
+            let w2 = words[words.count - 2].lowercased()
+            let keyword = words[words.count - 1].lowercased()
+
+            if normalizePrefix(w1) == "command" && isModifier(w2) {
+                let keyCode = pressCommands[keyword] ?? commandKeys[keyword]
+                if let keyCode, keyCode != 0xFF {
+                    var shift = false, option = false
+                    if w2 == "shift" { shift = true }
+                    if w2 == "option" || w2 == "alt" { option = true }
+                    let name = "⌘\(shift ? "⇧" : "")\(option ? "⌥" : "")\(keyword.uppercased())"
+                    return .command(.pressModifiedKey(keyCode, shift: shift, control: false, option: option, command: true), wordCount: 3, displayName: name)
+                }
+            }
+        }
 
         // Check for complete command (prefix + keyword)
         if words.count >= 2 {

@@ -31,13 +31,22 @@ enum VoiceCommandParser {
 
     private static let commandKeys: [String: UInt16] = [
         "tab": UInt16(kVK_Tab),
-        "z": 6,
-        "c": 8,
-        "v": 9,
-        "a": 0,
         "delete": UInt16(kVK_Delete),
         "click": 0xFF,
     ]
+
+    private static let letterKeyCodes: [String: UInt16] = [
+        "a": 0, "b": 11, "c": 8, "d": 2, "e": 14, "f": 3, "g": 5,
+        "h": 4, "i": 34, "j": 38, "k": 40, "l": 37, "m": 46, "n": 45,
+        "o": 31, "p": 35, "q": 12, "r": 15, "s": 1, "t": 17, "u": 32,
+        "v": 9, "w": 13, "x": 7, "y": 16, "z": 6,
+    ]
+
+    private static func commandKeyCode(_ keyword: String) -> UInt16? {
+        if let code = commandKeys[keyword] { return code }
+        if let code = letterKeyCodes[keyword] { return code }
+        return nil
+    }
 
     private static let pressDisplayNames: [String: String] = [
         "up": "↑ Up Arrow",
@@ -108,7 +117,7 @@ enum VoiceCommandParser {
             let keyword = words[words.count - 1].lowercased()
 
             if normalizePrefix(w1) == "command" && isModifier(w2) {
-                let keyCode = pressCommands[keyword] ?? commandKeys[keyword]
+                let keyCode = pressCommands[keyword] ?? commandKeyCode(keyword)
                 if let keyCode, keyCode != 0xFF {
                     var shift = false, option = false
                     if w2 == "shift" { shift = true }
@@ -129,12 +138,11 @@ enum VoiceCommandParser {
                     let name = pressDisplayNames[keyword] ?? keyword
                     return .command(.pressKey(keyCode), wordCount: 2, displayName: name)
                 }
-                if normalized == "command", commandKeys[keyword] != nil {
-                    let name = commandDisplayNames[keyword] ?? keyword
+                if normalized == "command", let keyCode = commandKeyCode(keyword) {
+                    let name = commandDisplayNames[keyword] ?? "⌘\(keyword.uppercased())"
                     if keyword == "click" {
                         return .command(.commandClick, wordCount: 2, displayName: name)
                     }
-                    let keyCode = commandKeys[keyword]!
                     return .command(.pressModifiedKey(keyCode, shift: false, control: false, option: false, command: true), wordCount: 2, displayName: name)
                 }
             }

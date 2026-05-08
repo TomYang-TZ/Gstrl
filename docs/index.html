@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iGest — Control Your Mac With Hand Gestures</title>
+    <meta name="description" content="iGest is a free, open-source macOS app that lets you control your computer with hand gestures through your webcam. Move the cursor, click, scroll, swipe, and dictate text — hands-free.">
+    <meta name="keywords" content="hand gesture control mac, hands-free mac cursor, webcam gesture recognition macos, control computer with hand gestures, gesture mouse mac, accessibility mac app, hand tracking macos, vision framework hand detection">
+    <link rel="canonical" href="https://tomyang-tz.github.io/iGest/">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="iGest — Control Your Mac With Hand Gestures">
+    <meta property="og:description" content="Turn your webcam into a hands-free input device. Pinch to click, swipe to navigate, speak to type. No special hardware needed.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://tomyang-tz.github.io/iGest/">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="iGest — Control Your Mac With Hand Gestures">
+    <meta name="twitter:description" content="Turn your webcam into a hands-free input device. Pinch to click, swipe to navigate, speak to type.">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "iGest",
+        "operatingSystem": "macOS 14+",
+        "applicationCategory": "UtilitiesApplication",
+        "description": "Control your Mac with hand gestures through your webcam. Move the cursor, click, scroll, and dictate text hands-free using real-time hand tracking.",
+        "url": "https://github.com/TomYang-TZ/iGest",
+        "downloadUrl": "https://github.com/TomYang-TZ/iGest",
+        "softwareVersion": "1.0",
+        "author": {
+            "@type": "Person",
+            "name": "Tom Yang",
+            "url": "https://github.com/TomYang-TZ"
+        },
+        "license": "https://opensource.org/licenses/MIT",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "featureList": [
+            "Hands-free cursor control via webcam",
+            "Pinch-to-click gesture recognition",
+            "Velocity-based swipe detection for arrow keys",
+            "Speech-to-text dictation mode",
+            "Drag-and-drop with two-hand gestures",
+            "Scroll control without touching anything",
+            "Dynamic Island status overlay",
+            "Real-time hand tracking at 30fps",
+            "Zero network dependency — all processing on-device"
+        ]
+    }
+    </script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+            background: #0a0a0a;
+            color: #e5e5e5;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        .container { max-width: 720px; margin: 0 auto; padding: 80px 24px; }
+        h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 16px;
+        }
+        .tagline {
+            font-size: 1.25rem;
+            color: #a3a3a3;
+            margin-bottom: 48px;
+        }
+        .cta {
+            display: inline-block;
+            background: #fff;
+            color: #0a0a0a;
+            padding: 12px 28px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 64px;
+            transition: opacity 0.2s;
+        }
+        .cta:hover { opacity: 0.85; }
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 48px 0 16px;
+            color: #fff;
+        }
+        p { margin-bottom: 16px; color: #d4d4d4; }
+        .features {
+            list-style: none;
+            padding: 0;
+        }
+        .features li {
+            padding: 12px 0;
+            border-bottom: 1px solid #262626;
+            color: #d4d4d4;
+        }
+        .features li:last-child { border-bottom: none; }
+        .gesture-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0 32px;
+        }
+        .gesture-table th,
+        .gesture-table td {
+            text-align: left;
+            padding: 10px 12px;
+            border-bottom: 1px solid #262626;
+        }
+        .gesture-table th { color: #a3a3a3; font-weight: 500; font-size: 0.875rem; }
+        code {
+            background: #1a1a1a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        pre {
+            background: #1a1a1a;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 16px 0;
+        }
+        pre code { background: none; padding: 0; }
+        footer {
+            margin-top: 80px;
+            padding-top: 24px;
+            border-top: 1px solid #262626;
+            color: #737373;
+            font-size: 0.875rem;
+        }
+        footer a { color: #a3a3a3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>iGest 🤌</h1>
+        <p class="tagline">Control your Mac with hand gestures. No keyboard, no mouse — just your webcam.</p>
+        <a href="https://github.com/TomYang-TZ/iGest" class="cta">View on GitHub</a>
+
+        <h2>What is iGest?</h2>
+        <p>iGest is a free, open-source macOS app that turns your webcam into a hands-free input device. It uses Apple's Vision framework to track your hand poses in real time at 30fps, then maps gestures to mouse and keyboard actions.</p>
+        <p>Move the cursor by pinching and dragging. Click with a pinch. Swipe for arrow keys. Speak to type. All processing runs locally on your Mac — no cloud, no latency, no data leaving your machine.</p>
+
+        <h2>Features</h2>
+        <ul class="features">
+            <li><strong>Cursor control</strong> — pinch your right hand and move to drag the cursor</li>
+            <li><strong>Click &amp; right-click</strong> — left pinch for click, two-finger pinch for right-click</li>
+            <li><strong>Swipe navigation</strong> — open hand swipe for arrow keys (velocity-based, no false triggers)</li>
+            <li><strong>Scroll</strong> — left pinch + right fist, then move left hand up/down</li>
+            <li><strong>Drag and drop</strong> — pinch both hands, move right hand to drag</li>
+            <li><strong>Speech-to-text</strong> — hold both fists to activate dictation</li>
+            <li><strong>Escalating delete</strong> — hold 🤙 to delete chars, then words, then lines</li>
+            <li><strong>Dynamic Island overlay</strong> — always-visible status showing detected hands and gestures</li>
+            <li><strong>Fully local</strong> — zero network dependency, everything on-device</li>
+        </ul>
+
+        <h2>Gestures</h2>
+        <table class="gesture-table">
+            <thead>
+                <tr><th>Gesture</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Right pinch + move</td><td>Move cursor</td></tr>
+                <tr><td>Left pinch</td><td>Click</td></tr>
+                <tr><td>Left two-finger pinch</td><td>Right-click</td></tr>
+                <tr><td>Right open hand swipe</td><td>Arrow keys</td></tr>
+                <tr><td>L pinch + R fist + move</td><td>Scroll</td></tr>
+                <tr><td>Both pinch + move</td><td>Drag and drop</td></tr>
+                <tr><td>Both fists</td><td>Speech-to-text</td></tr>
+                <tr><td>Right 🤙 hold</td><td>Delete (escalating)</td></tr>
+                <tr><td>Cross fingers</td><td>Ctrl+C (kill)</td></tr>
+            </tbody>
+        </table>
+
+        <h2>Install</h2>
+        <pre><code>git clone https://github.com/TomYang-TZ/iGest.git
+cd iGest
+make install</code></pre>
+        <p>Requires macOS 14+, a webcam, and Swift 5.9+. Grant Camera, Accessibility, and Speech Recognition permissions when prompted.</p>
+
+        <h2>Use Cases</h2>
+        <p><strong>Accessibility</strong> — operate your Mac without fine motor control of a mouse or keyboard.</p>
+        <p><strong>RSI relief</strong> — rest your hands while still navigating and typing.</p>
+        <p><strong>Presentations</strong> — control slides from across the room with natural gestures.</p>
+        <p><strong>Standing desk</strong> — step back from your desk and keep working.</p>
+
+        <footer>
+            <p>MIT License. Built by <a href="https://github.com/TomYang-TZ">Tom Yang</a>.</p>
+        </footer>
+    </div>
+</body>
+</html>

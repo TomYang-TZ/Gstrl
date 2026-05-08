@@ -2,7 +2,7 @@
 
 > Augment your Mac with hand gestures — use alongside your keyboard and mouse, not instead of them.
 
-**Gstrl** adds a gesture layer on top of your normal workflow. **Pinch and drag to move your cursor.** Swipe for arrows, circle to screenshot, speak to type or execute commands. Powered by real-time hand tracking via Apple's Vision framework. Your webcam becomes an extra input channel.
+**Gstrl** adds a gesture and voice layer on top of your normal workflow. **Pinch to move cursor. Swipe for arrows. Circle to screenshot. Speak to type or run commands.** Powered by Apple Vision framework + SFSpeechRecognizer. Your webcam becomes an extra input channel.
 
 This isn't about replacing your keyboard and mouse. It's about having **another way to interact** when your hands are busy, far from your desk, or when a gesture is simply faster than a click.
 

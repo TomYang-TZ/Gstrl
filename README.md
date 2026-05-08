@@ -26,7 +26,7 @@ Raise both hands. Single-hand gestures are suppressed — only these combos fire
 ```
 🖐🖐 Both open    → Speech-to-text
 🖐+👆 Open+swipe  → Tab / Shift+Tab
-🤙🤙 Both 🤙      → Delete by line (escalates to select all)
+🤙🤙 Both thumb+pinky → Delete lines (escalates to select all)
 ✕  Fingers cross → Ctrl+C (cancel)
 ```
 

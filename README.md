@@ -30,7 +30,7 @@ Control your computer using hand gestures through your webcam. No special hardwa
 |---------|--------|
 | L pinch + R pinch + move | Drag and drop |
 | L pinch + R fist + move | Scroll up/down |
-| Both hands open | Speech-to-text |
+| Both fists | Speech-to-text |
 | L open + R swipe ←→ | Tab / Shift+Tab |
 | Both 🤙 six | Delete lines (escalates to select all) |
 | ✕ Cross index fingers | Ctrl+C ×2 (cancel/kill) |

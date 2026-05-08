@@ -46,7 +46,9 @@ enum GestureClassifier {
               thumb.confidence > 0.3, index.confidence > 0.3, middle.confidence > 0.3 else { return false }
         let thumbToIndex = hypot(thumb.location.x - index.location.x, thumb.location.y - index.location.y)
         let thumbToMiddle = hypot(thumb.location.x - middle.location.x, thumb.location.y - middle.location.y)
-        return thumbToIndex < 0.07 && thumbToMiddle < 0.07
+        let indexToMiddle = hypot(index.location.x - middle.location.x, index.location.y - middle.location.y)
+        // All three fingertips must be close together (not just thumb near each independently)
+        return thumbToIndex < 0.05 && thumbToMiddle < 0.05 && indexToMiddle < 0.05
     }
 
     static func isThumbPinky(_ obs: VNHumanHandPoseObservation) -> Bool {

@@ -78,7 +78,7 @@ struct MainStatusView: View {
                 gestureRow("☝️ 1-3 fingers (hold)", "Press 1-3")
                 gestureRow("✊ Fist (hold)", "Enter")
                 gestureRow("🤙 Six (hold)", "Escape")
-                gestureRow("🖐🖐 Both open (hold)", "Speech-to-text")
+                gestureRow("✊✊ Both fists (hold)", "Speech-to-text")
             }
 
             Group {

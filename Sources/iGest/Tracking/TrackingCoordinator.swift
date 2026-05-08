@@ -190,13 +190,14 @@ final class TrackingCoordinator {
             deleteController.resetBothHands()
         }
 
-        // === SPEECH: both hands open ===
-        let bothOpen = leftHand != nil && rightHand != nil
-            && GestureClassifier.countExtendedFingers(leftHand!) >= 4
-            && GestureClassifier.countExtendedFingers(rightHand!) >= 4
+        // === SPEECH: both fists ===
+        let bothFists = leftHand != nil && rightHand != nil
+            && GestureClassifier.countExtendedFingers(leftHand!) == 0
+            && GestureClassifier.countExtendedFingers(rightHand!) == 0
             && !GestureClassifier.isPinching(leftHand!) && !GestureClassifier.isPinching(rightHand!)
+            && !GestureClassifier.isThumbPinky(leftHand!) && !GestureClassifier.isThumbPinky(rightHand!)
 
-        if bothOpen {
+        if bothFists {
             let status = speechController.process()
             DispatchQueue.main.async { [weak self] in
                 self?.appState.progressMode = status.progressMode

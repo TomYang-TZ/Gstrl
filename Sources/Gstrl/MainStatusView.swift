@@ -53,6 +53,11 @@ struct MainStatusView: View {
                 .foregroundStyle(.secondary)
                 .frame(height: 14)
 
+            Button(appState.isEnabled ? "Disable" : "Enable") {
+                onToggle()
+            }
+            .buttonStyle(.borderedProminent)
+
             Divider()
 
             DisclosureGroup("Gestures", isExpanded: $gesturesExpanded) {
@@ -64,11 +69,6 @@ struct MainStatusView: View {
             Divider()
 
             settingsView
-
-            Button(appState.isEnabled ? "Disable" : "Enable") {
-                onToggle()
-            }
-            .buttonStyle(.borderedProminent)
         }
         .padding(20)
         .frame(width: 340)

@@ -77,14 +77,14 @@ struct MainStatusView: View {
                 gestureRow("👌 Pinch", "Click")
                 gestureRow("☝️ 1-3 fingers (hold)", "Press 1-3")
                 gestureRow("✊ Fist (hold)", "Enter")
-                gestureRow("🤙 Thumb+pinky (hold)", "Escape")
+                gestureRow("🤙 Six (hold)", "Escape")
                 gestureRow("🖐🖐 Both open (hold)", "Speech-to-text")
             }
 
             Group {
                 Text("RIGHT HAND").font(.system(.caption2, design: .monospaced)).foregroundStyle(.blue)
                 gestureRow("👌 Pinch + move", "Drag cursor")
-                gestureRow("🤙 Thumb+pinky (hold)", "Delete (repeats)")
+                gestureRow("🤙 Six (hold)", "Delete (repeats)")
                 gestureRow("👆 Swipe ↑", "Up arrow")
                 gestureRow("👇 Swipe ↓", "Down arrow")
                 gestureRow("👈 Swipe ←", "Left arrow")

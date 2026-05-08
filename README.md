@@ -14,7 +14,7 @@ Control your computer using hand gestures through your webcam. No special hardwa
 | 👌👌 Two-finger pinch (thumb + index + middle) | Right click |
 | ☝️ Hold 1–3 fingers | Type 1, 2, or 3 |
 | ✊ Hold fist | Enter |
-| 🤙 Hold thumb + pinky | Escape |
+| 🤙 Six (hold) | Escape |
 
 ### Right Hand (navigation hand)
 
@@ -22,7 +22,7 @@ Control your computer using hand gestures through your webcam. No special hardwa
 |---------|--------|
 | 👌 Pinch + move | Move cursor |
 | 👆 Swipe ↑↓←→ | Arrow keys |
-| 🤙 Hold thumb + pinky | Delete (chars → words → lines → all) |
+| 🤙 Six (hold) | Delete (chars → words → lines → all) |
 
 ### Both Hands (combos)
 
@@ -32,7 +32,7 @@ Control your computer using hand gestures through your webcam. No special hardwa
 | L pinch + R fist + move | Scroll up/down |
 | Both hands open | Speech-to-text |
 | L open + R swipe ←→ | Tab / Shift+Tab |
-| Both 🤙 | Delete lines (escalates to select all) |
+| Both 🤙 six | Delete lines (escalates to select all) |
 | ✕ Cross index fingers | Ctrl+C ×2 (cancel/kill) |
 
 

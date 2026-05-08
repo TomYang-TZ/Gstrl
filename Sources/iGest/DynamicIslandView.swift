@@ -2,6 +2,7 @@ import SwiftUI
 
 struct DynamicIslandView: View {
     @Bindable var appState: AppState
+    var onToggle: () -> Void
 
     private var isExpanded: Bool {
         !appState.gestureLabel.isEmpty
@@ -32,27 +33,29 @@ struct DynamicIslandView: View {
             .shadow(color: .black.opacity(0.25), radius: 8, y: 3)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .animation(.spring(response: 0.45, dampingFraction: 0.88), value: isExpanded)
+            .onTapGesture { onToggle() }
     }
 
     private var compactContent: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             Circle()
-                .fill(appState.leftHandDetected ? .orange : .white.opacity(0.12))
-                .frame(width: 9, height: 9)
+                .fill(appState.leftHandDetected ? .orange : .white.opacity(0.15))
+                .frame(width: 8, height: 8)
 
-            if appState.handsCount > 0 {
-                Text("●")
-                    .font(.system(size: 5))
-                    .foregroundStyle(.green.opacity(0.9))
-            } else {
-                Text("○")
-                    .font(.system(size: 5))
-                    .foregroundStyle(.white.opacity(0.2))
-            }
+            RoundedRectangle(cornerRadius: 3)
+                .fill(appState.isEnabled ? .green.opacity(0.9) : .white.opacity(0.2))
+                .frame(width: 16, height: 8)
+                .overlay(alignment: appState.isEnabled ? .trailing : .leading) {
+                    Circle()
+                        .fill(.white)
+                        .frame(width: 6, height: 6)
+                        .padding(.horizontal, 1)
+                }
+                .animation(.easeInOut(duration: 0.2), value: appState.isEnabled)
 
             Circle()
-                .fill(appState.rightHandDetected ? .blue : .white.opacity(0.12))
-                .frame(width: 9, height: 9)
+                .fill(appState.rightHandDetected ? .blue : .white.opacity(0.15))
+                .frame(width: 8, height: 8)
         }
     }
 

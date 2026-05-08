@@ -112,4 +112,5 @@ Requires Accessibility permission — app prompts on first enable.
 ## Next Steps
 
 - **App icon** — design a distinctive, recognizable icon for Gstrl. Should convey gesture/hand/control at a glance, work at small sizes (menu bar, dock, Finder), and feel native to macOS. Consider: abstract hand silhouette, gesture trail/arc, or a stylized "G" with motion lines.
+- **Launch strategy** — plan posts for Reddit (r/macapps, r/sideproject, r/accessibility), X/Twitter, and RedNote (小红书). Need: short demo video/GIF, compelling hook, appropriate subreddits/hashtags, posting timing.
 - **Two-finger directional hold** — point index+middle to fire accelerating arrow key repeats. Detection was unreliable; needs wrist angle + ML classifier approach.

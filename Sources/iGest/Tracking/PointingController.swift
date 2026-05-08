@@ -64,16 +64,28 @@ final class PointingController {
               let indexPIP = try? obs.recognizedPoint(.indexPIP),
               let middleTip = try? obs.recognizedPoint(.middleTip),
               let middlePIP = try? obs.recognizedPoint(.middlePIP),
-              indexTip.confidence > 0.3, indexPIP.confidence > 0.3 else { return nil }
+              let ringTip = try? obs.recognizedPoint(.ringTip),
+              let ringPIP = try? obs.recognizedPoint(.ringPIP),
+              let littleTip = try? obs.recognizedPoint(.littleTip),
+              let littlePIP = try? obs.recognizedPoint(.littlePIP),
+              indexTip.confidence > 0.3, middleTip.confidence > 0.3 else { return nil }
 
-        let indexExtended = indexTip.location.y > indexPIP.location.y
-            || abs(indexTip.location.x - indexPIP.location.x) > 0.06
-        let middleClosed = middleTip.location.y <= middlePIP.location.y
+        // Two fingers extended (index + middle), ring + pinky closed
+        let indexLength = hypot(indexTip.location.x - indexPIP.location.x,
+                                indexTip.location.y - indexPIP.location.y)
+        let middleLength = hypot(middleTip.location.x - middlePIP.location.x,
+                                 middleTip.location.y - middlePIP.location.y)
+        let ringLength = hypot(ringTip.location.x - ringPIP.location.x,
+                               ringTip.location.y - ringPIP.location.y)
+        let littleLength = hypot(littleTip.location.x - littlePIP.location.x,
+                                 littleTip.location.y - littlePIP.location.y)
 
-        guard indexExtended && middleClosed else { return nil }
+        guard indexLength > 0.06 && middleLength > 0.06 else { return nil }
+        guard ringLength < 0.05 && littleLength < 0.05 else { return nil }
 
-        let dx = indexTip.location.x - indexPIP.location.x
-        let dy = indexTip.location.y - indexPIP.location.y
+        // Use average direction of both extended fingers
+        let dx = ((indexTip.location.x - indexPIP.location.x) + (middleTip.location.x - middlePIP.location.x)) / 2
+        let dy = ((indexTip.location.y - indexPIP.location.y) + (middleTip.location.y - middlePIP.location.y)) / 2
         let absDx = abs(dx)
         let absDy = abs(dy)
 

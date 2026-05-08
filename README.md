@@ -21,7 +21,7 @@ Control your computer using hand gestures through your webcam. No special hardwa
 | Gesture | Action |
 |---------|--------|
 | 👌 Pinch + move | Move cursor |
-| ☝️ Point direction + hold | Arrow keys (accelerating repeat) |
+| ✌️ Two-finger point + hold | Arrow keys (accelerating repeat) |
 | 👆 Swipe ↑↓←→ | Arrow key (single press) |
 | 🤙 Hold thumb + pinky | Delete (chars → words → lines → all) |
 

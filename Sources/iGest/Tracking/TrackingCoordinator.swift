@@ -251,7 +251,7 @@ final class TrackingCoordinator {
                 }
                 swipeDetector.process(rh, leftHand: leftHand)
 
-                if leftHand == nil && GestureClassifier.countExtendedFingers(rh) == 1 {
+                if leftHand == nil {
                     if let status = pointingController.process(rh) {
                         rightHandLabelActive = true
                         DispatchQueue.main.async { [weak self] in

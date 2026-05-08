@@ -47,7 +47,7 @@ While speech-to-text is active, say "press" + keyword to execute actions instead
 | press down/up/left/right | Arrow keys |
 | press enter / press tab | Enter / Tab |
 | press delete / press escape | Backspace / Escape |
-| command tab / command z / command c / command v | Cmd+Tab / Undo / Copy / Paste |
+| command tab/z/c/v | Cmd+Tab / Undo / Copy / Paste |
 
 ## Dynamic Island
 

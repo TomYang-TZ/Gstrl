@@ -9,10 +9,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var coordinator: TrackingCoordinator?
     private var mainWindow: NSWindow?
     private var islandPanel: NSPanel?
+    private var statusItem: NSStatusItem?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         createMainWindow()
         createIslandPanel()
+        createMenuBarItem()
         requestAllPermissions()
     }
 
@@ -87,12 +89,35 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         islandPanel = panel
     }
 
+    private func createMenuBarItem() {
+        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        statusItem?.button?.image = NSImage(systemSymbolName: "hand.raised", accessibilityDescription: "iGest")
+
+        let menu = NSMenu()
+        menu.addItem(NSMenuItem(title: "Toggle", action: #selector(toggleTracking), keyEquivalent: ""))
+        menu.addItem(.separator())
+        menu.addItem(NSMenuItem(title: "Show Window", action: #selector(showWindow), keyEquivalent: ""))
+        menu.addItem(.separator())
+        menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        statusItem?.menu = menu
+    }
+
+    @objc private func showWindow() {
+        mainWindow?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
     @objc private func toggleTracking() {
         if appState.isEnabled {
             coordinator?.stop()
             coordinator = nil
             appState.isEnabled = false
         } else {
+            if !AXIsProcessTrusted() {
+                let options = [kAXTrustedCheckOptionPrompt.takeRetainedValue(): true] as CFDictionary
+                AXIsProcessTrustedWithOptions(options)
+                return
+            }
             appState.isEnabled = true
             let coord = TrackingCoordinator(appState: appState)
             coord.start()

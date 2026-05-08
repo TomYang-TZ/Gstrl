@@ -39,6 +39,16 @@ enum GestureClassifier {
         return lDir * rDir < 0
     }
 
+    static func isTwoFingerPinch(_ obs: VNHumanHandPoseObservation) -> Bool {
+        guard let thumb = try? obs.recognizedPoint(.thumbTip),
+              let index = try? obs.recognizedPoint(.indexTip),
+              let middle = try? obs.recognizedPoint(.middleTip),
+              thumb.confidence > 0.3, index.confidence > 0.3, middle.confidence > 0.3 else { return false }
+        let thumbToIndex = hypot(thumb.location.x - index.location.x, thumb.location.y - index.location.y)
+        let thumbToMiddle = hypot(thumb.location.x - middle.location.x, thumb.location.y - middle.location.y)
+        return thumbToIndex < 0.07 && thumbToMiddle < 0.07
+    }
+
     static func isThumbPinky(_ obs: VNHumanHandPoseObservation) -> Bool {
         guard let thumbTip = try? obs.recognizedPoint(.thumbTip),
               let thumbIP = try? obs.recognizedPoint(.thumbIP),

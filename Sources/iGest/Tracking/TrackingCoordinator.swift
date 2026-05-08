@@ -224,7 +224,13 @@ final class TrackingCoordinator {
                 deleteController.reset()
                 swipeDetector.resetEntryFrames()
                 swipeDetector.reset()
-                cursorDrag.process(rh)
+                let leftPinching = leftHand != nil && GestureClassifier.isPinching(leftHand!)
+                cursorDrag.process(rh, holdingClick: leftPinching)
+                if leftPinching {
+                    DispatchQueue.main.async { [weak self] in
+                        self?.appState.gestureLabel = "🔀 Drag"
+                    }
+                }
             } else if rThumbPinky {
                 cursorDrag.reset()
                 swipeDetector.reset()
@@ -258,7 +264,18 @@ final class TrackingCoordinator {
             leftHandEntryFrames += 1
             guard leftHandEntryFrames > handEntryGraceFrames else { return }
 
-            if GestureClassifier.isPinching(lh) {
+            if GestureClassifier.isTwoFingerPinch(lh) {
+                resetLeftGesture()
+                let now = Date()
+                if now.timeIntervalSince(lastClickTime) > 0.5 {
+                    lastClickTime = now
+                    InputDispatch.perform(.rightClick)
+                }
+                DispatchQueue.main.async { [weak self] in
+                    self?.appState.trackingState = .pinching
+                    self?.appState.gestureLabel = "👆👆 Right Click"
+                }
+            } else if GestureClassifier.isPinching(lh) {
                 resetLeftGesture()
                 let now = Date()
                 if now.timeIntervalSince(lastClickTime) > 0.5 {

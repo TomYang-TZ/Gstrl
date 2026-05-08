@@ -6,6 +6,7 @@ enum GestureAction {
     case pressKey(UInt16)
     case pressModifiedKey(UInt16, shift: Bool, control: Bool, option: Bool, command: Bool)
     case click
+    case rightClick
 }
 
 enum InputDispatch {
@@ -21,7 +22,9 @@ enum InputDispatch {
             if command { flags.insert(.maskCommand) }
             postKey(keyCode: keyCode, flags: flags)
         case .click:
-            postClick()
+            postClick(button: .left)
+        case .rightClick:
+            postClick(button: .right)
         }
     }
 
@@ -37,11 +40,13 @@ enum InputDispatch {
         }
     }
 
-    private static func postClick() {
+    private static func postClick(button: CGMouseButton) {
         DispatchQueue.main.async {
             guard let pos = CGEvent(source: nil)?.location else { return }
-            guard let down = CGEvent(mouseEventSource: nil, mouseType: .leftMouseDown, mouseCursorPosition: pos, mouseButton: .left),
-                  let up = CGEvent(mouseEventSource: nil, mouseType: .leftMouseUp, mouseCursorPosition: pos, mouseButton: .left) else { return }
+            let downType: CGEventType = button == .left ? .leftMouseDown : .rightMouseDown
+            let upType: CGEventType = button == .left ? .leftMouseUp : .rightMouseUp
+            guard let down = CGEvent(mouseEventSource: nil, mouseType: downType, mouseCursorPosition: pos, mouseButton: button),
+                  let up = CGEvent(mouseEventSource: nil, mouseType: upType, mouseCursorPosition: pos, mouseButton: button) else { return }
             down.post(tap: .cghidEventTap)
             usleep(50000)
             up.post(tap: .cghidEventTap)

@@ -1,10 +1,10 @@
 # Gstrl 🤌
 
-> Your webcam is now an input device. Yes, really.
+> Sometimes a pinch is faster than reaching for the mouse.
 
-**Gstrl** adds gesture and voice control on top of your Mac. **Pinch to move cursor. Swipe for arrows. Circle to screenshot. Speak to run commands.** All on-device via Apple Vision + SFSpeechRecognizer.
+**Gstrl** adds gesture and voice control to macOS. **Pinch to move cursor. Swipe for arrows. Circle to screenshot. Speak to run commands.** All on-device via Apple Vision + SFSpeechRecognizer.
 
-Not a mouse replacement — a mouse *supplement*. For when you're lying back, presenting, or just tired of using keyboard and mouse.
+For when you're lying back, presenting, or just tired of reaching across your desk.
 
 ## Gestures & Voice
 

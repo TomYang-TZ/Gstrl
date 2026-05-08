@@ -1,10 +1,10 @@
-# iGest — Hands-Free Mac Control via Webcam Hand Gestures
+# iGest 🤌
 
-> macOS hand gesture recognition app: control your cursor, click, type, scroll, and dictate — all without touching your keyboard or mouse.
+> Talk to your AI agent with your hands.
 
-iGest turns any webcam into a gesture controller for macOS. It uses Apple Vision's real-time hand pose detection to translate pinches, swipes, finger counts, and hand poses into mouse clicks, cursor movement, keyboard shortcuts, and speech-to-text input. No special hardware required — just your built-in webcam.
+iGest turns your webcam into a gesture interface for controlling AI agents. Pinch to click, swipe to navigate, hold to confirm, wave to dictate — no keyboard or mouse needed. Just your hands and a webcam.
 
-**Use cases:** accessibility, RSI relief, hands-free presentations, touchless kiosk control, creative workflows, distance interaction.
+Built with Apple Vision's real-time hand pose detection. No special hardware required.
 
 ## How It Works
 

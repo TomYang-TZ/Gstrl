@@ -66,10 +66,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard let screen = NSScreen.main else { return }
 
         let panelSize = NSSize(width: 400, height: 100)
-        let menuBarHeight = screen.frame.maxY - screen.visibleFrame.maxY
+        let hasNotch = screen.safeAreaInsets.top > 0
+        let offset: CGFloat = hasNotch ? screen.safeAreaInsets.top : 0
         let origin = NSPoint(
             x: screen.frame.midX - panelSize.width / 2,
-            y: screen.frame.maxY - panelSize.height - menuBarHeight
+            y: screen.frame.maxY - panelSize.height - offset
         )
 
         let panel = NSPanel(

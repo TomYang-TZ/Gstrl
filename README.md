@@ -8,7 +8,7 @@ This isn't about replacing your keyboard and mouse. It's about having **another 
 
 **Use cases:** quick screenshots by circling content, scrolling while eating, navigating slides during presentations, RSI relief by alternating input methods, accessibility, or hands-free control from across the room.
 
-## Gestures
+## Gestures & Voice
 
 ### Left Hand (action hand)
 

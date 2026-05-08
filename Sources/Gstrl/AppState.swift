@@ -16,7 +16,7 @@ final class AppState {
     var screenshotPreview: NSImage? = nil
 
     // User-configurable settings
-    var fps: FPS = .sixty
+    var fps: FPS = .thirty
     var cursorSensitivity: Double = 2.5
     var scrollSensitivity: Double = 1.0
 

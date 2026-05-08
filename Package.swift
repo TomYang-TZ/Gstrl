@@ -2,12 +2,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "iGest",
+    name: "Gstrl",
     platforms: [.macOS(.v14)],
     targets: [
         .executableTarget(
-            name: "iGest",
-            path: "Sources/iGest",
+            name: "Gstrl",
+            path: "Sources/Gstrl",
             linkerSettings: [
                 .linkedFramework("AVFoundation"),
                 .linkedFramework("Vision"),
@@ -19,9 +19,9 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "iGestTests",
-            dependencies: ["iGest"],
-            path: "Tests/iGestTests"
+            name: "GstrlTests",
+            dependencies: ["Gstrl"],
+            path: "Tests/GstrlTests"
         )
     ]
 )

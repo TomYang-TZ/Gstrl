@@ -1,6 +1,6 @@
 .PHONY: build install uninstall run stop restart clean
 
-APP_NAME := iGest
+APP_NAME := Gstrl
 APP_BUNDLE := $(APP_NAME).app
 INSTALL_DIR := /Applications
 

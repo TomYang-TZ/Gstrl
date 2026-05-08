@@ -1,10 +1,10 @@
-# iGest — Engineering Handoff
+# Gstrl — Engineering Handoff
 
 ## Architecture
 
 ```
-Sources/iGest/
-├── iGestApp.swift                 App entry, window + island + menu bar lifecycle
+Sources/Gstrl/
+├── GstrlApp.swift                 App entry, window + island + menu bar lifecycle
 ├── AppState.swift                 @Observable model — all UI-bound state
 ├── DynamicIslandView.swift        Floating notch overlay (NotchShape + SwiftUI)
 ├── MainStatusView.swift           Settings window with gesture reference

@@ -3,7 +3,7 @@ import Vision
 
 final class CameraManager: NSObject, @unchecked Sendable {
     private let captureSession = AVCaptureSession()
-    private let processingQueue = DispatchQueue(label: "com.igest.camera", qos: .userInteractive)
+    private let processingQueue = DispatchQueue(label: "com.gstrl.camera", qos: .userInteractive)
     private var isProcessing = false
 
     var onFrame: ((_ pixelBuffer: CVPixelBuffer) -> Void)?

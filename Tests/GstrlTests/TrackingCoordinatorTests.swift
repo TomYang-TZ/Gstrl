@@ -1,5 +1,5 @@
 import XCTest
-@testable import iGest
+@testable import Gstrl
 
 final class TrackingCoordinatorTests: XCTestCase {
     func testCoordinatorStarts() {

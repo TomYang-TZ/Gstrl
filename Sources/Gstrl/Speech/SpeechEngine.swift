@@ -9,7 +9,7 @@ final class SpeechEngine {
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var recognitionTask: SFSpeechRecognitionTask?
     private(set) var isListening = false
-    private let queue = DispatchQueue(label: "com.igest.speech")
+    private let queue = DispatchQueue(label: "com.gstrl.speech")
     var onResult: ((String) -> Void)?
 
     init() {
@@ -23,7 +23,7 @@ final class SpeechEngine {
     private func _startListening() {
         guard !isListening else { return }
         guard let recognizer, recognizer.isAvailable else {
-            NSLog("iGest: Speech recognizer not available")
+            NSLog("Gstrl: Speech recognizer not available")
             return
         }
 
@@ -43,12 +43,12 @@ final class SpeechEngine {
         let format = inputNode.outputFormat(forBus: 0)
 
         guard format.sampleRate > 0 && format.channelCount > 0 else {
-            NSLog("iGest: Audio input format invalid (rate=%.0f ch=%d) — no mic available?", format.sampleRate, format.channelCount)
+            NSLog("Gstrl: Audio input format invalid (rate=%.0f ch=%d) — no mic available?", format.sampleRate, format.channelCount)
             isListening = false
             return
         }
 
-        NSLog("iGest: Speech starting — input: %.0fHz, %d ch", format.sampleRate, format.channelCount)
+        NSLog("Gstrl: Speech starting — input: %.0fHz, %d ch", format.sampleRate, format.channelCount)
 
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, _ in
             request.append(buffer)
@@ -58,7 +58,7 @@ final class SpeechEngine {
         do {
             try engine.start()
         } catch {
-            NSLog("iGest: Audio engine failed: \(error)")
+            NSLog("Gstrl: Audio engine failed: \(error)")
             inputNode.removeTap(onBus: 0)
             isListening = false
             return
@@ -93,7 +93,7 @@ final class SpeechEngine {
         recognitionRequest = nil
         recognitionTask = nil
 
-        NSLog("iGest: Speech listening stopped")
+        NSLog("Gstrl: Speech listening stopped")
     }
 
     func deleteChars(_ count: Int) {

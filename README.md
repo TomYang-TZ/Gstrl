@@ -1,8 +1,8 @@
-# iGest 🤌
+# Gstrl 🤌
 
 > Control your Mac with hand gestures — no keyboard, no mouse, just your webcam.
 
-**iGest** is a hands-free Mac cursor and gesture control app that turns your webcam into an input device. Point, pinch, swipe, and speak to navigate your computer using real-time hand tracking powered by Apple's Vision framework.
+**Gstrl** is a hands-free Mac cursor and gesture control app that turns your webcam into an input device. Point, pinch, swipe, and speak to navigate your computer using real-time hand tracking powered by Apple's Vision framework.
 
 Use it to control your Mac with hand gestures, move the cursor hands-free, click and scroll without touching anything, or dictate text with speech-to-text — all through webcam gesture recognition on macOS. No special hardware required.
 
@@ -64,8 +64,8 @@ Always visible, never steals focus.
 ## Install
 
 ```bash
-git clone https://github.com/TomYang-TZ/iGest.git
-cd iGest
+git clone https://github.com/TomYang-TZ/Gstrl.git
+cd Gstrl
 make install   # builds and copies to /Applications
 ```
 
@@ -87,7 +87,7 @@ Grant Camera, Microphone, Accessibility, and Speech Recognition permissions when
 
 ## How It Works
 
-iGest uses Apple's Vision framework (`VNDetectHumanHandPoseRequest`) to detect hand landmarks at 30fps from your webcam feed. A gesture classifier maps hand poses to actions — pinch detection, finger counting, velocity-based swipe recognition, and two-hand combo tracking. All processing runs locally on-device with zero network dependency.
+Gstrl uses Apple's Vision framework (`VNDetectHumanHandPoseRequest`) to detect hand landmarks at 30fps from your webcam feed. A gesture classifier maps hand poses to actions — pinch detection, finger counting, velocity-based swipe recognition, and two-hand combo tracking. All processing runs locally on-device with zero network dependency.
 
 ## License
 

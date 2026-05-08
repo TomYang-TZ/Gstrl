@@ -48,7 +48,7 @@ final class TrackingCoordinator {
         }
 
         cursorDrag.onCircleScreenshot = { [weak self] rect in
-            let tmpFile = "/tmp/igest-preview-\(ProcessInfo.processInfo.processIdentifier).png"
+            let tmpFile = "/tmp/gstrl-preview-\(ProcessInfo.processInfo.processIdentifier).png"
             let process = Process()
             process.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")
             let r = "\(Int(rect.origin.x)),\(Int(rect.origin.y)),\(Int(rect.width)),\(Int(rect.height))"

@@ -50,7 +50,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             backing: .buffered,
             defer: false
         )
-        window.title = "iGest"
+        window.title = "Gstrl"
         window.center()
         window.isReleasedWhenClosed = false
         window.contentView = NSHostingView(rootView: MainStatusView(appState: appState, onToggle: { [weak self] in
@@ -103,7 +103,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func createMenuBarItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        statusItem?.button?.image = NSImage(systemSymbolName: "dot.radiowaves.left.and.right", accessibilityDescription: "iGest")
+        statusItem?.button?.image = NSImage(systemSymbolName: "dot.radiowaves.left.and.right", accessibilityDescription: "Gstrl")
 
         let menu = NSMenu()
         menu.addItem(NSMenuItem(title: "Toggle", action: #selector(toggleTracking), keyEquivalent: ""))
@@ -139,7 +139,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func registerGlobalHotkey() {
-        // Only kill when iGest is focused
+        // Only kill when Gstrl is focused
         NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             if event.keyCode == UInt16(kVK_Escape) {
                 self?.coordinator?.emergencyKill()
@@ -151,7 +151,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 }
 
 @main
-struct iGestMain {
+struct GstrlMain {
     static func main() {
         let app = NSApplication.shared
         let delegate = AppDelegate()

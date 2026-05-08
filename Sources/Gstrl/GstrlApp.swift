@@ -92,9 +92,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             .ignoresCycle
         ]
 
-        let hostView = NSHostingView(rootView:
+        let hostView = ClickThroughHostingView(rootView:
             DynamicIslandView(appState: appState, onToggle: { [weak self] in
                 self?.toggleTracking()
+            }, onTap: { [weak self] in
+                self?.showWindow()
             })
         )
         hostView.frame = panel.contentView?.bounds ?? .zero
@@ -152,6 +154,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return event
         }
     }
+}
+
+final class ClickThroughHostingView<Content: View>: NSHostingView<Content> {
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 }
 
 @main

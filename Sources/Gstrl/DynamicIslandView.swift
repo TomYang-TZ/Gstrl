@@ -3,6 +3,8 @@ import SwiftUI
 struct DynamicIslandView: View {
     @Bindable var appState: AppState
     var onToggle: () -> Void
+    var onTap: (() -> Void)?
+    @State private var isPressed = false
 
     private var isExpanded: Bool {
         !appState.gestureLabel.isEmpty
@@ -24,7 +26,17 @@ struct DynamicIslandView: View {
     var body: some View {
         VStack(spacing: 8) {
             islandContent
-                .onTapGesture { onToggle() }
+                .contentShape(Capsule())
+                .scaleEffect(isPressed ? 0.92 : 1.0)
+                .animation(.spring(response: 0.2, dampingFraction: 0.6), value: isPressed)
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { _ in isPressed = true }
+                        .onEnded { _ in
+                            isPressed = false
+                            onTap?()
+                        }
+                )
 
             if let preview = appState.screenshotPreview {
                 screenshotThumbnail(preview)
@@ -49,11 +61,16 @@ struct DynamicIslandView: View {
     private var islandContent: some View {
         ZStack {
             compactContent
+                .frame(width: 160, height: 36)
                 .opacity(isExpanded ? 0 : 1)
+                .allowsHitTesting(!isExpanded)
             expandedContent
+                .frame(width: isSpeechMode ? 320 : 280, height: 60)
                 .opacity(isExpanded ? 1 : 0)
+                .allowsHitTesting(isExpanded)
         }
         .frame(width: contentSize.width, height: contentSize.height)
+        .clipped()
         .modifier(LiquidGlassModifier())
     }
 
@@ -72,6 +89,7 @@ struct DynamicIslandView: View {
                 symbol: "hand.raised.fill",
                 color: .cyan
             )
+            .scaleEffect(x: -1, y: 1)
         }
         .padding(.horizontal, 16)
     }
@@ -117,6 +135,7 @@ struct DynamicIslandView: View {
                     symbol: "hand.raised.fill",
                     color: .cyan
                 )
+                .scaleEffect(x: -1, y: 1)
             }
             .padding(.horizontal, 20)
 

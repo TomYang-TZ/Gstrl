@@ -19,6 +19,7 @@ final class AppState {
     var fps: FPS = .thirty
     var cursorSensitivity: Double = 2.5
     var scrollSensitivity: Double = 1.0
+    var naturalScroll: Bool = false
 
     enum ProgressMode {
         case countdown

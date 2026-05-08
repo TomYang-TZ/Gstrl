@@ -27,6 +27,7 @@ struct MainStatusView: View {
                         .font(.caption)
                     Image(systemName: appState.isEnabled && appState.rightHandDetected ? "hand.raised.fill" : "hand.raised.slash")
                         .foregroundStyle(appState.isEnabled && appState.rightHandDetected ? .blue : .gray)
+                        .scaleEffect(x: -1, y: 1)
                 }
             }
 
@@ -60,11 +61,31 @@ struct MainStatusView: View {
 
             Divider()
 
-            DisclosureGroup("Gestures", isExpanded: $gesturesExpanded) {
-                gestureReferenceView
+            VStack(alignment: .leading, spacing: 6) {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        gesturesExpanded.toggle()
+                    }
+                } label: {
+                    HStack {
+                        Text("Gestures")
+                            .font(.caption.bold())
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption2.bold())
+                            .foregroundStyle(.secondary)
+                            .rotationEffect(.degrees(gesturesExpanded ? 90 : 0))
+                    }
+                }
+                .buttonStyle(.plain)
+
+                if gesturesExpanded {
+                    gestureReferenceView
+                        .transition(.opacity)
+                }
             }
-            .font(.caption.bold())
-            .foregroundStyle(.secondary)
+            .clipped()
 
             Divider()
 
@@ -108,6 +129,9 @@ struct MainStatusView: View {
                     .font(.system(.caption2, design: .monospaced))
                     .frame(width: 30)
             }
+
+            Toggle("Natural scroll", isOn: $appState.naturalScroll)
+                .font(.caption)
         }
     }
 

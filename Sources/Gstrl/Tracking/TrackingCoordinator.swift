@@ -95,6 +95,7 @@ final class TrackingCoordinator {
         cameraManager.updateFPS(appState.fps.timescale)
         cursorDrag.sensitivity = appState.cursorSensitivity
         scrollController.sensitivityMultiplier = appState.scrollSensitivity
+        scrollController.naturalScroll = appState.naturalScroll
     }
 
     func stop() {
@@ -111,6 +112,7 @@ final class TrackingCoordinator {
     private func processFrame(_ pixelBuffer: CVPixelBuffer) {
         cursorDrag.sensitivity = appState.cursorSensitivity
         scrollController.sensitivityMultiplier = appState.scrollSensitivity
+        scrollController.naturalScroll = appState.naturalScroll
 
         let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, options: [:])
         let handRequest = VNDetectHumanHandPoseRequest()

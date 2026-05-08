@@ -1,12 +1,12 @@
 # Gstrl 🤌
 
-> Control your Mac with hand gestures — no keyboard, no mouse, just your webcam.
+> Augment your Mac with hand gestures — use alongside your keyboard and mouse, not instead of them.
 
-**Gstrl** is a hands-free Mac cursor and gesture control app that turns your webcam into an input device. Point, pinch, swipe, and speak to navigate your computer using real-time hand tracking powered by Apple's Vision framework.
+**Gstrl** adds a gesture layer on top of your normal workflow. Point, pinch, swipe, and speak to perform actions without reaching for your mouse — powered by real-time hand tracking via Apple's Vision framework. Your webcam becomes an extra input channel.
 
-Use it to control your Mac with hand gestures, move the cursor hands-free, click and scroll without touching anything, or dictate text with speech-to-text — all through webcam gesture recognition on macOS. No special hardware required.
+This isn't about replacing your keyboard and mouse. It's about having **another way to interact** when your hands are busy, far from your desk, or when a gesture is simply faster than a click.
 
-**Use cases:** accessibility, RSI relief, presentations, standing-desk workflows, or just keeping your hands off a dirty keyboard.
+**Use cases:** quick screenshots by circling content, scrolling while eating, navigating slides during presentations, RSI relief by alternating input methods, accessibility, or hands-free control from across the room.
 
 ## Gestures
 
@@ -15,7 +15,7 @@ Use it to control your Mac with hand gestures, move the cursor hands-free, click
 | Gesture | Action |
 |---------|--------|
 | 👌 Quick pinch (thumb + index) | Click |
-| 👌 Long pinch (hold 0.5s) | Right click |
+| 👌 Long pinch (hold 1s) | Right click |
 | ☝️ Hold 1–3 fingers | Type 1, 2, or 3 |
 | ✊ Hold fist | Enter |
 | 🤙 Six (hold) | Escape |

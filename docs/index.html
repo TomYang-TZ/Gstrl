@@ -147,23 +147,26 @@
 <body>
     <div class="container">
         <h1>Gstrl 🤌</h1>
-        <p class="tagline">Control your Mac with hand gestures. No keyboard, no mouse — just your webcam.</p>
+        <p class="tagline">Augment your Mac with hand gestures — use alongside your keyboard and mouse, not instead of them.</p>
         <a href="https://github.com/TomYang-TZ/Gstrl" class="cta">View on GitHub</a>
 
         <h2>What is Gstrl?</h2>
-        <p>Gstrl is a free, open-source macOS app that turns your webcam into a hands-free input device. It uses Apple's Vision framework to track your hand poses in real time at 60fps, then maps gestures to mouse and keyboard actions.</p>
-        <p>Move the cursor by pinching and dragging. Click with a pinch. Swipe for arrow keys. Speak to type. All processing runs locally on your Mac — no cloud, no latency, no data leaving your machine.</p>
+        <p>Gstrl is a free, open-source macOS app that adds a gesture layer on top of your normal workflow. It uses Apple's Vision framework to track your hand poses at 60fps, giving you another way to interact when a gesture is faster than a click.</p>
+        <p>Circle something to screenshot it. Scroll while eating. Navigate slides from across the room. Pinch to click, swipe for arrows, speak to type. All processing runs locally — no cloud, no latency, no data leaving your machine.</p>
 
         <h2>Features</h2>
         <ul class="features">
             <li><strong>Cursor control</strong> — pinch your right hand and move to drag the cursor</li>
-            <li><strong>Click &amp; right-click</strong> — quick pinch for click, long pinch (0.5s) for right-click</li>
+            <li><strong>Click &amp; right-click</strong> — quick pinch for click, long pinch (1s) for right-click</li>
             <li><strong>Swipe navigation</strong> — open hand swipe for arrow keys (velocity-based, no false triggers)</li>
             <li><strong>Scroll</strong> — left pinch + right fist, then move left hand up/down</li>
             <li><strong>Drag and drop</strong> — pinch both hands, move right hand to drag</li>
             <li><strong>Speech-to-text</strong> — hold both fists to activate dictation</li>
             <li><strong>Escalating delete</strong> — hold 🤙 to delete chars, then words, then lines</li>
-            <li><strong>Dynamic Island overlay</strong> — always-visible status showing detected hands and gestures</li>
+            <li><strong>Circle-to-screenshot</strong> — pinch and draw a circle to capture that region to clipboard</li>
+            <li><strong>Voice commands</strong> — say "press down" or "command z" during speech mode</li>
+            <li><strong>Dynamic Island</strong> — Liquid Glass overlay (macOS 26+) showing hands, gestures, and screenshot previews</li>
+            <li><strong>Configurable</strong> — adjust FPS (30/60/90/120), cursor sensitivity, and scroll speed</li>
             <li><strong>Fully local</strong> — zero network dependency, everything on-device</li>
         </ul>
 
@@ -175,13 +178,14 @@
             <tbody>
                 <tr><td>Right pinch + move</td><td>Move cursor</td></tr>
                 <tr><td>Left pinch</td><td>Click</td></tr>
-                <tr><td>Left long pinch (hold 0.5s)</td><td>Right-click</td></tr>
+                <tr><td>Left long pinch (hold 1s)</td><td>Right-click</td></tr>
                 <tr><td>Right open hand swipe</td><td>Arrow keys</td></tr>
                 <tr><td>L pinch + R fist + move</td><td>Scroll</td></tr>
                 <tr><td>Both pinch + move</td><td>Drag and drop</td></tr>
                 <tr><td>Both fists</td><td>Speech-to-text</td></tr>
                 <tr><td>Right 🤙 hold</td><td>Delete (escalating)</td></tr>
                 <tr><td>Cross fingers</td><td>Ctrl+C (kill)</td></tr>
+                <tr><td>Right pinch + draw circle</td><td>Screenshot region → clipboard</td></tr>
             </tbody>
         </table>
 
@@ -189,12 +193,14 @@
         <pre><code>git clone https://github.com/TomYang-TZ/Gstrl.git
 cd Gstrl
 make install</code></pre>
-        <p>Requires macOS 14+, a webcam, and Swift 5.9+. Grant Camera, Accessibility, and Speech Recognition permissions when prompted.</p>
+        <p>Requires macOS 14+, a webcam, and Swift 5.9+. Grant Camera, Accessibility, Screen Recording, and Speech Recognition permissions when prompted (app opens settings pages automatically).</p>
 
         <h2>Use Cases</h2>
-        <p><strong>Accessibility</strong> — operate your Mac without fine motor control of a mouse or keyboard.</p>
-        <p><strong>RSI relief</strong> — rest your hands while still navigating and typing.</p>
+        <p><strong>Quick capture</strong> — circle something on screen to screenshot it instantly.</p>
+        <p><strong>Eating at your desk</strong> — scroll and navigate without touching your keyboard.</p>
         <p><strong>Presentations</strong> — control slides from across the room with natural gestures.</p>
+        <p><strong>RSI relief</strong> — alternate between mouse and gestures to reduce strain.</p>
+        <p><strong>Accessibility</strong> — another input channel for users with limited fine motor control.</p>
         <p><strong>Standing desk</strong> — step back from your desk and keep working.</p>
 
         <footer>

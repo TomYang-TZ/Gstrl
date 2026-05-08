@@ -5,6 +5,8 @@ final class CameraManager: NSObject, @unchecked Sendable {
     private let captureSession = AVCaptureSession()
     private let processingQueue = DispatchQueue(label: "com.gstrl.camera", qos: .userInteractive)
     private var isProcessing = false
+    private var videoOutput: AVCaptureVideoDataOutput?
+    var targetFPS: Int32 = 60
 
     var onFrame: ((_ pixelBuffer: CVPixelBuffer) -> Void)?
 
@@ -21,6 +23,20 @@ final class CameraManager: NSObject, @unchecked Sendable {
     func stop() {
         processingQueue.async { [weak self] in
             self?.captureSession.stopRunning()
+        }
+    }
+
+    func updateFPS(_ fps: Int32) {
+        targetFPS = fps
+        processingQueue.async { [weak self] in
+            guard let self, let output = self.videoOutput,
+                  let connection = output.connection(with: .video) else { return }
+            if connection.isVideoMinFrameDurationSupported {
+                connection.videoMinFrameDuration = CMTime(value: 1, timescale: fps)
+            }
+            if connection.isVideoMaxFrameDurationSupported {
+                connection.videoMaxFrameDuration = CMTime(value: 1, timescale: fps)
+            }
         }
     }
 
@@ -43,14 +59,14 @@ final class CameraManager: NSObject, @unchecked Sendable {
         if captureSession.canAddOutput(output) {
             captureSession.addOutput(output)
         }
+        videoOutput = output
 
-        // Target 60fps via connection (device-level setting crashes on DAL devices)
         if let connection = output.connection(with: .video) {
             if connection.isVideoMinFrameDurationSupported {
-                connection.videoMinFrameDuration = CMTime(value: 1, timescale: 60)
+                connection.videoMinFrameDuration = CMTime(value: 1, timescale: targetFPS)
             }
             if connection.isVideoMaxFrameDurationSupported {
-                connection.videoMaxFrameDuration = CMTime(value: 1, timescale: 60)
+                connection.videoMaxFrameDuration = CMTime(value: 1, timescale: targetFPS)
             }
         }
     }

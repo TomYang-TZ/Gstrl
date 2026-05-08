@@ -5,7 +5,7 @@ import Vision
 final class CursorDragController {
     private var anchor: CGPoint?
     private var cursorAnchor: CGPoint?
-    private let sensitivity: CGFloat = 2.5
+    var sensitivity: CGFloat = 2.5
     private let screenW: CGFloat
     private let screenH: CGFloat
     private var isDragging = false

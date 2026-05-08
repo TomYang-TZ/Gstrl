@@ -16,6 +16,8 @@ final class TrackingCoordinator {
     // Left hand gesture hold detection
     private var leftGestureStartTime: Date?
     private var leftGestureValue: Int = -1
+    private var leftGestureStableFrames: Int = 0
+    private let stableFramesRequired: Int = 5
     private let holdDuration: TimeInterval = 1.0
     private var leftHandEntryFrames: Int = 0
     private let handEntryGraceFrames: Int = 15
@@ -85,7 +87,14 @@ final class TrackingCoordinator {
     }
 
     func start() {
+        syncSettings()
         cameraManager.start()
+    }
+
+    func syncSettings() {
+        cameraManager.updateFPS(appState.fps.timescale)
+        cursorDrag.sensitivity = appState.cursorSensitivity
+        scrollController.sensitivityMultiplier = appState.scrollSensitivity
     }
 
     func stop() {
@@ -100,6 +109,9 @@ final class TrackingCoordinator {
     }
 
     private func processFrame(_ pixelBuffer: CVPixelBuffer) {
+        cursorDrag.sensitivity = appState.cursorSensitivity
+        scrollController.sensitivityMultiplier = appState.scrollSensitivity
+
         let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, options: [:])
         let handRequest = VNDetectHumanHandPoseRequest()
         handRequest.maximumHandCount = 2
@@ -336,7 +348,7 @@ final class TrackingCoordinator {
                         leftPinchStartTime = Date()
                     }
                     let elapsed = Date().timeIntervalSince(leftPinchStartTime!)
-                    let longPinchDuration: TimeInterval = 0.5
+                    let longPinchDuration: TimeInterval = 1.0
 
                     if elapsed < longPinchDuration {
                         let progress = elapsed / longPinchDuration
@@ -407,6 +419,8 @@ final class TrackingCoordinator {
                 if gestureValue == -1 {
                     resetLeftGesture()
                 } else if gestureValue == leftGestureValue {
+                    leftGestureStableFrames += 1
+                    guard leftGestureStableFrames >= stableFramesRequired else { return }
                     if let start = leftGestureStartTime {
                         let elapsed = Date().timeIntervalSince(start)
                         let progress = min(1.0, elapsed / holdDuration)
@@ -424,6 +438,7 @@ final class TrackingCoordinator {
                     }
                 } else {
                     leftGestureValue = gestureValue
+                    leftGestureStableFrames = 0
                     leftGestureStartTime = Date()
                     DispatchQueue.main.async { [weak self] in
                         self?.appState.gestureProgress = 0

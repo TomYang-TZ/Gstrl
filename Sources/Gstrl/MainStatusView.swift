@@ -3,6 +3,7 @@ import SwiftUI
 struct MainStatusView: View {
     @Bindable var appState: AppState
     var onToggle: () -> Void
+    var onFPSChanged: ((Int32) -> Void)?
     @State private var gesturesExpanded = false
 
     var body: some View {
@@ -14,52 +15,55 @@ struct MainStatusView: View {
             Text(statusText)
                 .font(.headline)
 
-            if appState.isEnabled {
-                HStack(spacing: 20) {
-                    VStack {
-                        Text("Left (click/keys)")
-                            .font(.caption)
-                        Image(systemName: appState.leftHandDetected ? "hand.raised.fill" : "hand.raised.slash")
-                            .foregroundStyle(appState.leftHandDetected ? .orange : .gray)
-                    }
-                    VStack {
-                        Text("Right (cursor/swipe)")
-                            .font(.caption)
-                        Image(systemName: appState.rightHandDetected ? "hand.raised.fill" : "hand.raised.slash")
-                            .foregroundStyle(appState.rightHandDetected ? .blue : .gray)
-                    }
+            HStack(spacing: 20) {
+                VStack {
+                    Text("Left (click/keys)")
+                        .font(.caption)
+                    Image(systemName: appState.isEnabled && appState.leftHandDetected ? "hand.raised.fill" : "hand.raised.slash")
+                        .foregroundStyle(appState.isEnabled && appState.leftHandDetected ? .orange : .gray)
                 }
-
-                if !appState.gestureLabel.isEmpty {
-                    VStack(spacing: 4) {
-                        Text(appState.gestureLabel)
-                            .font(.system(size: 32, weight: .bold, design: .rounded))
-                        if appState.gestureProgress > 0 {
-                            HStack(spacing: 4) {
-                                Text(appState.progressMode == .countdown ? "HOLD" : "COOL")
-                                    .font(.system(size: 8, weight: .bold, design: .monospaced))
-                                    .foregroundStyle(appState.progressMode == .countdown ? .orange : .green)
-                                ProgressView(value: appState.gestureProgress)
-                                    .tint(appState.progressMode == .countdown ? .orange : .green)
-                                    .frame(width: 120)
-                                    .animation(.linear(duration: 0.1), value: appState.gestureProgress)
-                            }
-                        }
-                    }
+                VStack {
+                    Text("Right (cursor/swipe)")
+                        .font(.caption)
+                    Image(systemName: appState.isEnabled && appState.rightHandDetected ? "hand.raised.fill" : "hand.raised.slash")
+                        .foregroundStyle(appState.isEnabled && appState.rightHandDetected ? .blue : .gray)
                 }
-
-                Text(appState.debugInfo)
-                    .font(.system(.caption2, design: .monospaced))
-                    .foregroundStyle(.secondary)
-
-                Divider()
-
-                DisclosureGroup("Gestures", isExpanded: $gesturesExpanded) {
-                    gestureReferenceView
-                }
-                .font(.caption.bold())
-                .foregroundStyle(.secondary)
             }
+
+            VStack(spacing: 4) {
+                Text(appState.isEnabled && !appState.gestureLabel.isEmpty ? appState.gestureLabel : "—")
+                    .font(.system(size: 32, weight: .bold, design: .rounded))
+                    .foregroundStyle(appState.gestureLabel.isEmpty ? .quaternary : .primary)
+                if appState.gestureProgress > 0 {
+                    HStack(spacing: 4) {
+                        Text(appState.progressMode == .countdown ? "HOLD" : "COOL")
+                            .font(.system(size: 8, weight: .bold, design: .monospaced))
+                            .foregroundStyle(appState.progressMode == .countdown ? .orange : .green)
+                        ProgressView(value: appState.gestureProgress)
+                            .tint(appState.progressMode == .countdown ? .orange : .green)
+                            .frame(width: 120)
+                            .animation(.linear(duration: 0.1), value: appState.gestureProgress)
+                    }
+                }
+            }
+            .frame(height: 50)
+
+            Text(appState.debugInfo)
+                .font(.system(.caption2, design: .monospaced))
+                .foregroundStyle(.secondary)
+                .frame(height: 14)
+
+            Divider()
+
+            DisclosureGroup("Gestures", isExpanded: $gesturesExpanded) {
+                gestureReferenceView
+            }
+            .font(.caption.bold())
+            .foregroundStyle(.secondary)
+
+            Divider()
+
+            settingsView
 
             Button(appState.isEnabled ? "Disable" : "Enable") {
                 onToggle()
@@ -68,6 +72,43 @@ struct MainStatusView: View {
         }
         .padding(20)
         .frame(width: 340)
+    }
+
+    private var settingsView: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Settings").font(.caption.bold()).foregroundStyle(.secondary)
+
+            HStack {
+                Text("FPS").font(.caption)
+                Spacer()
+                Picker("", selection: $appState.fps) {
+                    ForEach(AppState.FPS.allCases, id: \.self) { fps in
+                        Text(fps.rawValue).tag(fps)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .frame(width: 180)
+                .onChange(of: appState.fps) { _, newValue in
+                    onFPSChanged?(newValue.timescale)
+                }
+            }
+
+            HStack {
+                Text("Cursor").font(.caption)
+                Slider(value: $appState.cursorSensitivity, in: 1.0...5.0, step: 0.5)
+                Text(String(format: "%.1fx", appState.cursorSensitivity))
+                    .font(.system(.caption2, design: .monospaced))
+                    .frame(width: 30)
+            }
+
+            HStack {
+                Text("Scroll").font(.caption)
+                Slider(value: $appState.scrollSensitivity, in: 0.5...3.0, step: 0.25)
+                Text(String(format: "%.1fx", appState.scrollSensitivity))
+                    .font(.system(.caption2, design: .monospaced))
+                    .frame(width: 30)
+            }
+        }
     }
 
     private var gestureReferenceView: some View {

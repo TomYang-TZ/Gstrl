@@ -6,7 +6,8 @@ final class ScrollController {
     private var anchor: CGFloat?
     private var scrollStartTime: Date?
     private let deadZone: CGFloat = 0.015
-    private let maxSpeed: CGFloat = 40.0
+    private let baseMaxSpeed: CGFloat = 40.0
+    var sensitivityMultiplier: CGFloat = 1.0
 
     func reset() {
         anchor = nil
@@ -35,6 +36,7 @@ final class ScrollController {
         let sign: CGFloat = displacement > 0 ? 1 : -1
         let magnitude = abs(displacement) - deadZone
         let normalized = magnitude / 0.1
+        let maxSpeed = baseMaxSpeed * sensitivityMultiplier
         let speed = min(maxSpeed, normalized * maxSpeed * timeMultiplier)
         let scrollAmount = Int32(sign * speed)
 

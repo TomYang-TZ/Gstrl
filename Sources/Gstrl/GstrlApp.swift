@@ -55,6 +55,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isReleasedWhenClosed = false
         window.contentView = NSHostingView(rootView: MainStatusView(appState: appState, onToggle: { [weak self] in
             self?.toggleTracking()
+        }, onFPSChanged: { [weak self] fps in
+            self?.coordinator?.syncSettings()
         }))
         window.makeKeyAndOrderFront(nil)
         mainWindow = window
@@ -64,9 +66,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard let screen = NSScreen.main else { return }
 
         let panelSize = NSSize(width: 400, height: 100)
+        let menuBarHeight = screen.frame.maxY - screen.visibleFrame.maxY
         let origin = NSPoint(
             x: screen.frame.midX - panelSize.width / 2,
-            y: screen.frame.maxY - panelSize.height
+            y: screen.frame.maxY - panelSize.height - menuBarHeight
         )
 
         let panel = NSPanel(

@@ -151,7 +151,7 @@ struct DynamicIslandView: View {
 struct LiquidGlassModifier: ViewModifier {
     func body(content: Content) -> some View {
         if #available(macOS 26.0, *) {
-            content.glassEffect(.regular, in: .capsule)
+            content.glassEffect(.clear, in: .capsule)
         } else {
             content
                 .environment(\.colorScheme, .dark)

@@ -27,6 +27,10 @@ final class TrackingCoordinator {
     // Scroll countdown
     private var scrollStartTime: Date?
 
+    // Left pinch timing (short = click, long = right click)
+    private var leftPinchStartTime: Date?
+    private var leftPinchFired: Bool = false
+
     // UI label management
     private var rightHandLabelActive: Bool = false
     private var rightHandLabelUntil: Date = .distantPast
@@ -319,34 +323,56 @@ final class TrackingCoordinator {
             leftHandEntryFrames += 1
             guard leftHandEntryFrames > handEntryGraceFrames else { return }
 
-            if GestureClassifier.isTwoFingerPinch(lh) {
-                resetLeftGesture()
-                let now = Date()
-                if now.timeIntervalSince(lastClickTime) > 0.5 {
-                    lastClickTime = now
-                    InputDispatch.perform(.rightClick)
-                }
-                DispatchQueue.main.async { [weak self] in
-                    self?.appState.trackingState = .pinching
-                    self?.appState.gestureLabel = "👆👆 Right Click"
-                }
-            } else if GestureClassifier.isPinching(lh) {
-                resetLeftGesture()
+            if GestureClassifier.isPinching(lh) {
                 let rightIsPinching = rightHand != nil && GestureClassifier.isPinching(rightHand!)
                 if rightIsPinching {
                     // Drag mode — don't fire click, right-hand section handles it
+                    leftPinchStartTime = nil
+                    leftPinchFired = true
+                    resetLeftGesture()
                 } else {
-                    let now = Date()
-                    if now.timeIntervalSince(lastClickTime) > 0.5 {
-                        lastClickTime = now
-                        InputDispatch.perform(.click)
+                    // Long pinch = right click, short pinch = left click
+                    if leftPinchStartTime == nil {
+                        leftPinchStartTime = Date()
                     }
-                    DispatchQueue.main.async { [weak self] in
-                        self?.appState.trackingState = .pinching
-                        self?.appState.gestureLabel = "👆 Click"
+                    let elapsed = Date().timeIntervalSince(leftPinchStartTime!)
+                    let longPinchDuration: TimeInterval = 0.5
+
+                    if elapsed < longPinchDuration {
+                        let progress = elapsed / longPinchDuration
+                        DispatchQueue.main.async { [weak self] in
+                            self?.appState.trackingState = .pinching
+                            self?.appState.progressMode = .countdown
+                            self?.appState.gestureLabel = "👆 Hold → Right Click"
+                            self?.appState.gestureProgress = progress
+                        }
+                    } else if !leftPinchFired {
+                        leftPinchFired = true
+                        InputDispatch.perform(.rightClick)
+                        DispatchQueue.main.async { [weak self] in
+                            self?.appState.gestureLabel = "👆 Right Click"
+                            self?.appState.gestureProgress = 0
+                        }
+                        startCooldownProgress()
                     }
                 }
             } else {
+                // Pinch released — fire left click if it was short
+                if let start = leftPinchStartTime, !leftPinchFired {
+                    let elapsed = Date().timeIntervalSince(start)
+                    if elapsed < 0.5 {
+                        let now = Date()
+                        if now.timeIntervalSince(lastClickTime) > 0.3 {
+                            lastClickTime = now
+                            InputDispatch.perform(.click)
+                            DispatchQueue.main.async { [weak self] in
+                                self?.appState.gestureLabel = "👆 Click"
+                            }
+                        }
+                    }
+                }
+                leftPinchStartTime = nil
+                leftPinchFired = false
                 let fingerCount = GestureClassifier.countExtendedFingers(lh)
 
                 let gestureValue: Int

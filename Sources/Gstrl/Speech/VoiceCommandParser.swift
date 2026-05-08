@@ -126,7 +126,7 @@ enum VoiceCommandParser {
     }
 
     private static let pressAliases: Set<String> = ["press", "pres", "prex", "breast", "rest"]
-    private static let commandAliases: Set<String> = ["command", "commend", "commence", "comet", "comment", "come in", "come on", "common"]
+    private static let commandAliases: Set<String> = ["command", "commander", "commend", "commence", "comet", "comment", "come in", "come on", "common", "comma"]
 
     private static func normalizePrefix(_ word: String) -> String? {
         let w = word.lowercased()

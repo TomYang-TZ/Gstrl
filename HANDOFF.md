@@ -27,13 +27,15 @@ Camera (30fps CVPixelBuffer)
   → TrackingCoordinator.processFrame()
     → VNDetectHumanHandPoseRequest (up to 2 hands)
     → Chirality separation (left/right)
-    → Gesture state machine:
-        1. Both hands open? → Speech countdown/activation
-        2. Right hand pinch? → Relative cursor drag
-        3. Right hand 🤙? → Delete (accelerating)
-        4. Right hand open? → Velocity-based swipe detection
-        5. Left hand pinch? → Click (CGEvent)
-        6. Left hand fingers? → Hold-to-fire (numbers/enter/escape)
+    → Gesture state machine (priority order):
+        1. Fingers crossed (X)? → Ctrl+C (cancel)
+        2. Both hands 🤙? → Delete lines (escalating)
+        3. Both hands open? → Speech countdown/activation
+        4. Right hand pinch? → Relative cursor drag
+        5. Right hand 🤙? → Delete chars (accelerating)
+        6. Right hand open? → Velocity-based swipe detection
+        7. Left hand pinch? → Click (CGEvent)
+        8. Left hand fingers? → Hold-to-fire (numbers/enter/escape)
     → AppState updates (main thread)
     → UI reacts (SwiftUI observation)
 ```
@@ -75,10 +77,23 @@ Camera (30fps CVPixelBuffer)
 
 Requires Accessibility permission at `/Users/tomyang/iGest/iGest.app` — persists across rebuilds if path and ad-hoc signature stay the same.
 
-## Known Issues / Watch Out
+## Refactor Tasks
+
+1. **Delete dead code** — `CursorController.swift`, `HandTracker.swift`, and the `private let handTracker` line in TrackingCoordinator. All logic lives inline now.
+2. **Break up TrackingCoordinator (795 lines)** — Extract into focused types:
+   - `SwipeDetector` — velocity tracking, grace period, cooldown
+   - `DeleteController` — escalation state machine (chars→words→lines→all)
+   - `SpeechController` — countdown + SpeechEngine lifecycle
+   - `GestureClassifier` — `isPinching`, `isThumbPinky`, `countExtendedFingers`, `isFingersCrossed`
+   - Keep `TrackingCoordinator` as the orchestrator that delegates to these
+3. **Typed gesture events** — Replace the scattered `pressKey`/`pressKeyWithModifiers` calls with a `GestureAction` enum that gets dispatched centrally. Makes testing and logging trivial.
+4. **Progress bar driven by SwiftUI Timer** — Currently progress is set per-frame from the camera callback (30fps). Smoother approach: set target + duration, let SwiftUI `TimelineView` or `withAnimation` interpolate.
+5. **`countExtendedFingers` reliability** — tip.y > pip.y fails when hand is sideways or tilted. Could use angle between joints instead of raw Y comparison.
+
+## Known Issues
 
 - **Accessibility permission resets** if you move the .app or change signing identity
 - **Escape key kills tracking** when iGest window is focused (local event monitor)
-- **CursorController.swift and HandTracker.swift** are legacy dead code — all logic lives in TrackingCoordinator now
-- **`countExtendedFingers`** uses tip.y > pip.y which can fail when hand is sideways
-- **Camera runs on background thread**, all AppState writes dispatch to main
+- **Camera runs on background thread** — all AppState writes dispatch to main
+- **`isThumbPinky` false positives** during fast motion — mitigated by frame debounce but not eliminated
+- **Speech partial results** can occasionally repeat or shorten — `lastTypedLength` tracking handles it but edge cases exist

@@ -96,6 +96,20 @@ final class SpeechEngine {
         NSLog("iGest: Speech listening stopped")
     }
 
+    func deleteChars(_ count: Int) {
+        DispatchQueue.main.async {
+            for _ in 0..<count {
+                guard let down = CGEvent(keyboardEventSource: nil, virtualKey: 0x33, keyDown: true) else { continue }
+                down.flags = []
+                down.post(tap: .cghidEventTap)
+                guard let up = CGEvent(keyboardEventSource: nil, virtualKey: 0x33, keyDown: false) else { continue }
+                up.flags = []
+                up.post(tap: .cghidEventTap)
+                usleep(10000)
+            }
+        }
+    }
+
     func typeText(_ text: String) {
         DispatchQueue.main.async {
             for char in text {

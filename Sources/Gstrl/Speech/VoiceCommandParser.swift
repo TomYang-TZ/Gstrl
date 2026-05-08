@@ -150,21 +150,27 @@ enum VoiceCommandParser {
         let words = newText.split(separator: " ", omittingEmptySubsequences: true)
         guard !words.isEmpty else { return .text }
 
-        // Check for multi-modifier command (e.g. "command shift z", "command option left")
+        // Check for 3-word modifier combos (e.g. "command shift z", "shift option left", "option shift right")
         if words.count >= 3 {
             let w1 = words[words.count - 3].lowercased()
             let w2 = words[words.count - 2].lowercased()
             let keyword = words[words.count - 1].lowercased()
 
-            if normalizePrefix(w1) == "command" && isModifier(w2) {
+            let isW1Command = normalizePrefix(w1) == "command"
+            let isW1Modifier = isModifier(w1)
+            let isW2Modifier = isModifier(w2)
+
+            if (isW1Command || isW1Modifier) && isW2Modifier {
                 let normalizedKey = normalizeKeyword(keyword)
                 let keyCode = pressCommands[normalizedKey] ?? commandKeyCode(keyword)
                 if let keyCode, keyCode != 0xFF {
-                    let mod = normalizeModifier(w2)
-                    let shift = mod == "shift"
-                    let option = mod == "option"
-                    let name = "⌘\(shift ? "⇧" : "")\(option ? "⌥" : "")\(normalizedKey)"
-                    return .command(.pressModifiedKey(keyCode, shift: shift, control: false, option: option, command: true), wordCount: 3, displayName: name)
+                    let command = isW1Command
+                    let mod1 = isW1Modifier ? normalizeModifier(w1) : nil
+                    let mod2 = normalizeModifier(w2)
+                    let shift = mod1 == "shift" || mod2 == "shift"
+                    let option = mod1 == "option" || mod2 == "option"
+                    let name = "\(command ? "⌘" : "")\(shift ? "⇧" : "")\(option ? "⌥" : "")\(normalizedKey)"
+                    return .command(.pressModifiedKey(keyCode, shift: shift, control: false, option: option, command: command), wordCount: 3, displayName: name)
                 }
             }
         }
@@ -211,11 +217,12 @@ enum VoiceCommandParser {
             }
         }
 
-        // Check for partial: "command shift" / "command option" / "shift" / "option" waiting for keyword
+        // Check for partial: "command shift" / "shift option" / "option" etc waiting for keyword
         if words.count >= 2 {
             let secondLast = words[words.count - 2].lowercased()
             let last = words[words.count - 1].lowercased()
-            if normalizePrefix(secondLast) == "command" && isModifier(last) {
+            let isSecondLastPrefix = normalizePrefix(secondLast) == "command" || isModifier(secondLast)
+            if isSecondLastPrefix && isModifier(last) {
                 return .partial(prefix: "\(secondLast) \(last)", wordCount: 2)
             }
         }

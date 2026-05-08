@@ -368,6 +368,7 @@ final class TrackingCoordinator {
 
     // MARK: - Helpers
 
+
     private func resetLeftGesture() {
         leftGestureValue = -1
         leftGestureStartTime = nil

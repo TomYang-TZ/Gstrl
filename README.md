@@ -6,24 +6,47 @@ iGest uses your webcam to detect hand poses via Apple Vision and translates them
 
 ## How It Works
 
+### Single Hand (left or right alone)
+
 | Gesture | Action |
 |---------|--------|
-| **Left hand pinch** (thumb + index) | Click |
-| **Right hand pinch + move** | Drag cursor (relative movement) |
-| **Left hand 1-3 fingers** (hold 1s) | Press number key 1-3 |
-| **Left hand fist** (hold 1s) | Press Enter |
-| **Left hand 🤙** thumb + pinky (hold 1s) | Press Escape |
-| **Both hands fist** (hold 1s) | Start speech-to-text (types as you speak) |
-| **Drop both hands** | Stop speech-to-text |
+| **Left pinch** (thumb + index) | Click |
+| **Right pinch + move** | Drag cursor (relative) |
+| **Left 1-3 fingers** (hold 1s) | Press number key 1-3 |
+| **Left fist** (hold 1s) | Enter |
+| **Left 🤙** thumb+pinky (hold 1s) | Escape |
+| **Right 🤙** thumb+pinky (hold 1s) | Delete (accelerates: chars → words → lines → select all) |
+| **Right swipe ↑↓** | Up/Down arrow |
+| **Right swipe ←→** | Left/Right arrow |
+
+### Two Hands
+
+| Gesture | Action |
+|---------|--------|
+| **Left open + right swipe ←→** | Shift+Tab / Tab |
+| **Both hands open** (hold 1s) | Speech-to-text |
+| **Change gesture** | Stop speech |
+
+Single-hand hold gestures (numbers, enter, escape) are disabled when both hands are detected to prevent accidental triggers.
+
+## Dynamic Island
+
+A floating notch-style overlay at the top of your screen shows:
+- Hand detection status (orange dot = left, blue dot = right)
+- Active gesture label with progress bar
+- Cooldown indicator after swipe actions
 
 ## Setup
 
-1. Build with Xcode (`xcodebuild -scheme iGest -configuration Release build`)
-2. Grant **Camera**, **Microphone**, **Speech Recognition**, and **Accessibility** permissions
-3. Click **Enable** in the app window
-4. Use gestures to control your Mac
+```bash
+./restart.sh
+```
 
-Works great alongside macOS **Head Pointer** (Accessibility → Pointer Control) for cursor movement via head tracking + iGest for clicking.
+Or manually:
+1. `xcodebuild -project iGest.xcodeproj -scheme iGest -configuration Release build`
+2. Copy and codesign the app
+3. Grant **Camera**, **Microphone**, **Speech Recognition**, and **Accessibility** permissions
+4. Click **Enable** in the app window
 
 ## Requirements
 
@@ -33,7 +56,8 @@ Works great alongside macOS **Head Pointer** (Accessibility → Pointer Control)
 
 ## Tech Stack
 
-- Swift / AppKit
+- Swift / AppKit / SwiftUI
 - Apple Vision framework (VNDetectHumanHandPoseRequest)
 - Speech framework (SFSpeechRecognizer)
 - CGEvent for input simulation
+- Velocity-based swipe detection with return-to-origin filtering

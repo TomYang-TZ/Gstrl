@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		004339C08409569FE942015A /* MainStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71DDC9AA61D7AD62C8C52E2B /* MainStatusView.swift */; };
+		025D0509CE75A3FF7AC2F618 /* DynamicIslandView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 935C8569763C96FBD14CCE5D /* DynamicIslandView.swift */; };
 		090999F86B8B3278A283E88E /* TrackingCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16343A495D74CB1E64F34357 /* TrackingCoordinator.swift */; };
 		160CFCD4C532CACCD6CBEA4B /* HandTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5181F2F9DCE7E6AEDFE10EE /* HandTracker.swift */; };
 		4A01E036E7F3A711CED8215D /* CalibrationEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8390621B7BDDE2F2793DE731 /* CalibrationEngineTests.swift */; };
@@ -43,6 +44,7 @@
 		8390621B7BDDE2F2793DE731 /* CalibrationEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalibrationEngineTests.swift; sourceTree = "<group>"; };
 		8641C413CDC0DDCA379C3211 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		8FE7E8BC878EE4B4BAD2951F /* TrackingState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackingState.swift; sourceTree = "<group>"; };
+		935C8569763C96FBD14CCE5D /* DynamicIslandView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicIslandView.swift; sourceTree = "<group>"; };
 		AB5818C4D4C7B261B23B7454 /* CursorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CursorController.swift; sourceTree = "<group>"; };
 		B1381C8D8192323D5B876BE3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		B19769FDFA740698F1791330 /* PolynomialMapperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PolynomialMapperTests.swift; sourceTree = "<group>"; };
@@ -101,6 +103,7 @@
 			isa = PBXGroup;
 			children = (
 				8641C413CDC0DDCA379C3211 /* AppState.swift */,
+				935C8569763C96FBD14CCE5D /* DynamicIslandView.swift */,
 				BDA933C8FB13FB007DF6B0F7 /* iGest.entitlements */,
 				BCC098C1DEBB89B3D07FBC59 /* iGestApp.swift */,
 				B1381C8D8192323D5B876BE3 /* Info.plist */,
@@ -214,6 +217,7 @@
 				E9469D7166CAE4C3A62195ED /* AppState.swift in Sources */,
 				61B71CF5425F343B8181C8D5 /* CameraManager.swift in Sources */,
 				73BA82819408812D0AD51D76 /* CursorController.swift in Sources */,
+				025D0509CE75A3FF7AC2F618 /* DynamicIslandView.swift in Sources */,
 				160CFCD4C532CACCD6CBEA4B /* HandTracker.swift in Sources */,
 				004339C08409569FE942015A /* MainStatusView.swift in Sources */,
 				71140648B6D981D60E10AEA0 /* SpeechEngine.swift in Sources */,

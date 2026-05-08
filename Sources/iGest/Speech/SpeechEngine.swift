@@ -74,10 +74,14 @@ final class SpeechEngine {
         DispatchQueue.main.async {
             for char in text {
                 let chars = Array(String(char).utf16)
-                guard let event = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: true) else { continue }
+                // Use virtualKey 49 (space) as dummy — unicode string overrides actual character
+                guard let event = CGEvent(keyboardEventSource: nil, virtualKey: 49, keyDown: true) else { continue }
                 event.keyboardSetUnicodeString(stringLength: chars.count, unicodeString: chars)
+                event.flags = []
                 event.post(tap: .cghidEventTap)
-                guard let up = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: false) else { continue }
+                guard let up = CGEvent(keyboardEventSource: nil, virtualKey: 49, keyDown: false) else { continue }
+                up.keyboardSetUnicodeString(stringLength: chars.count, unicodeString: chars)
+                up.flags = []
                 up.post(tap: .cghidEventTap)
                 usleep(10000)
             }

@@ -77,6 +77,7 @@ enum VoiceCommandParser {
         let normalized = normalizeKeyword(keyword)
         if let code = commandKeys[normalized] { return code }
         if let code = letterKeyCodes[normalized] { return code }
+        if let code = pressCommands[normalized] { return code }
         return nil
     }
 

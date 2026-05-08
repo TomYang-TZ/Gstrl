@@ -42,9 +42,41 @@ enum VoiceCommandParser {
         "v": 9, "w": 13, "x": 7, "y": 16, "z": 6,
     ]
 
+    private static let letterAliases: [String: String] = [
+        "and": "n", "end": "n", "in": "n",
+        "are": "r", "our": "r",
+        "be": "b", "bee": "b",
+        "see": "c", "sea": "c",
+        "tea": "t", "tee": "t",
+        "you": "u",
+        "why": "y",
+        "hey": "a", "ay": "a",
+        "oh": "o", "owe": "o",
+        "eye": "i",
+        "jay": "j",
+        "kay": "k", "ok": "k",
+        "el": "l",
+        "em": "m",
+        "ex": "x",
+        "cue": "q", "queue": "q",
+        "we": "w", "wee": "w",
+        "dee": "d",
+        "gee": "g",
+        "pee": "p",
+        "fee": "f",
+        "es": "s",
+        "vee": "v",
+        "zed": "z", "zee": "z",
+    ]
+
+    private static func normalizeKeyword(_ word: String) -> String {
+        letterAliases[word] ?? word
+    }
+
     private static func commandKeyCode(_ keyword: String) -> UInt16? {
-        if let code = commandKeys[keyword] { return code }
-        if let code = letterKeyCodes[keyword] { return code }
+        let normalized = normalizeKeyword(keyword)
+        if let code = commandKeys[normalized] { return code }
+        if let code = letterKeyCodes[normalized] { return code }
         return nil
     }
 
@@ -124,12 +156,13 @@ enum VoiceCommandParser {
             let keyword = words[words.count - 1].lowercased()
 
             if normalizePrefix(w1) == "command" && isModifier(w2) {
-                let keyCode = pressCommands[keyword] ?? commandKeyCode(keyword)
+                let normalizedKey = normalizeKeyword(keyword)
+                let keyCode = pressCommands[normalizedKey] ?? commandKeyCode(keyword)
                 if let keyCode, keyCode != 0xFF {
                     let mod = normalizeModifier(w2)
                     let shift = mod == "shift"
                     let option = mod == "option"
-                    let name = "⌘\(shift ? "⇧" : "")\(option ? "⌥" : "")\(keyword)"
+                    let name = "⌘\(shift ? "⇧" : "")\(option ? "⌥" : "")\(normalizedKey)"
                     return .command(.pressModifiedKey(keyCode, shift: shift, control: false, option: option, command: true), wordCount: 3, displayName: name)
                 }
             }
@@ -146,8 +179,9 @@ enum VoiceCommandParser {
                     return .command(.pressKey(keyCode), wordCount: 2, displayName: name)
                 }
                 if normalized == "command", let keyCode = commandKeyCode(keyword) {
-                    let name = commandDisplayNames[keyword] ?? "⌘\(keyword)"
-                    if keyword == "click" {
+                    let normalizedKey = normalizeKeyword(keyword)
+                    let name = commandDisplayNames[normalizedKey] ?? "⌘\(normalizedKey)"
+                    if normalizedKey == "click" {
                         return .command(.commandClick, wordCount: 2, displayName: name)
                     }
                     return .command(.pressModifiedKey(keyCode, shift: false, control: false, option: false, command: true), wordCount: 2, displayName: name)

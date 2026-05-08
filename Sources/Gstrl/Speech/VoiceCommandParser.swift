@@ -122,7 +122,7 @@ enum VoiceCommandParser {
                     var shift = false, option = false
                     if w2 == "shift" { shift = true }
                     if w2 == "option" || w2 == "alt" { option = true }
-                    let name = "⌘\(shift ? "⇧" : "")\(option ? "⌥" : "")\(keyword.uppercased())"
+                    let name = "⌘\(shift ? "⇧" : "")\(option ? "⌥" : "")\(keyword)"
                     return .command(.pressModifiedKey(keyCode, shift: shift, control: false, option: option, command: true), wordCount: 3, displayName: name)
                 }
             }
@@ -139,7 +139,7 @@ enum VoiceCommandParser {
                     return .command(.pressKey(keyCode), wordCount: 2, displayName: name)
                 }
                 if normalized == "command", let keyCode = commandKeyCode(keyword) {
-                    let name = commandDisplayNames[keyword] ?? "⌘\(keyword.uppercased())"
+                    let name = commandDisplayNames[keyword] ?? "⌘\(keyword)"
                     if keyword == "click" {
                         return .command(.commandClick, wordCount: 2, displayName: name)
                     }

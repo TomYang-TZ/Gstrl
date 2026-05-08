@@ -70,17 +70,14 @@ struct DynamicIslandView: View {
     }
 
     private var statusIndicator: some View {
-        HStack(spacing: 4) {
-            Circle()
-                .fill(appState.isEnabled
-                    ? Color.green
-                    : Color.secondary.opacity(0.4))
-                .frame(width: 6, height: 6)
-
-            Text(appState.isEnabled ? "ON" : "OFF")
-                .font(.system(size: 9, weight: .bold, design: .rounded))
-                .foregroundStyle(.primary.opacity(0.7))
+        Toggle(isOn: .init(
+            get: { appState.isEnabled },
+            set: { _ in onToggle() }
+        )) {
+            EmptyView()
         }
+        .toggleStyle(.switch)
+        .controlSize(.mini)
         .animation(.easeInOut(duration: 0.25), value: appState.isEnabled)
     }
 

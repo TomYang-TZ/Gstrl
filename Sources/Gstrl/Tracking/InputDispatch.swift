@@ -10,21 +10,27 @@ enum GestureAction {
 }
 
 enum InputDispatch {
+    private static var physicalModifiers: CGEventFlags {
+        let flags = CGEventSource.flagsState(.combinedSessionState)
+        return flags.intersection([.maskShift, .maskControl, .maskAlternate, .maskCommand])
+    }
+
     static func perform(_ action: GestureAction) {
+        let mods = physicalModifiers
         switch action {
         case .pressKey(let keyCode):
-            postKey(keyCode: keyCode, flags: [])
+            postKey(keyCode: keyCode, flags: mods)
         case .pressModifiedKey(let keyCode, let shift, let control, let option, let command):
-            var flags: CGEventFlags = []
+            var flags: CGEventFlags = mods
             if shift { flags.insert(.maskShift) }
             if control { flags.insert(.maskControl) }
             if option { flags.insert(.maskAlternate) }
             if command { flags.insert(.maskCommand) }
             postKey(keyCode: keyCode, flags: flags)
         case .click:
-            postClick(button: .left)
+            postClick(button: .left, modifiers: mods)
         case .rightClick:
-            postClick(button: .right)
+            postClick(button: .right, modifiers: mods)
         }
     }
 
@@ -40,13 +46,15 @@ enum InputDispatch {
         }
     }
 
-    private static func postClick(button: CGMouseButton) {
+    private static func postClick(button: CGMouseButton, modifiers: CGEventFlags) {
         DispatchQueue.main.async {
             guard let pos = CGEvent(source: nil)?.location else { return }
             let downType: CGEventType = button == .left ? .leftMouseDown : .rightMouseDown
             let upType: CGEventType = button == .left ? .leftMouseUp : .rightMouseUp
             guard let down = CGEvent(mouseEventSource: nil, mouseType: downType, mouseCursorPosition: pos, mouseButton: button),
                   let up = CGEvent(mouseEventSource: nil, mouseType: upType, mouseCursorPosition: pos, mouseButton: button) else { return }
+            down.flags = modifiers
+            up.flags = modifiers
             down.post(tap: .cghidEventTap)
             usleep(50000)
             up.post(tap: .cghidEventTap)

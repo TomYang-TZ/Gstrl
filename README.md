@@ -49,6 +49,17 @@ While speech-to-text is active, say "press" + keyword to execute actions instead
 | press delete / press escape | Backspace / Escape |
 | command tab/z/c/v | Cmd+Tab / Undo / Copy / Paste |
 
+### Keyboard + Gesture Combos
+
+Hold any modifier key on your keyboard and gesture actions inherit it automatically:
+
+| Hold on keyboard | Gesture | Result |
+|-----------------|---------|--------|
+| Cmd | Pinch (click) | Cmd+Click |
+| Shift | Swipe right | Shift+Right (select text) |
+| Cmd | Swipe left | Cmd+Left (back in browser) |
+| Option | Pinch (click) | Option+Click |
+
 ## Dynamic Island
 
 A floating pill at the top of your screen with Apple Liquid Glass styling (macOS 26+):

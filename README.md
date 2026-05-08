@@ -36,7 +36,7 @@ Not a mouse replacement — a mouse *supplement*. For when you're lying back, pr
 | Both fists | Speech-to-text |
 | L open + R swipe ←→ | Tab / Shift+Tab |
 | Both 🤙 six | Delete lines (escalates to select all) |
-| ✕ Cross index fingers | Ctrl+C ×2 (cancel/kill) |
+| ✕ Both hands held together | Ctrl+C ×2 (cancel/kill) |
 
 ### Voice Commands (during speech mode)
 

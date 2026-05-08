@@ -41,12 +41,20 @@ A floating notch at the top of your screen shows what iGest is doing in real tim
 
 Always visible, never steals focus.
 
-## Quick Start
+## Install
 
 ```bash
 git clone https://github.com/TomYang-TZ/iGest.git
 cd iGest
-./restart.sh
+make install   # builds and copies to /Applications
+```
+
+Then launch from Applications, or:
+
+```bash
+make run       # build + launch
+make restart   # stop + build + launch
+make stop      # kill running instance
 ```
 
 Grant Camera, Microphone, Accessibility, and Speech Recognition permissions when prompted.
@@ -55,4 +63,4 @@ Grant Camera, Microphone, Accessibility, and Speech Recognition permissions when
 
 - macOS 14+
 - Webcam
-- Swift 5.9+ (builds with Swift Package Manager)
+- Swift 5.9+

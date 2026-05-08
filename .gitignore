@@ -9,3 +9,5 @@ DerivedData/
 Gstrl.app/
 *.xcodeproj/
 default.profraw
+iGest.app/
+*.app/

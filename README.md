@@ -4,7 +4,7 @@
 
 **Gstrl** adds gesture and voice control on top of your Mac. **Pinch to move cursor. Swipe for arrows. Circle to screenshot. Speak to run commands.** All on-device via Apple Vision + SFSpeechRecognizer.
 
-Not a mouse replacement — a mouse *supplement*. For when your hands are holding coffee, you're across the room, or you just think pinching is cool.
+Not a mouse replacement — a mouse *supplement*. For when you're lying back, presenting, or just feel like pinching.
 
 ## Gestures & Voice
 

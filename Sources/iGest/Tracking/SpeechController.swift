@@ -38,7 +38,13 @@ final class SpeechController {
                 speechEngine.onResult = { [weak self] text in
                     guard let self else { return }
                     let newChars = String(text.dropFirst(self.lastTypedLength))
-                    if !newChars.isEmpty {
+                    guard !newChars.isEmpty else { return }
+
+                    switch VoiceCommandParser.parse(newText: newChars) {
+                    case .command(let action, _):
+                        InputDispatch.perform(action)
+                        self.lastTypedLength = text.count
+                    case .text:
                         self.speechEngine.typeText(newChars)
                         self.lastTypedLength = text.count
                     }

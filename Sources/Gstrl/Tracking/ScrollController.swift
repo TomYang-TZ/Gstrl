@@ -4,11 +4,13 @@ import AppKit
 
 final class ScrollController {
     private var anchor: CGFloat?
+    private var scrollStartTime: Date?
     private let deadZone: CGFloat = 0.015
-    private let maxSpeed: CGFloat = 20.0
+    private let maxSpeed: CGFloat = 40.0
 
     func reset() {
         anchor = nil
+        scrollStartTime = nil
     }
 
     func process(_ hand: VNHumanHandPoseObservation) {
@@ -17,6 +19,7 @@ final class ScrollController {
         let currentY = wrist.location.y
         if anchor == nil {
             anchor = currentY
+            scrollStartTime = Date()
             return
         }
 
@@ -25,10 +28,14 @@ final class ScrollController {
         // Dead zone — small movements don't scroll
         guard abs(displacement) > deadZone else { return }
 
+        // Acceleration: speed multiplier increases over time (1x → 3x over 5 seconds)
+        let elapsed = Date().timeIntervalSince(scrollStartTime ?? Date())
+        let timeMultiplier = 1.0 + min(2.0, elapsed / 2.5)
+
         let sign: CGFloat = displacement > 0 ? 1 : -1
         let magnitude = abs(displacement) - deadZone
-        let normalized = magnitude / 0.1  // 0.1 units = full speed
-        let speed = min(maxSpeed, normalized * maxSpeed)
+        let normalized = magnitude / 0.1
+        let speed = min(maxSpeed, normalized * maxSpeed * timeMultiplier)
         let scrollAmount = Int32(sign * speed)
 
         if scrollAmount != 0 {

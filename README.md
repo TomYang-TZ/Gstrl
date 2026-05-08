@@ -14,8 +14,8 @@ Use it to control your Mac with hand gestures, move the cursor hands-free, click
 
 | Gesture | Action |
 |---------|--------|
-| 👌 Pinch (thumb + index) | Click |
-| 👌👌 Two-finger pinch (thumb + index + middle) | Right click |
+| 👌 Quick pinch (thumb + index) | Click |
+| 👌 Long pinch (hold 0.5s) | Right click |
 | ☝️ Hold 1–3 fingers | Type 1, 2, or 3 |
 | ✊ Hold fist | Enter |
 | 🤙 Six (hold) | Escape |
@@ -26,7 +26,7 @@ Use it to control your Mac with hand gestures, move the cursor hands-free, click
 |---------|--------|
 | 👌 Pinch + move | Move cursor |
 | 👌 Pinch + draw circle | Screenshot circled area → clipboard |
-| 👆 Swipe ↑↓←→ | Arrow keys |
+| 🖐 Open hand + swipe ↑↓←→ | Arrow keys |
 | 🤙 Six (hold) | Delete (chars → words → lines → all) |
 
 ### Both Hands (combos)
@@ -34,7 +34,7 @@ Use it to control your Mac with hand gestures, move the cursor hands-free, click
 | Gesture | Action |
 |---------|--------|
 | L pinch + R pinch + move | Drag and drop |
-| L pinch + R fist + move | Scroll up/down |
+| L pinch + R fist + move | Scroll (velocity-based, accelerates over time) |
 | Both fists | Speech-to-text |
 | L open + R swipe ←→ | Tab / Shift+Tab |
 | Both 🤙 six | Delete lines (escalates to select all) |

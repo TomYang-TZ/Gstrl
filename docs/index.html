@@ -43,14 +43,15 @@
             "priceCurrency": "USD"
         },
         "featureList": [
-            "Hands-free cursor control via webcam",
-            "Pinch-to-click gesture recognition",
-            "Velocity-based swipe detection for arrow keys",
-            "Speech-to-text dictation mode",
+            "Hands-free cursor control via palm center tracking",
+            "Pinch-to-click, long pinch for right-click",
+            "Circle-to-screenshot — pinch and draw a circle to capture",
+            "Open hand swipe detection for arrow keys",
+            "Speech-to-text with voice commands",
             "Drag-and-drop with two-hand gestures",
-            "Scroll control without touching anything",
-            "Dynamic Island status overlay",
-            "Real-time hand tracking at 30fps",
+            "Velocity-based scroll with time acceleration",
+            "Apple Liquid Glass Dynamic Island overlay",
+            "Real-time hand tracking at 60fps",
             "Zero network dependency — all processing on-device"
         ]
     }
@@ -150,13 +151,13 @@
         <a href="https://github.com/TomYang-TZ/Gstrl" class="cta">View on GitHub</a>
 
         <h2>What is Gstrl?</h2>
-        <p>Gstrl is a free, open-source macOS app that turns your webcam into a hands-free input device. It uses Apple's Vision framework to track your hand poses in real time at 30fps, then maps gestures to mouse and keyboard actions.</p>
+        <p>Gstrl is a free, open-source macOS app that turns your webcam into a hands-free input device. It uses Apple's Vision framework to track your hand poses in real time at 60fps, then maps gestures to mouse and keyboard actions.</p>
         <p>Move the cursor by pinching and dragging. Click with a pinch. Swipe for arrow keys. Speak to type. All processing runs locally on your Mac — no cloud, no latency, no data leaving your machine.</p>
 
         <h2>Features</h2>
         <ul class="features">
             <li><strong>Cursor control</strong> — pinch your right hand and move to drag the cursor</li>
-            <li><strong>Click &amp; right-click</strong> — left pinch for click, two-finger pinch for right-click</li>
+            <li><strong>Click &amp; right-click</strong> — quick pinch for click, long pinch (0.5s) for right-click</li>
             <li><strong>Swipe navigation</strong> — open hand swipe for arrow keys (velocity-based, no false triggers)</li>
             <li><strong>Scroll</strong> — left pinch + right fist, then move left hand up/down</li>
             <li><strong>Drag and drop</strong> — pinch both hands, move right hand to drag</li>
@@ -174,7 +175,7 @@
             <tbody>
                 <tr><td>Right pinch + move</td><td>Move cursor</td></tr>
                 <tr><td>Left pinch</td><td>Click</td></tr>
-                <tr><td>Left two-finger pinch</td><td>Right-click</td></tr>
+                <tr><td>Left long pinch (hold 0.5s)</td><td>Right-click</td></tr>
                 <tr><td>Right open hand swipe</td><td>Arrow keys</td></tr>
                 <tr><td>L pinch + R fist + move</td><td>Scroll</td></tr>
                 <tr><td>Both pinch + move</td><td>Drag and drop</td></tr>

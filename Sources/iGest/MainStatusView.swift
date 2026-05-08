@@ -3,6 +3,7 @@ import SwiftUI
 struct MainStatusView: View {
     @Bindable var appState: AppState
     var onToggle: () -> Void
+    @State private var gesturesExpanded = false
 
     var body: some View {
         VStack(spacing: 12) {
@@ -53,7 +54,7 @@ struct MainStatusView: View {
 
                 Divider()
 
-                DisclosureGroup("Gestures") {
+                DisclosureGroup("Gestures", isExpanded: $gesturesExpanded) {
                     gestureReferenceView
                 }
                 .font(.caption.bold())
@@ -66,7 +67,7 @@ struct MainStatusView: View {
             .buttonStyle(.borderedProminent)
         }
         .padding(20)
-        .frame(width: 340, height: appState.isEnabled ? 520 : 280)
+        .frame(width: 340)
     }
 
     private var gestureReferenceView: some View {
@@ -92,6 +93,7 @@ struct MainStatusView: View {
 
             Group {
                 Text("COMBO").font(.system(.caption2, design: .monospaced)).foregroundStyle(.purple)
+                gestureRow("👌+✊ L pinch + R fist move", "Scroll")
                 gestureRow("🖐+👈 Open left + swipe ←", "Shift+Tab")
                 gestureRow("🖐+👉 Open left + swipe →", "Tab")
             }

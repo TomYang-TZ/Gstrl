@@ -9,6 +9,7 @@ final class TrackingCoordinator {
     private let deleteController = DeleteController()
     private let speechController = SpeechController()
     private let cursorDrag = CursorDragController()
+    private let scrollController = ScrollController()
     private var lastClickTime: Date = .distantPast
 
     // Left hand gesture hold detection
@@ -152,6 +153,24 @@ final class TrackingCoordinator {
         } else {
             fingersCrossedStartTime = nil
             fingersCrossedCount = 0
+        }
+
+        // === LEFT PINCH + RIGHT FIST = scroll ===
+        let rightFist = rightHand != nil && GestureClassifier.countExtendedFingers(rightHand!) == 0
+            && !GestureClassifier.isPinching(rightHand!) && !GestureClassifier.isThumbPinky(rightHand!)
+        let scrollActive = leftHand != nil && rightFist && GestureClassifier.isPinching(leftHand!)
+
+        if scrollActive {
+            cursorDrag.reset()
+            scrollController.process(leftHand!)
+            DispatchQueue.main.async { [weak self] in
+                self?.appState.trackingState = .pinching
+                self?.appState.gestureLabel = "↕ Scroll"
+                self?.appState.gestureProgress = 0
+            }
+            return
+        } else {
+            scrollController.reset()
         }
 
         // === BOTH HANDS 🤙 = aggressive delete ===

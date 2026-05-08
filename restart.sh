@@ -6,19 +6,16 @@ pkill -f iGest 2>/dev/null || true
 sleep 0.5
 
 echo "Building..."
-xcodebuild -project iGest.xcodeproj -scheme iGest -configuration Release build 2>&1 | tail -3
+swift build 2>&1 | tail -3
 
+echo "Packaging..."
 rm -rf iGest.app
-cp -R ~/Library/Developer/Xcode/DerivedData/iGest-*/Build/Products/Release/iGest.app ./iGest.app
+mkdir -p iGest.app/Contents/MacOS
+cp .build/arm64-apple-macosx/debug/iGest iGest.app/Contents/MacOS/iGest
+cp Info.plist iGest.app/Contents/Info.plist
 codesign --force --sign - iGest.app
 
-# Reset accessibility permission so the app gets a fresh prompt on launch
-tccutil reset Accessibility com.tomyang.iGest 2>/dev/null || true
-
-# Open System Settings to Accessibility pane (user must toggle iGest on)
-open "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
-
-sleep 1
+echo "Launching..."
 open iGest.app
 
-echo "✓ iGest launched. Toggle it ON in the Accessibility pane that just opened."
+echo "✓ iGest running"

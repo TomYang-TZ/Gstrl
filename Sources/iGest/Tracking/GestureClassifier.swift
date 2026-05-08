@@ -1,11 +1,11 @@
 import Vision
 
 enum GestureClassifier {
-    static func isPinching(_ obs: VNHumanHandPoseObservation) -> Bool {
+    static func isPinching(_ obs: VNHumanHandPoseObservation, threshold: CGFloat = 0.06) -> Bool {
         guard let thumb = try? obs.recognizedPoint(.thumbTip),
               let index = try? obs.recognizedPoint(.indexTip),
               thumb.confidence > 0.3, index.confidence > 0.3 else { return false }
-        return hypot(thumb.location.x - index.location.x, thumb.location.y - index.location.y) < 0.06
+        return hypot(thumb.location.x - index.location.x, thumb.location.y - index.location.y) < threshold
     }
 
     static func countExtendedFingers(_ obs: VNHumanHandPoseObservation) -> Int {

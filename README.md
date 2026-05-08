@@ -24,10 +24,11 @@ Use your left or right hand alone. These won't fire if the other hand is visible
 Raise both hands. Single-hand gestures are suppressed — only these combos fire.
 
 ```
-🖐🖐 Both open    → Speech-to-text
-🖐+👆 Open+swipe  → Tab / Shift+Tab
-🤙🤙 Both thumb+pinky → Delete lines (escalates to select all)
-✕  Fingers cross → Ctrl+C ×2 (cancel/kill)
+👌+✊ L pinch + R fist + move → Scroll (move left hand up/down)
+🖐🖐 Both open               → Speech-to-text
+🖐+👆 Open+swipe             → Tab / Shift+Tab
+🤙🤙 Both thumb+pinky        → Delete lines (escalates to select all)
+✕  Fingers cross            → Ctrl+C ×2 (cancel/kill)
 ```
 
 ### Delete Behavior
@@ -67,10 +68,10 @@ cd iGest
 ./restart.sh
 ```
 
-Grant Camera, Microphone, and Accessibility permissions when prompted.
+Grant Camera, Microphone, Accessibility, and Speech Recognition permissions when prompted.
 
 ## Requirements
 
 - macOS 14+
 - Webcam
-- Xcode (to build)
+- Swift 5.9+ (builds with Swift Package Manager)

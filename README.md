@@ -6,6 +6,22 @@
 
 For when you're lying back, presenting, tired of gripping a mouse all day, or just tired of reaching across your desk.
 
+## Install
+
+```bash
+git clone https://github.com/TomYang-TZ/Gstrl.git
+cd Gstrl
+make install   # builds + installs to /Applications
+```
+
+```bash
+make run       # build + launch
+make restart   # stop + rebuild + launch
+make stop      # kill it
+```
+
+App auto-opens permission pages on first launch (Camera, Accessibility, Screen Recording, Speech).
+
 ## Gestures & Voice
 
 ### Left Hand (action hand)
@@ -66,22 +82,6 @@ A floating pill at the top of your screen with Apple Liquid Glass styling (macOS
 - Screenshot preview thumbnail on circle capture
 
 Always visible, never steals focus.
-
-## Install
-
-```bash
-git clone https://github.com/TomYang-TZ/Gstrl.git
-cd Gstrl
-make install   # builds + installs to /Applications
-```
-
-```bash
-make run       # build + launch
-make restart   # stop + rebuild + launch
-make stop      # kill it
-```
-
-App auto-opens permission pages on first launch (Camera, Accessibility, Screen Recording, Speech).
 
 ## Requirements
 

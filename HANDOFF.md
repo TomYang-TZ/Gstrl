@@ -91,3 +91,8 @@ Requires Accessibility permission — app prompts on first enable.
 - `countExtendedFingers` uses tip.y > pip.y which fails when hand is sideways
 - Speech partial results can occasionally repeat (mitigated by lastTypedLength tracking)
 - Scroll sensitivity may need per-app tuning (1500 is aggressive)
+
+## Next Steps
+
+- **SEO for GitHub search** — add relevant topics/tags to the repo (hand-tracking, gesture-control, macos, accessibility, vision-framework, hands-free), write a compelling repo description, add social preview image
+- **SEO for Google search** — optimize README with searchable keywords (e.g. "control mac with hand gestures", "hands-free mac cursor", "webcam gesture recognition macos"), add a GitHub Pages landing page with structured data, submit to macOS tool directories and HN/Product Hunt

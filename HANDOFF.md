@@ -112,5 +112,6 @@ Requires Accessibility permission — app prompts on first enable.
 ## Next Steps
 
 - **App icon** — design a distinctive, recognizable icon for Gstrl. Should convey gesture/hand/control at a glance, work at small sizes (menu bar, dock, Finder), and feel native to macOS. Consider: abstract hand silhouette, gesture trail/arc, or a stylized "G" with motion lines.
+- **Landing page redesign** — current page is plain dark with no visual interest. Needs: color, motion, personality. Consider: demo GIF/video hero, gradient backgrounds, animated gesture illustrations, better typography hierarchy, maybe a glassmorphism card style matching the Liquid Glass island. Should feel like a product page, not a README rendered as HTML.
 - **Launch strategy** — plan posts for Reddit (r/macapps, r/sideproject, r/accessibility), X/Twitter, and RedNote (小红书). Need: short demo video/GIF, compelling hook, appropriate subreddits/hashtags, posting timing.
 - **Two-finger directional hold** — point index+middle to fire accelerating arrow key repeats. Detection was unreliable; needs wrist angle + ML classifier approach.

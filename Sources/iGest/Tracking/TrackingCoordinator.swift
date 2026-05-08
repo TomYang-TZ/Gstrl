@@ -1,5 +1,6 @@
 import Foundation
 import Vision
+import AppKit
 import Carbon.HIToolbox
 
 final class TrackingCoordinator {
@@ -15,7 +16,6 @@ final class TrackingCoordinator {
     // Left hand gesture hold detection
     private var leftGestureStartTime: Date?
     private var leftGestureValue: Int = -1
-    private var leftGestureFired: Bool = false
     private let holdDuration: TimeInterval = 1.0
     private var leftHandEntryFrames: Int = 0
     private let handEntryGraceFrames: Int = 5
@@ -45,6 +45,35 @@ final class TrackingCoordinator {
 
         speechController.onLabelUpdate = { [weak self] label in
             DispatchQueue.main.async { self?.appState.gestureLabel = label }
+        }
+
+        cursorDrag.onCircleScreenshot = { [weak self] rect in
+            let tmpFile = "/tmp/igest-preview-\(ProcessInfo.processInfo.processIdentifier).png"
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")
+            let r = "\(Int(rect.origin.x)),\(Int(rect.origin.y)),\(Int(rect.width)),\(Int(rect.height))"
+            process.arguments = ["-R", r, tmpFile]
+            try? process.run()
+            process.waitUntilExit()
+
+            guard let image = NSImage(contentsOfFile: tmpFile) else { return }
+
+            DispatchQueue.main.async {
+                self?.appState.gestureLabel = "📸 Captured"
+                self?.appState.gestureProgress = 0
+                self?.appState.screenshotPreview = image
+            }
+
+            // Copy to clipboard and dismiss after 3 seconds
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                let pb = NSPasteboard.general
+                pb.clearContents()
+                pb.writeObjects([image])
+                self?.appState.screenshotPreview = nil
+                self?.appState.gestureLabel = "📸 Copied"
+                try? FileManager.default.removeItem(atPath: tmpFile)
+            }
+            self?.startCooldownProgress()
         }
     }
 
@@ -328,7 +357,7 @@ final class TrackingCoordinator {
                 if gestureValue == -1 {
                     resetLeftGesture()
                 } else if gestureValue == leftGestureValue {
-                    if !leftGestureFired, let start = leftGestureStartTime {
+                    if let start = leftGestureStartTime {
                         let elapsed = Date().timeIntervalSince(start)
                         let progress = min(1.0, elapsed / holdDuration)
                         DispatchQueue.main.async { [weak self] in
@@ -336,10 +365,9 @@ final class TrackingCoordinator {
                             self?.appState.gestureProgress = progress
                         }
                         if elapsed >= holdDuration {
-                            leftGestureFired = true
                             fireGesture(gestureValue)
+                            leftGestureStartTime = Date()
                             DispatchQueue.main.async { [weak self] in
-                                self?.appState.gestureLabel = "✓"
                                 self?.appState.gestureProgress = 0
                             }
                         }
@@ -347,7 +375,6 @@ final class TrackingCoordinator {
                 } else {
                     leftGestureValue = gestureValue
                     leftGestureStartTime = Date()
-                    leftGestureFired = false
                     DispatchQueue.main.async { [weak self] in
                         self?.appState.gestureProgress = 0
                     }
@@ -372,7 +399,6 @@ final class TrackingCoordinator {
     private func resetLeftGesture() {
         leftGestureValue = -1
         leftGestureStartTime = nil
-        leftGestureFired = false
     }
 
     private func fireGesture(_ value: Int) {

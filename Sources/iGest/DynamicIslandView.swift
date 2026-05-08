@@ -8,147 +8,148 @@ struct DynamicIslandView: View {
         !appState.gestureLabel.isEmpty
     }
 
-    private var shape: NotchShape {
-        isExpanded ? .opened : .closed
-    }
-
     private var contentSize: CGSize {
         isExpanded
-            ? CGSize(width: 260, height: 56)
-            : CGSize(width: 140, height: 34)
+            ? CGSize(width: 280, height: 60)
+            : CGSize(width: 160, height: 36)
     }
 
     var body: some View {
-        Color.black
-            .frame(width: contentSize.width, height: contentSize.height)
-            .overlay(alignment: .center) {
-                compactContent
-                    .opacity(isExpanded ? 0 : 1)
-            }
-            .overlay(alignment: .center) {
-                expandedContent
-                    .opacity(isExpanded ? 1 : 0)
-            }
-            .clipShape(shape)
-            .shadow(color: .black.opacity(0.25), radius: 8, y: 3)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .animation(.spring(response: 0.45, dampingFraction: 0.88), value: isExpanded)
-            .onTapGesture { onToggle() }
+        ZStack {
+            islandBackground
+            compactContent
+                .opacity(isExpanded ? 0 : 1)
+            expandedContent
+                .opacity(isExpanded ? 1 : 0)
+        }
+        .frame(width: contentSize.width, height: contentSize.height)
+        .clipShape(Capsule())
+        .shadow(color: .black.opacity(0.4), radius: 12, y: 4)
+        .shadow(color: .black.opacity(0.15), radius: 2, y: 1)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .animation(.spring(response: 0.4, dampingFraction: 0.82), value: isExpanded)
+        .onTapGesture { onToggle() }
     }
 
-    private var compactContent: some View {
-        HStack(spacing: 10) {
-            Circle()
-                .fill(appState.leftHandDetected ? .orange : .white.opacity(0.15))
-                .frame(width: 8, height: 8)
+    private var islandBackground: some View {
+        ZStack {
+            // Deep black base matching Apple's Dynamic Island
+            Color.black
 
-            RoundedRectangle(cornerRadius: 3)
-                .fill(appState.isEnabled ? .green.opacity(0.9) : .white.opacity(0.2))
-                .frame(width: 16, height: 8)
-                .overlay(alignment: appState.isEnabled ? .trailing : .leading) {
-                    Circle()
-                        .fill(.white)
-                        .frame(width: 6, height: 6)
-                        .padding(.horizontal, 1)
-                }
-                .animation(.easeInOut(duration: 0.2), value: appState.isEnabled)
-
-            Circle()
-                .fill(appState.rightHandDetected ? .blue : .white.opacity(0.15))
-                .frame(width: 8, height: 8)
+            // Subtle inner glow at edges when active
+            Capsule()
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [
+                            .white.opacity(appState.isEnabled ? 0.12 : 0.06),
+                            .white.opacity(0.02)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    ),
+                    lineWidth: 0.5
+                )
         }
     }
 
+    private var compactContent: some View {
+        HStack(spacing: 12) {
+            handIndicator(
+                detected: appState.leftHandDetected,
+                symbol: "hand.raised.fill",
+                color: .orange
+            )
+
+            statusIndicator
+
+            handIndicator(
+                detected: appState.rightHandDetected,
+                symbol: "hand.raised.fill",
+                color: .cyan
+            )
+        }
+        .padding(.horizontal, 16)
+    }
+
+    private var statusIndicator: some View {
+        HStack(spacing: 4) {
+            Circle()
+                .fill(appState.isEnabled
+                    ? Color.green
+                    : Color.white.opacity(0.25))
+                .frame(width: 6, height: 6)
+                .shadow(color: appState.isEnabled ? .green.opacity(0.6) : .clear, radius: 4)
+
+            if appState.isEnabled {
+                Text("ON")
+                    .font(.system(size: 9, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.7))
+            }
+        }
+        .animation(.easeInOut(duration: 0.25), value: appState.isEnabled)
+    }
+
+    private func handIndicator(detected: Bool, symbol: String, color: Color) -> some View {
+        Image(systemName: detected ? symbol : "hand.raised")
+            .font(.system(size: 12, weight: .medium))
+            .foregroundStyle(detected ? color : .white.opacity(0.2))
+            .shadow(color: detected ? color.opacity(0.5) : .clear, radius: 3)
+            .animation(.easeInOut(duration: 0.2), value: detected)
+    }
+
     private var expandedContent: some View {
-        VStack(spacing: 5) {
-            HStack(spacing: 10) {
-                Circle()
-                    .fill(appState.leftHandDetected ? .orange : .white.opacity(0.12))
-                    .frame(width: 9, height: 9)
+        VStack(spacing: 6) {
+            HStack(spacing: 12) {
+                handIndicator(
+                    detected: appState.leftHandDetected,
+                    symbol: "hand.raised.fill",
+                    color: .orange
+                )
 
                 Text(appState.gestureLabel)
-                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                    .font(.system(size: 15, weight: .semibold, design: .rounded))
                     .foregroundStyle(.white)
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
                     .frame(maxWidth: .infinity)
+                    .contentTransition(.numericText())
 
-                Circle()
-                    .fill(appState.rightHandDetected ? .blue : .white.opacity(0.12))
-                    .frame(width: 9, height: 9)
+                handIndicator(
+                    detected: appState.rightHandDetected,
+                    symbol: "hand.raised.fill",
+                    color: .cyan
+                )
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 20)
 
             if appState.gestureProgress > 0 {
-                HStack(spacing: 4) {
-                    Text(appState.progressMode == .countdown ? "HOLD" : "COOL")
-                        .font(.system(size: 7, weight: .bold, design: .monospaced))
-                        .foregroundStyle(appState.progressMode == .countdown ? .orange.opacity(0.8) : .green.opacity(0.8))
-
-                    GeometryReader { geo in
-                        let barColor: Color = appState.progressMode == .countdown ? .orange : .green
-                        RoundedRectangle(cornerRadius: 1.5)
-                            .fill(.white.opacity(0.12))
-                            .overlay(alignment: appState.progressMode == .countdown ? .leading : .trailing) {
-                                RoundedRectangle(cornerRadius: 1.5)
-                                    .fill(barColor.opacity(0.9))
-                                    .frame(width: geo.size.width * appState.gestureProgress)
-                                    .animation(.linear(duration: 0.1), value: appState.gestureProgress)
-                            }
-                    }
-                    .frame(height: 3)
-                }
-                .frame(width: 180)
+                progressBar
             }
         }
     }
-}
 
-struct NotchShape: Shape, Animatable {
-    var topRadius: CGFloat
-    var bottomRadius: CGFloat
+    private var progressBar: some View {
+        let isCountdown = appState.progressMode == .countdown
+        let barColor: Color = isCountdown ? .orange : .green
 
-    var animatableData: AnimatablePair<CGFloat, CGFloat> {
-        get { AnimatablePair(topRadius, bottomRadius) }
-        set { topRadius = newValue.first; bottomRadius = newValue.second }
-    }
+        return GeometryReader { geo in
+            ZStack(alignment: isCountdown ? .leading : .trailing) {
+                Capsule()
+                    .fill(.white.opacity(0.08))
 
-    static let closed = NotchShape(topRadius: 6, bottomRadius: 17)
-    static let opened = NotchShape(topRadius: 14, bottomRadius: 28)
-
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        let w = rect.width
-        let h = rect.height
-        let tr = min(topRadius, min(w, h) / 2)
-        let br = min(bottomRadius, min(w, h) / 2)
-
-        path.move(to: CGPoint(x: 0, y: 0))
-        path.addLine(to: CGPoint(x: tr, y: 0))
-        path.addQuadCurve(
-            to: CGPoint(x: 0, y: tr),
-            control: CGPoint(x: 0, y: 0)
-        )
-
-        path.addLine(to: CGPoint(x: 0, y: h - br))
-        path.addQuadCurve(
-            to: CGPoint(x: br, y: h),
-            control: CGPoint(x: 0, y: h)
-        )
-
-        path.addLine(to: CGPoint(x: w - br, y: h))
-        path.addQuadCurve(
-            to: CGPoint(x: w, y: h - br),
-            control: CGPoint(x: w, y: h)
-        )
-
-        path.addLine(to: CGPoint(x: w, y: tr))
-        path.addQuadCurve(
-            to: CGPoint(x: w - tr, y: 0),
-            control: CGPoint(x: w, y: 0)
-        )
-
-        path.closeSubpath()
-        return path
+                Capsule()
+                    .fill(
+                        LinearGradient(
+                            colors: [barColor.opacity(0.7), barColor],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .frame(width: geo.size.width * appState.gestureProgress)
+                    .shadow(color: barColor.opacity(0.4), radius: 2)
+                    .animation(.linear(duration: 0.1), value: appState.gestureProgress)
+            }
+        }
+        .frame(width: 200, height: 3)
     }
 }

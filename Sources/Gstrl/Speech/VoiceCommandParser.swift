@@ -169,6 +169,24 @@ enum VoiceCommandParser {
             }
         }
 
+        // Check for standalone modifier + key (e.g. "option left", "shift down")
+        if words.count >= 2 {
+            let modWord = words[words.count - 2].lowercased()
+            let keyword = words[words.count - 1].lowercased()
+
+            if isModifier(modWord) {
+                let normalizedKey = normalizeKeyword(keyword)
+                let keyCode = pressCommands[normalizedKey] ?? commandKeyCode(keyword)
+                if let keyCode, keyCode != 0xFF {
+                    let mod = normalizeModifier(modWord)
+                    let shift = mod == "shift"
+                    let option = mod == "option"
+                    let name = "\(shift ? "⇧" : "")\(option ? "⌥" : "")\(normalizedKey)"
+                    return .command(.pressModifiedKey(keyCode, shift: shift, control: false, option: option, command: false), wordCount: 2, displayName: name)
+                }
+            }
+        }
+
         // Check for complete command (prefix + keyword)
         if words.count >= 2 {
             let rawPrefix = words[words.count - 2].lowercased()
@@ -193,13 +211,18 @@ enum VoiceCommandParser {
             }
         }
 
-        // Check for partial: "command shift" / "command option" waiting for keyword
+        // Check for partial: "command shift" / "command option" / "shift" / "option" waiting for keyword
         if words.count >= 2 {
             let secondLast = words[words.count - 2].lowercased()
             let last = words[words.count - 1].lowercased()
             if normalizePrefix(secondLast) == "command" && isModifier(last) {
                 return .partial(prefix: "\(secondLast) \(last)", wordCount: 2)
             }
+        }
+
+        let lastW = words[words.count - 1].lowercased()
+        if isModifier(lastW) {
+            return .partial(prefix: lastW, wordCount: 1)
         }
 
         // Check for partial prefix at end (just "press" or "command" with no keyword yet)

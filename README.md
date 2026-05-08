@@ -12,49 +12,51 @@ Not a mouse replacement — a mouse *supplement*. For when your hands are holdin
 
 | Gesture | Action |
 |---------|--------|
-| 👌 Pinch | Click |
-| 👌 Hold pinch 1s | Right click |
+| 👌 Quick pinch (thumb + index) | Click |
+| 👌 Long pinch (hold 1s) | Right click |
 | ☝️ Hold 1–3 fingers | Type 1, 2, or 3 |
-| ✊ Fist | Enter |
-| 🤙 Six | Escape |
+| ✊ Hold fist | Enter |
+| 🤙 Six (hold) | Escape |
 
 ### Right Hand (navigation hand)
 
 | Gesture | Action |
 |---------|--------|
 | 👌 Pinch + move | Move cursor |
-| 👌 Pinch + draw circle | Screenshot area → clipboard |
-| 🖐 Open hand + swipe | Arrow keys |
-| 🤙 Six (hold) | Delete (escalates: chars → words → lines → all) |
+| 👌 Pinch + draw circle | Screenshot circled area → clipboard |
+| 🖐 Open hand + swipe ↑↓←→ | Arrow keys |
+| 🤙 Six (hold) | Delete (chars → words → lines → all) |
 
-### Both Hands
+### Both Hands (combos)
 
 | Gesture | Action |
 |---------|--------|
 | L pinch + R pinch + move | Drag and drop |
-| L pinch + R fist + move | Scroll (accelerates over time) |
+| L pinch + R fist + move | Scroll (velocity-based, accelerates over time) |
 | Both fists | Speech-to-text |
 | L open + R swipe ←→ | Tab / Shift+Tab |
-| Both 🤙 | Nuclear delete (select all + delete) |
-| ✕ Cross fingers | Ctrl+C ×2 (kill it with fire) |
+| Both 🤙 six | Delete lines (escalates to select all) |
+| ✕ Cross index fingers | Ctrl+C ×2 (cancel/kill) |
 
 ### Voice Commands (during speech mode)
 
-Say "press" or "command" + keyword:
+While speech-to-text is active, say "press" + keyword to execute actions instead of typing:
 
-| Say this | Does this |
-|----------|-----------|
-| press up/down/left/right | Arrow keys |
+| Command | Action |
+|---------|--------|
+| press down/up/left/right | Arrow keys |
 | press enter / press tab | Enter / Tab |
 | press delete / press escape | Backspace / Escape |
-| command tab/z/c/v | Cmd+Tab / Undo / Copy / Paste |
+| command tab / command z / command c / command v | Cmd+Tab / Undo / Copy / Paste |
 
 ## Dynamic Island
 
-Floating glass pill at the top of your screen (Liquid Glass on macOS 26+):
-- Shows which hands are detected
-- Current gesture + progress bar
-- Screenshot preview on circle capture
+A floating pill at the top of your screen with Apple Liquid Glass styling (macOS 26+):
+- SF Symbol hand indicators (orange = left, cyan = right)
+- Current gesture label and progress bar
+- Screenshot preview thumbnail on circle capture
+
+Always visible, never steals focus.
 
 ## Install
 
@@ -80,7 +82,7 @@ App auto-opens permission pages on first launch (Camera, Accessibility, Screen R
 
 ## How It Works
 
-Vision framework hand pose detection → gesture classifier → CGEvent dispatch. Palm center tracking for cursor, displacement-based swipe detection, velocity joystick for scroll. Speech via SFSpeechRecognizer with command keyword parsing. 30fps default, configurable up to 120fps. Zero network calls.
+Gstrl uses Apple's Vision framework (`VNDetectHumanHandPoseRequest`) to detect hand landmarks from your webcam feed. A gesture classifier maps hand poses to actions — pinch detection via palm center tracking, displacement-based swipe recognition (requires open hand pose), and two-hand combo tracking. Scroll uses velocity-based joystick control. Speech mode uses Apple's `SFSpeechRecognizer` for on-device dictation and voice commands. 30fps default, configurable up to 120fps. All processing runs locally with zero network dependency.
 
 ## License
 

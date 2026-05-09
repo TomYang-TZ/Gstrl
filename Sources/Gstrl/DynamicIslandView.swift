@@ -94,37 +94,65 @@ struct DynamicIslandView: View {
         .padding(.horizontal, 16)
     }
 
-    @State private var dotHovered = false
+    @State private var dotPressed = false
 
     private var statusIndicator: some View {
-        Button { onToggle() } label: {
-            ZStack {
-                if appState.isEnabled {
-                    Circle()
-                        .fill(.green.opacity(0.3))
-                        .frame(width: 20, height: 20)
-                        .blur(radius: 4)
-                        .phaseAnimator([false, true]) { content, phase in
-                            content.opacity(phase ? 0.4 : 1.0)
-                        } animation: { _ in
-                            .easeInOut(duration: 1.2)
-                        }
-                }
+        let baseColor: Color = appState.isEnabled ? .green : Color(white: 0.65)
+        let size: CGFloat = 18
+
+        return ZStack {
+            // Outer glow when active
+            if appState.isEnabled {
                 Circle()
-                    .fill(appState.isEnabled ? .green : .primary.opacity(0.3))
-                    .frame(width: 10, height: 10)
-                    .overlay {
-                        Circle()
-                            .strokeBorder(.white.opacity(dotHovered ? 0.5 : 0.15), lineWidth: 1.5)
+                    .fill(.green.opacity(0.25))
+                    .frame(width: size + 8, height: size + 8)
+                    .blur(radius: 4)
+                    .phaseAnimator([false, true]) { content, phase in
+                        content.opacity(phase ? 0.3 : 0.8)
+                    } animation: { _ in
+                        .easeInOut(duration: 1.2)
                     }
-                    .scaleEffect(dotHovered ? 1.3 : 1.0)
             }
-            .frame(width: 24, height: 24)
-            .contentShape(Circle())
+
+            // 3D squishy button
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: [baseColor.opacity(0.9), baseColor],
+                        center: .init(x: 0.4, y: 0.35),
+                        startRadius: 0,
+                        endRadius: size * 0.6
+                    )
+                )
+                .frame(width: size, height: size)
+                .shadow(color: .black.opacity(dotPressed ? 0.1 : 0.35), radius: dotPressed ? 1 : 3, x: 0, y: dotPressed ? 1 : 3)
+                .shadow(color: .white.opacity(0.5), radius: 0, x: 0, y: dotPressed ? 0 : -1)
+                .overlay {
+                    // Top highlight
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [.white.opacity(dotPressed ? 0.1 : 0.5), .clear],
+                                startPoint: .top,
+                                endPoint: .center
+                            )
+                        )
+                        .frame(width: size - 2, height: size - 2)
+                }
+                .scaleEffect(dotPressed ? 0.85 : 1.0)
+                .offset(y: dotPressed ? 2 : 0)
         }
-        .buttonStyle(.plain)
-        .onHover { dotHovered = $0 }
-        .animation(.easeInOut(duration: 0.15), value: dotHovered)
+        .frame(width: size + 10, height: size + 10)
+        .contentShape(Circle())
+        .gesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in dotPressed = true }
+                .onEnded { _ in
+                    dotPressed = false
+                    onToggle()
+                }
+        )
+        .animation(.spring(response: 0.2, dampingFraction: 0.5), value: dotPressed)
         .animation(.easeInOut(duration: 0.25), value: appState.isEnabled)
     }
 

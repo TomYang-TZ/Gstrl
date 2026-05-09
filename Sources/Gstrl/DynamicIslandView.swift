@@ -94,66 +94,14 @@ struct DynamicIslandView: View {
         .padding(.horizontal, 16)
     }
 
-    @State private var dotPressed = false
-
     private var statusIndicator: some View {
-        let baseColor: Color = appState.isEnabled ? .green : Color(white: 0.65)
-        let size: CGFloat = 18
-
-        return ZStack {
-            // Outer glow when active
-            if appState.isEnabled {
-                Circle()
-                    .fill(.green.opacity(0.25))
-                    .frame(width: size + 8, height: size + 8)
-                    .blur(radius: 4)
-                    .phaseAnimator([false, true]) { content, phase in
-                        content.opacity(phase ? 0.3 : 0.8)
-                    } animation: { _ in
-                        .easeInOut(duration: 1.2)
-                    }
-            }
-
-            // 3D squishy button
+        Button { onToggle() } label: {
             Circle()
-                .fill(
-                    RadialGradient(
-                        colors: [baseColor.opacity(0.9), baseColor],
-                        center: .init(x: 0.4, y: 0.35),
-                        startRadius: 0,
-                        endRadius: size * 0.6
-                    )
-                )
-                .frame(width: size, height: size)
-                .shadow(color: .black.opacity(dotPressed ? 0.1 : 0.35), radius: dotPressed ? 1 : 3, x: 0, y: dotPressed ? 1 : 3)
-                .shadow(color: .white.opacity(0.5), radius: 0, x: 0, y: dotPressed ? 0 : -1)
-                .overlay {
-                    // Top highlight
-                    Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [.white.opacity(dotPressed ? 0.1 : 0.5), .clear],
-                                startPoint: .top,
-                                endPoint: .center
-                            )
-                        )
-                        .frame(width: size - 2, height: size - 2)
-                }
-                .scaleEffect(dotPressed ? 0.85 : 1.0)
-                .offset(y: dotPressed ? 2 : 0)
+                .fill(appState.isEnabled ? .green : .white.opacity(0.6))
+                .frame(width: 8, height: 8)
         }
-        .frame(width: size + 10, height: size + 10)
-        .contentShape(Circle())
-        .gesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in dotPressed = true }
-                .onEnded { _ in
-                    dotPressed = false
-                    onToggle()
-                }
-        )
-        .animation(.spring(response: 0.2, dampingFraction: 0.5), value: dotPressed)
-        .animation(.easeInOut(duration: 0.25), value: appState.isEnabled)
+        .buttonStyle(.plain)
+        .animation(.easeInOut(duration: 0.2), value: appState.isEnabled)
     }
 
     private func handIndicator(detected: Bool, symbol: String, color: Color) -> some View {

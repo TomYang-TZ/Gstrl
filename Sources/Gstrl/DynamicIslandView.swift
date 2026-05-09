@@ -95,23 +95,26 @@ struct DynamicIslandView: View {
     }
 
     private var statusIndicator: some View {
-        ZStack {
-            if appState.isEnabled {
+        Button { onToggle() } label: {
+            ZStack {
+                if appState.isEnabled {
+                    Circle()
+                        .fill(.green.opacity(0.3))
+                        .frame(width: 16, height: 16)
+                        .blur(radius: 4)
+                        .phaseAnimator([false, true]) { content, phase in
+                            content.opacity(phase ? 0.4 : 1.0)
+                        } animation: { _ in
+                            .easeInOut(duration: 1.2)
+                        }
+                }
                 Circle()
-                    .fill(.green.opacity(0.3))
-                    .frame(width: 16, height: 16)
-                    .blur(radius: 4)
-                    .phaseAnimator([false, true]) { content, phase in
-                        content.opacity(phase ? 0.4 : 1.0)
-                    } animation: { _ in
-                        .easeInOut(duration: 1.2)
-                    }
+                    .fill(appState.isEnabled ? .green : .primary.opacity(0.3))
+                    .frame(width: 8, height: 8)
             }
-            Circle()
-                .fill(appState.isEnabled ? .green : .primary.opacity(0.3))
-                .frame(width: 8, height: 8)
+            .frame(width: 20, height: 20)
         }
-        .frame(width: 20, height: 20)
+        .buttonStyle(.plain)
         .animation(.easeInOut(duration: 0.25), value: appState.isEnabled)
     }
 

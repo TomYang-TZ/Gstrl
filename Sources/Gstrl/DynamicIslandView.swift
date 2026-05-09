@@ -94,37 +94,26 @@ struct DynamicIslandView: View {
         .padding(.horizontal, 16)
     }
 
-    private var statusIndicator: some View {
-        Button { onToggle() } label: {
-            ZStack {
-                // Outer ring (the "C" part of the power symbol)
-                Circle()
-                    .strokeBorder(
-                        appState.isEnabled ? .green : .white.opacity(0.5),
-                        lineWidth: 2
-                    )
-                    .frame(width: 16, height: 16)
-                    // Gap at top for the line
-                    .mask {
-                        Rectangle()
-                            .overlay {
-                                Rectangle()
-                                    .frame(width: 4, height: 10)
-                                    .offset(y: -6)
-                                    .blendMode(.destinationOut)
-                            }
-                            .compositingGroup()
-                    }
+    @State private var toggleHovered = false
 
-                // Top line (the "I" part)
-                RoundedRectangle(cornerRadius: 1)
-                    .fill(appState.isEnabled ? .green : .white.opacity(0.5))
-                    .frame(width: 2, height: 7)
-                    .offset(y: -5)
-            }
-            .frame(width: 20, height: 20)
+    private var statusIndicator: some View {
+        let lineColor: Color = appState.isEnabled ? .green : .white.opacity(0.7)
+
+        return Button { onToggle() } label: {
+            Text(appState.isEnabled ? "ON" : "OFF")
+                .font(.system(size: 8, weight: .bold, design: .monospaced))
+                .foregroundStyle(lineColor)
+                .tracking(toggleHovered ? 3 : 1)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .overlay {
+                    Capsule()
+                        .strokeBorder(lineColor, lineWidth: 1.5)
+                }
         }
         .buttonStyle(.plain)
+        .onHover { toggleHovered = $0 }
+        .animation(.easeInOut(duration: 0.3), value: toggleHovered)
         .animation(.easeInOut(duration: 0.2), value: appState.isEnabled)
     }
 

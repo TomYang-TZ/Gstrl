@@ -94,8 +94,6 @@ struct DynamicIslandView: View {
         .padding(.horizontal, 16)
     }
 
-    @State private var toggleHovered = false
-
     private var statusIndicator: some View {
         let lineColor: Color = appState.isEnabled ? .green : .white.opacity(0.7)
 
@@ -103,17 +101,22 @@ struct DynamicIslandView: View {
             Text(appState.isEnabled ? "ON" : "OFF")
                 .font(.system(size: 8, weight: .bold, design: .monospaced))
                 .foregroundStyle(lineColor)
-                .tracking(toggleHovered ? 3 : 1)
-                .padding(.horizontal, 8)
+                .tracking(1)
+                .padding(.horizontal, 6)
                 .padding(.vertical, 4)
                 .overlay {
-                    Capsule()
+                    RoundedRectangle(cornerRadius: 3)
                         .strokeBorder(lineColor, lineWidth: 1.5)
                 }
         }
         .buttonStyle(.plain)
-        .onHover { toggleHovered = $0 }
-        .animation(.easeInOut(duration: 0.3), value: toggleHovered)
+        .onHover { inside in
+            if inside {
+                NSCursor.pointingHand.push()
+            } else {
+                NSCursor.pop()
+            }
+        }
         .animation(.easeInOut(duration: 0.2), value: appState.isEnabled)
     }
 

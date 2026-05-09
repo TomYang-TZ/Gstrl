@@ -33,10 +33,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         AVCaptureDevice.requestAccess(for: .audio) { _ in }
         SFSpeechRecognizer.requestAuthorization { _ in }
 
-        if !CGPreflightScreenCaptureAccess() {
-            CGRequestScreenCaptureAccess()
-        }
-
         if !AXIsProcessTrusted() {
             let options = [kAXTrustedCheckOptionPrompt.takeRetainedValue(): true] as CFDictionary
             AXIsProcessTrustedWithOptions(options)

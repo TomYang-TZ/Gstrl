@@ -2,7 +2,7 @@
   <img src="Sources/Gstrl/Resources/AppIcon.iconset/icon_256x256.png" width="128" alt="Gstrl icon">
 </p>
 
-# Gstrl 🤌
+# Gstrl
 
 > Sometimes a pinch is faster than reaching for the mouse.
 

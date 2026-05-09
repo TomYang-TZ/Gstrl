@@ -76,12 +76,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         panel.hasShadow = false
         panel.hidesOnDeactivate = false
         panel.isMovable = false
+        panel.ignoresMouseEvents = false
         panel.collectionBehavior = [
             .fullScreenAuxiliary,
             .stationary,
             .canJoinAllSpaces,
             .ignoresCycle
         ]
+
+        panel.contentView?.wantsLayer = true
+        panel.contentView?.layer?.isOpaque = false
+        panel.contentView?.layer?.backgroundColor = .clear
 
         let hostView = ClickThroughHostingView(rootView:
             DynamicIslandView(appState: appState, onToggle: { [weak self] in

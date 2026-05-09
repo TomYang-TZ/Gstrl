@@ -55,8 +55,9 @@ The panel uses `ignoresMouseEvents = true` by default. A **global event monitor*
 - Only `ignoresMouseEvents` + global monitor correctly separates "island clickable" from "background passthrough"
 
 **Dynamic hit area:**
-- Compact: 280x36 at top center
-- Expanded: 280x200 at top center (checked via AppState properties)
+- Uses `appState.islandHeight` (set via GeometryReader in DynamicIslandView)
+- Hit rect: 280 x islandHeight at top center of panel
+- Automatically grows/shrinks as island expands/collapses
 
 ### Layout (DynamicIslandView.swift)
 ```

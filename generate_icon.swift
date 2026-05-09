@@ -35,68 +35,63 @@ func renderIcon(size: Int) -> NSImage {
     let bgGradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: bgColors, locations: [0.0, 1.0])!
     ctx.drawLinearGradient(bgGradient, start: CGPoint(x: 0, y: s), end: CGPoint(x: s, y: 0), options: [])
 
-    // === ARCS — matching the CSS border approach ===
-    // CSS uses border-color on specific sides + rotation to create partial circles
-    // I'll draw arc segments to match
+    // === ARCS — exact CSS border math ===
+    // CSS border on circle: each side = 90deg arc
+    // CG coords: 0=right(3oclock), pi/2=top(12oclock), pi=left(9oclock), -pi/2=bottom(6oclock)
+    // CSS border positions in CG (before rotation):
+    //   top:    pi/4  → 3pi/4   (from 1:30 to 10:30)
+    //   right: -pi/4  → pi/4    (from 4:30 to 1:30)
+    //   bottom:-3pi/4 → -pi/4   (from 7:30 to 4:30)
+    //   left:  3pi/4  → 5pi/4   (from 10:30 to 7:30)
+    // Rotation in CSS is clockwise, CG rotation is CCW, so CSS rotate(-30deg) = CG +30deg offset
 
     let orange = NSColor(red: 1.0, green: 0.58, blue: 0.0, alpha: 1.0)
     let cyan = NSColor(red: 0.2, green: 0.68, blue: 0.9, alpha: 1.0)
+    ctx.setLineCap(.butt)
 
-    // Outer arc: 65% of icon size, rotated -30deg
-    // CSS: border-top = orange, border-right = cyan
-    // After -30deg rotation: orange appears top-left, cyan appears top-right
-    let outerRadius = s * 0.325
-    let outerWidth = s * 0.012
+    // --- Outer ring: 65% size, CSS rotate(-30deg) → CG offset = +pi/6 ---
+    let outerRadius = s * 0.285
+    let outerRot = CGFloat.pi / 6
+    ctx.setLineWidth(s * 0.012)
 
-    ctx.setLineWidth(outerWidth)
-    ctx.setLineCap(.round)
-
-    // The CSS border trick with rotation -30deg means:
-    // top border (orange) spans from -30deg to 60deg (relative to normal top)
-    // right border (cyan) spans from 60deg to 150deg
-    // In CG coordinate system (0 = right, counter-clockwise positive):
-    // After rotating the whole thing by -30 degrees:
-
-    // Orange arc segment (top portion after rotation)
+    // border-top (orange): pi/4+rot → 3pi/4+rot
     ctx.setStrokeColor(orange.withAlphaComponent(0.85).cgColor)
-    ctx.addArc(center: center, radius: outerRadius, startAngle: .pi * 0.33, endAngle: .pi * 0.83, clockwise: false)
+    ctx.addArc(center: center, radius: outerRadius, startAngle: .pi/4 + outerRot, endAngle: .pi*3/4 + outerRot, clockwise: false)
     ctx.strokePath()
 
-    // Cyan arc segment (right portion after rotation)
+    // border-right (cyan): -pi/4+rot → pi/4+rot
     ctx.setStrokeColor(cyan.withAlphaComponent(0.85).cgColor)
-    ctx.addArc(center: center, radius: outerRadius, startAngle: .pi * 1.33, endAngle: .pi * 1.83, clockwise: false)
+    ctx.addArc(center: center, radius: outerRadius, startAngle: -.pi/4 + outerRot, endAngle: .pi/4 + outerRot, clockwise: false)
     ctx.strokePath()
 
-    // Mid arc: 47% of icon size, rotated 60deg
-    // CSS: border-bottom = orange(0.6), border-left = cyan(0.6)
-    let midRadius = s * 0.235
-    let midWidth = s * 0.008
+    // --- Mid ring: 47% size, CSS rotate(60deg) → CG offset = -pi/3 ---
+    let midRadius = s * 0.205
+    let midRot = -CGFloat.pi / 3
+    ctx.setLineWidth(s * 0.008)
 
-    ctx.setLineWidth(midWidth)
-
-    // Orange segment (bottom after rotation)
+    // border-bottom (orange): -3pi/4+rot → -pi/4+rot
     ctx.setStrokeColor(orange.withAlphaComponent(0.6).cgColor)
-    ctx.addArc(center: center, radius: midRadius, startAngle: -.pi * 0.17, endAngle: .pi * 0.33, clockwise: false)
+    ctx.addArc(center: center, radius: midRadius, startAngle: -.pi*3/4 + midRot, endAngle: -.pi/4 + midRot, clockwise: false)
     ctx.strokePath()
 
-    // Cyan segment (left after rotation)
+    // border-left (cyan): 3pi/4+rot → 5pi/4+rot
     ctx.setStrokeColor(cyan.withAlphaComponent(0.6).cgColor)
-    ctx.addArc(center: center, radius: midRadius, startAngle: .pi * 0.83, endAngle: .pi * 1.33, clockwise: false)
+    ctx.addArc(center: center, radius: midRadius, startAngle: .pi*3/4 + midRot, endAngle: .pi*5/4 + midRot, clockwise: false)
     ctx.strokePath()
 
-    // Inner arc: 30% of icon size, rotated -15deg
-    // CSS: border-top = orange(0.45), border-right = cyan(0.45)
-    let innerRadius = s * 0.15
-    let innerWidth = s * 0.006
+    // --- Inner ring: 30% size, CSS rotate(-15deg) → CG offset = +pi/12 ---
+    let innerRadius = s * 0.13
+    let innerRot = CGFloat.pi / 12
+    ctx.setLineWidth(s * 0.005)
 
-    ctx.setLineWidth(innerWidth)
-
+    // border-top (orange): pi/4+rot → 3pi/4+rot
     ctx.setStrokeColor(orange.withAlphaComponent(0.45).cgColor)
-    ctx.addArc(center: center, radius: innerRadius, startAngle: .pi * 0.42, endAngle: .pi * 0.92, clockwise: false)
+    ctx.addArc(center: center, radius: innerRadius, startAngle: .pi/4 + innerRot, endAngle: .pi*3/4 + innerRot, clockwise: false)
     ctx.strokePath()
 
+    // border-right (cyan): -pi/4+rot → pi/4+rot
     ctx.setStrokeColor(cyan.withAlphaComponent(0.45).cgColor)
-    ctx.addArc(center: center, radius: innerRadius, startAngle: .pi * 1.42, endAngle: .pi * 1.92, clockwise: false)
+    ctx.addArc(center: center, radius: innerRadius, startAngle: -.pi/4 + innerRot, endAngle: .pi/4 + innerRot, clockwise: false)
     ctx.strokePath()
 
     // === FINGERTIPS ===
@@ -129,15 +124,17 @@ func renderIcon(size: Int) -> NSImage {
         ctx.restoreGState()
     }
 
+    // Left finger tilts right (top leans toward center)
     drawFingertip(
         at: CGPoint(x: center.x - gap - tipWidth * 0.55, y: center.y),
-        angle: .pi * 15 / 180,
+        angle: -.pi * 15 / 180,
         color: orange
     )
 
+    // Right finger tilts left (top leans toward center)
     drawFingertip(
         at: CGPoint(x: center.x + gap + tipWidth * 0.55, y: center.y),
-        angle: -.pi * 15 / 180,
+        angle: .pi * 15 / 180,
         color: cyan
     )
 

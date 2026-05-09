@@ -77,7 +77,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             y: screen.frame.maxY - panelSize.height - offset
         )
 
-        let panel = ClickThroughPanel(
+        let panel = NSPanel(
             contentRect: NSRect(origin: origin, size: panelSize),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
@@ -89,19 +89,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         panel.hasShadow = false
         panel.hidesOnDeactivate = false
         panel.isMovable = false
-        panel.ignoresMouseEvents = false
+        panel.ignoresMouseEvents = true
         panel.collectionBehavior = [
             .fullScreenAuxiliary,
             .stationary,
             .canJoinAllSpaces,
             .ignoresCycle
         ]
-
-        let containerView = ClickThroughContainerView()
-        containerView.wantsLayer = true
-        containerView.layer?.isOpaque = false
-        containerView.layer?.backgroundColor = .clear
-        panel.contentView = containerView
 
         let hostView = ClickThroughHostingView(rootView:
             DynamicIslandView(appState: appState, onToggle: { [weak self] in
@@ -120,9 +114,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         hostView.wantsLayer = true
         hostView.layer?.isOpaque = false
         hostView.layer?.backgroundColor = .clear
-        hostView.frame = containerView.bounds
-        hostView.autoresizingMask = [.width, .height]
-        containerView.addSubview(hostView)
+        hostView.appState = appState
+        panel.contentView = hostView
 
         panel.orderFrontRegardless()
         islandPanel = panel
@@ -179,19 +172,41 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 final class ClickThroughHostingView<Content: View>: NSHostingView<Content> {
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
-}
+    private var monitor: Any?
 
-final class ClickThroughContainerView: NSView {
-    override func hitTest(_ point: NSPoint) -> NSView? {
-        guard let result = super.hitTest(point) else { return nil }
-        if result === self { return nil }
-        return result
+    var appState: AppState?
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        guard let window, monitor == nil else { return }
+        monitor = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged]) { [weak self, weak window] event in
+            guard let self, let window else { return }
+            let mouseScreen = NSEvent.mouseLocation
+            let windowFrame = window.frame
+            let isExpanded = self.appState.map {
+                !$0.agentResponse.isEmpty || !$0.agentTranscript.isEmpty ||
+                !$0.speechTranscript.isEmpty || $0.agentActive ||
+                !$0.agentThinking.isEmpty || !$0.agentCurrentAction.isEmpty
+            } ?? false
+            let height: CGFloat = isExpanded ? 200 : 36
+            let islandFrame = NSRect(
+                x: windowFrame.midX - 140,
+                y: windowFrame.maxY - height,
+                width: 280,
+                height: height
+            )
+            let overIsland = islandFrame.contains(mouseScreen)
+            if overIsland != !window.ignoresMouseEvents {
+                window.ignoresMouseEvents = !overIsland
+            }
+        }
+    }
+
+    deinit {
+        if let monitor { NSEvent.removeMonitor(monitor) }
     }
 }
 
-final class ClickThroughPanel: NSPanel {
-    override var canBecomeKey: Bool { false }
-}
 
 @main
 struct GstrlMain {

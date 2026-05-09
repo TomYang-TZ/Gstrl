@@ -37,70 +37,88 @@ make stop      # kill running instance
 
 ## Dynamic Island — Current Design
 
-### Panel Structure
-- `ClickThroughPanel` (NSPanel, statusBar level, canBecomeKey=false, 300x200)
-  - `ClickThroughContainerView` (hitTest returns nil for self → click-through)
-    - `ClickThroughHostingView` (SwiftUI content, acceptsFirstMouse=true)
+### Panel Structure (GstrlApp.swift)
+```
+NSPanel (300x200, statusBar level, ignoresMouseEvents=true initially)
+  └── ClickThroughHostingView (SwiftUI content)
+        - Global NSEvent monitor toggles ignoresMouseEvents
+        - When mouse is over island area → accepts clicks
+        - When mouse is elsewhere → passes through to apps below
+```
 
-### Layout (DynamicIslandView)
-- Single glass container, fixed 280px wide, cornerRadius 14
+### Click-Through Mechanism (CRITICAL LEARNING)
+The panel uses `ignoresMouseEvents = true` by default. A **global event monitor** (`NSEvent.addGlobalMonitorForEvents`) tracks mouse position and toggles `ignoresMouseEvents` based on whether the cursor is over the island content area.
+
+**Why this approach:**
+- NSPanel `hitTest` overrides DON'T WORK for SwiftUI — `super.hitTest` returns the hosting view itself (not subviews) because SwiftUI renders into the hosting view directly
+- `ClickThroughContainerView.hitTest` returning nil for self doesn't help — the hosting view child still claims the full rect
+- Only `ignoresMouseEvents` + global monitor correctly separates "island clickable" from "background passthrough"
+
+**Dynamic hit area:**
+- Compact: 280x36 at top center
+- Expanded: 280x200 at top center (checked via AppState properties)
+
+### Layout (DynamicIslandView.swift)
+```
+VStack(spacing: 0) {
+    compactContent         // 32px, hands at edges via Spacer(), StatusButton center
+    expandedSection        // height 0→150 animated, .clipped(), opacity toggle
+}
+.frame(width: 280)
+.modifier(IslandGlassModifier(cornerRadius: 14))
+```
+
+- Fixed 280px width — glass shape never changes width
 - `.glassEffect(.regular, in: .rect(cornerRadius: 14))` on macOS 26+
-- `.clipShape(RoundedRectangle)` BEFORE `.glassEffect`
-- Compact row (32px): hands at edges via `Spacer()`, StatusButton center
-- Expanded section: always in tree, height animates via `maxHeight` + `.clipped()`
+- `.clipShape(RoundedRectangle)` BEFORE `.glassEffect` — glass doesn't clip content
 - `.fixedSize(horizontal: false, vertical: true)` so height fits content (max 150px)
-- `.easeOut(duration: 0.2)` animation on `isExpanded` and `responseExpanded`
-- `PointerButtonStyle` on all buttons (cursor change + press dim)
+- `.easeOut(duration: 0.2)` animation
+- `PointerButtonStyle` on all buttons (cursor + press dim)
 
-### Key Constraints Learned
-- `.glassEffect` does NOT clip content — explicit `.clipShape` needed before it
-- `.glassEffect` does NOT animate shape changes smoothly — keep width fixed
-- Conditional `if` views cause jarring transitions — keep views in tree, animate height
-- NSPanel size must accommodate expanded content (300x200 minimum)
-- `ClickThroughContainerView.hitTest` returns nil for self → transparent areas pass clicks
+### Key Constraints (Hard-Won Learnings)
+
+1. **`.glassEffect` does NOT clip content** — must add explicit `.clipShape` before it
+2. **`.glassEffect` does NOT animate shape changes** — any width/radius animation causes jarring pop. Keep dimensions fixed or only animate height
+3. **Conditional `if` views cause jarring transitions** — keep views in tree, animate height/opacity instead
+4. **NSHostingView hitTest always returns self** — SwiftUI doesn't create NSView subviews for buttons. Can't use hitTest to distinguish interactive vs empty areas
+5. **`ignoresMouseEvents = true` blocks tracking areas too** — can't use NSTrackingArea to toggle it back. Must use global event monitor
+6. **NSPanel size must accommodate expanded content** — 300x200 minimum
+7. **Panel at statusBar level blocks everything below** — the 300x200 rect eats ALL clicks unless `ignoresMouseEvents = true`
 
 ## Agent System
 
 - `claude -p --output-format stream-json --verbose`
-- `readabilityHandler` on pipe streams events in real-time
-- Parses `type: "assistant"` for `tool_use` → live action display in island
-- Parses `type: "result"` for final response
+- `readabilityHandler` streams events in real-time (thinking, tool_use, result)
 - `--add-dir ~/.claude` for user context
 - `--add-dir /tmp/gstrl/<session>` for session files
 - `--resume <session_id>` for multi-turn
-- "No response" or empty results silently dismissed (not shown or spoken)
+- "No response" or empty results silently dismissed
 - Clipboard image only attached if changed within last 60s
+- Terminate button kills `claudeProcess` reference
 
 ## Completed (2026-05-09)
 
-- Agent streaming with live thinking/action display in island
-- Dynamic Island redesign: single glass container, expandable downward, content-fit height
-- Click-through panel (transparent areas pass clicks to windows below)
-- Collapsible chat entries in Agent History tab
-- Agent actions tracked from stream-json tool_use blocks
-- Terminate agent button (kills claude process)
-- STT command flash (3s display in transcript area)
-- Delete countdown border properly wired
-- Follow-up listening (both fists during response re-enters listening)
-- PointerButtonStyle for all interactive elements
-- "No response" suppression (not shown, not spoken)
+- Agent streaming with live thinking/action display
+- Dynamic Island redesign: single glass, fixed width, expandable height
+- Click-through panel with global event monitor
+- Collapsible chat entries in Agent History
+- Agent actions parsed from stream-json tool_use blocks
+- Terminate agent button
+- STT command flash (3s)
+- Delete countdown border
+- Follow-up listening (both fists during response)
+- PointerButtonStyle for all elements
+- "No response" suppression
 
 ## Next Steps
 
 ### Priority: Cursor Jitter Fix
-When holding the right hand still in pinch position (cursor drag mode), the cursor jitters/vibrates instead of staying still. This is because Vision framework hand landmark detection has per-frame noise (~1-3px), and CursorDragController directly maps position delta to cursor movement without any smoothing.
+When holding right hand still in pinch, cursor vibrates. Vision has per-frame noise (~1-3px). Fix in `CursorDragController.swift`:
+1. Dead zone — ignore delta below threshold (0.005 normalized)
+2. Exponential smoothing — `smoothed = 0.7 * current + 0.3 * previous`
+3. Velocity gate — only move when velocity exceeds minimum
 
-**Approach to fix:**
-1. Look at `Sources/Gstrl/Tracking/CursorDragController.swift`
-2. The `process()` method computes delta from current vs previous palm center position
-3. Add a **dead zone** — ignore movement below a threshold (e.g. 0.005 normalized units)
-4. Add **exponential smoothing** — blend current position with previous (e.g. `smoothed = 0.7 * current + 0.3 * previous`)
-5. Consider a **velocity gate** — only move cursor when velocity exceeds a minimum, stops instantly when below
-
-The key insight: Vision's hand pose estimation has inherent jitter even on a perfectly still hand. The fix is signal processing (smoothing + dead zone), not changing the detection.
-
-### Other Remaining Tasks
-- Landing page redesign (color, motion, demo video)
+### Other
+- Landing page redesign
 - Launch strategy (Reddit, X, RedNote)
-- Two-finger directional hold (needs ML classifier)
-- App window resizable (caused layout gaps before)
+- Two-finger directional hold (ML classifier)

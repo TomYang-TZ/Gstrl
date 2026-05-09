@@ -4,46 +4,26 @@
 
 ```
 Sources/Gstrl/
-├── GstrlApp.swift                 App entry, window + island + menu bar lifecycle
+├── GstrlApp.swift                 App entry, window + island panel lifecycle
 ├── AppState.swift                 @Observable model — all UI-bound state
-├── DynamicIslandView.swift        Floating notch overlay (NotchShape + SwiftUI)
-├── MainStatusView.swift           Settings window with gesture reference
+├── DynamicIslandView.swift        Floating glass overlay (expandable, click-through)
+├── MainStatusView.swift           Tabbed settings window (Settings/Agent/Gestures)
 ├── Camera/
 │   └── CameraManager.swift        AVCaptureSession @ 30fps, delivers CVPixelBuffer
 ├── Tracking/
 │   ├── TrackingCoordinator.swift  Orchestrator — frame processing + priority routing
-│   ├── GestureClassifier.swift    Static: isPinching, isTwoFingerPinch, isThumbPinky, etc.
+│   ├── AgentController.swift      Speech → silence → claude -p (stream-json) → TTS
+│   ├── GestureClassifier.swift    Static: isPinching, isTwoFingerPinch, isThumbPinky
 │   ├── SwipeDetector.swift        Velocity-based swipe with grace period + cooldown
-│   ├── DeleteController.swift     Escalating delete state machine (chars→words→lines→all)
+│   ├── DeleteController.swift     Escalating delete state machine
 │   ├── ScrollController.swift     Relative scroll via wrist Y tracking
-│   ├── CursorDragController.swift Right-pinch cursor drag + drag-and-drop (mouse down)
-│   ├── SpeechController.swift     Countdown + SpeechEngine lifecycle
-│   ├── InputDispatch.swift        GestureAction enum → CGEvent (keys, click, right-click)
+│   ├── CursorDragController.swift Right-pinch cursor drag + drag-and-drop
+│   ├── SpeechController.swift     Hold countdown + SpeechEngine + transcript fade
+│   ├── InputDispatch.swift        GestureAction enum → CGEvent
 │   └── TrackingState.swift        Enum: inactive | tracking | pinching
 └── Speech/
-    └── SpeechEngine.swift         SFSpeechRecognizer → CGEvent character typing
-```
-
-## Data Flow
-
-```
-Camera (30fps CVPixelBuffer)
-  → TrackingCoordinator.processFrame()
-    → VNDetectHumanHandPoseRequest (up to 2 hands)
-    → Chirality separation (left/right)
-    → Gesture priority chain:
-        1. Fingers crossed (X)? → Ctrl+C ×2
-        2. L pinch + R fist? → Scroll (left hand Y movement)
-        3. Both hands 🤙? → Delete lines (escalating)
-        4. Both hands open? → Speech countdown/activation
-        5. Right hand pinch? → Cursor drag (+ drag-and-drop if L pinching)
-        6. Right hand 🤙? → Delete chars (accelerating)
-        7. Right hand open? → Velocity-based swipe detection
-        8. Left two-finger pinch? → Right click
-        9. Left hand pinch? → Click
-       10. Left hand fingers? → Hold-to-fire (numbers/enter/escape)
-    → AppState updates (main thread)
-    → UI reacts (SwiftUI observation)
+    ├── SpeechEngine.swift         SFSpeechRecognizer → CGEvent typing
+    └── VoiceCommandParser.swift   "press"/"command"/"control" + key → action
 ```
 
 ## Build & Run
@@ -53,71 +33,69 @@ make run       # build + launch
 make install   # build + copy to /Applications
 make restart   # stop + build + launch
 make stop      # kill running instance
-make clean     # remove build artifacts
 ```
 
-Requires Accessibility permission — app prompts on first enable.
+## Dynamic Island — Current Design
 
-## Key Design Decisions
+### Structure
+- `ClickThroughPanel` (NSPanel, statusBar level, canBecomeKey=false, 300x200)
+  - `ClickThroughContainerView` (hitTest returns nil for self → click-through)
+    - `ClickThroughHostingView` (SwiftUI content)
 
-**Velocity-based swipe detection** — Displacement-based was tried first but failed because the natural finger return-to-origin after a swipe would trigger a reverse swipe. Velocity-based detection ignores the slow wind-up and return.
+### Layout (DynamicIslandView)
+```
+┌──────────────────────────────────────┐  280px fixed, cornerRadius 14
+│  🖐         [ON/gesture]         🖐  │  32px compact row (always visible)
+│──────────────────────────────────────│
+│  expanded content (fits to content)  │  max 150px, sizes to text
+└──────────────────────────────────────┘
+```
 
-**Grace period on hand entry** — When a hand enters the frame, the upward motion of raising it registers as velocity. A 5-frame grace period suppresses detection until the hand settles.
+- Single glass container, fixed 280px width, `.glassEffect(.regular, in: .rect(cornerRadius: 14))`
+- `.clipShape(RoundedRectangle)` BEFORE `.glassEffect` — glass doesn't clip content
+- Compact row always at top, hands at edges via `Spacer()`
+- Expanded section appears/disappears with `.easeInOut(0.25)` animation
+- Uses `.fixedSize(horizontal: false, vertical: true)` so height fits content (max 150px cap)
+- `PointerButtonStyle` on all buttons — cursor change + press dim
 
-**Single-hand isolation** — Hold gestures (left hand numbers/enter/escape, right hand 🤙 delete) are disabled when both hands are detected. Prevents accidental triggers during two-hand combos.
+### Island Modes
+- **compact**: just top row
+- **transcript**: top row + HStack (text + waveform/sendCircle/stopButton)
+- **response**: top row + HStack (text + chevron + xmark, alignment: .top)
 
-**Scroll via left wrist tracking** — Left pinch + right fist activates scroll. Left hand Y movement drives scroll events. This keeps the right hand as a "mode selector" while left hand (already committed to pinch) provides the motion.
+### Key Constraints
+- `.glassEffect` does NOT animate shape changes — width must stay fixed
+- NSPanel must be large enough (300x200) for expanded content
+- `ClickThroughContainerView.hitTest` returns nil for self → transparent areas pass clicks through
 
-**Drag-and-drop** — Left pinch while right hand is pinch-dragging posts mouseDown at start, leftMouseDragged events during movement, and mouseUp on release.
+## Agent System
 
-**Two-finger pinch = right click** — Index + middle both touching thumb. Checked before regular pinch so it takes priority.
+- Uses `claude -p --output-format stream-json --verbose`
+- `readabilityHandler` on pipe streams events in real-time
+- Parses `type: "assistant"` messages for `tool_use` blocks → live action display
+- Parses `type: "result"` for final response
+- `--add-dir ~/.claude` for user context
+- `--add-dir /tmp/gstrl/<session>` for session files
+- `--resume <session_id>` for multi-turn
+- Clipboard image only attached if clipboard changed within last 60s
 
-## Gesture Parameters
+## Completed (This Session — 2026-05-09)
 
-| Parameter | Value | Location |
-|-----------|-------|----------|
-| `holdDuration` | 1.0s | TrackingCoordinator |
-| `swipeCooldown` | 1.0s | SwipeDetector |
-| `velocityThreshold` | 0.6 | SwipeDetector |
-| `handEntryGraceFrames` | 5 | SwipeDetector, TrackingCoordinator |
-| `rightThumbPinkyFrames` | 5 | DeleteController |
-| `sensitivity` (cursor) | 2.5 | CursorDragController |
-| `sensitivity` (scroll) | 1500 | ScrollController |
-| `pinchThreshold` | 0.06 | GestureClassifier |
-| `twoFingerPinchThreshold` | 0.07 | GestureClassifier |
+- **Island follow-up listening** — both fists during response clears response, re-enters listening
+- **Collapsible chat entries** — `CollapsibleChatEntry` in Agent History, latest expanded by default
+- **Agent actions in history** — tool_use blocks parsed from stream-json, shown with purple icons
+- **Live agent activity in island** — thinking/action events stream to island in real-time
+- **Terminate agent button** — kills running claude process
+- **STT command flash** — voice commands show in transcript for 3s
+- **Delete countdown border** — properly sets gestureCountdownStart
+- **Island redesign** — single glass container, expandable downward, fixed width
+- **Click-through panel** — ClickThroughContainerView + ClickThroughPanel
+- **PointerButtonStyle** — all buttons show pointing hand cursor on hover
+- **Clipboard freshness** — only attaches images < 60s old
 
-## Known Issues
+## Remaining Tasks
 
-- `countExtendedFingers` uses tip.y > pip.y which fails when hand is sideways
-- Speech partial results can occasionally repeat (mitigated by lastTypedLength tracking)
-- Scroll sensitivity may need per-app tuning (1500 is aggressive)
-
-## Completed
-
-- **Rename to Gstrl** — repo, bundle ID, all source references
-- **Dynamic Island Liquid Glass** — native `.glassEffect(.clear)` on macOS 26+, thinMaterial fallback for older versions
-- **Circle-to-screenshot** — pinch + draw circle captures region, shows 3s preview thumbnail, copies to clipboard
-- **Voice commands** — "press down/up/left/right", "command z/c/v/tab" during speech mode
-- **Palm center tracking** — cursor follows MCP knuckle average instead of wrist
-- **Velocity-based scroll** — joystick-style with time acceleration (1x → 3x over 5s)
-- **Improved swipe detection** — requires open hand, displacement + deceleration, stable finger count gating
-- **Long pinch right-click** — hold pinch 1s for right-click, quick release for left-click
-- **Settings UI** — configurable FPS (30/60/90/120), cursor sensitivity, scroll sensitivity
-- **60fps camera support** — via AVCaptureConnection frame duration (default 30fps for battery)
-- **Notch-safe positioning** — island detects safeAreaInsets and offsets only on notch screens
-- **Permission auto-prompts** — accessibility + screen recording settings pages open on launch
-- **SEO** — GitHub Pages landing page with structured data, optimized README keywords
-- **Augmentation messaging** — positioned as "augment, not replace" your keyboard and mouse
-- **Dynamic Island tap → open app** — `ClickThroughHostingView` with `acceptsFirstMouse` + `.contentShape(Capsule())` + spring scale-down press animation. Tapping anywhere on the island opens settings window.
-- **Flip right hand icon** — `.scaleEffect(x: -1, y: 1)` on right hand indicators in both DynamicIslandView (compact + expanded) and MainStatusView.
-- **App icon** — golden glass background, orange-to-cyan gradient border, real SF Symbol `hand.raised.fill`. Generated via `generate_icon.swift` script → iconset → icns. Bundled in Contents/Resources via Makefile.
-- **Natural scroll toggle** — `naturalScroll` property in AppState (default false), Toggle in settings, wired through ScrollController. When true, inverts scroll delta direction.
-- **Island collapse animation fix** — fixed inner frames for compact/expanded content + `.allowsHitTesting` to prevent invisible views eating taps + `.clipped()`.
-- **Gesture section smooth collapse** — replaced DisclosureGroup with custom VStack + Button + `.opacity` transition + `.clipped()`.
-- **README banner** — app icon at top of README.md
-
-## Next Steps
-
-- **Landing page redesign** — current page is plain dark with no visual interest. Needs: color, motion, personality. Consider: demo GIF/video hero, gradient backgrounds, animated gesture illustrations, better typography hierarchy, maybe a glassmorphism card style matching the Liquid Glass island. Should feel like a product page, not a README rendered as HTML.
-- **Launch strategy** — plan posts for Reddit (r/macapps, r/sideproject, r/accessibility), X/Twitter, and RedNote (小红书). Need: short demo video/GIF, compelling hook, appropriate subreddits/hashtags, posting timing.
-- **Two-finger directional hold** — point index+middle to fire accelerating arrow key repeats. Detection was unreliable; needs wrist angle + ML classifier approach.
+1. **Landing page redesign** — color, motion, personality, demo video hero
+2. **Launch strategy** — Reddit, X, RedNote posts with demo GIF
+3. **Two-finger directional hold** — needs ML classifier approach
+4. **App window resizable** — needs proper approach (caused layout gaps before)

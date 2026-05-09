@@ -32,11 +32,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         AVCaptureDevice.requestAccess(for: .video) { _ in }
         AVCaptureDevice.requestAccess(for: .audio) { _ in }
         SFSpeechRecognizer.requestAuthorization { _ in }
+
+        // Screen recording
+        if !CGPreflightScreenCaptureAccess() {
+            CGRequestScreenCaptureAccess()
+        }
+
+        // Accessibility
+        if !AXIsProcessTrusted() {
+            let options = [kAXTrustedCheckOptionPrompt.takeRetainedValue(): true] as CFDictionary
+            AXIsProcessTrustedWithOptions(options)
+        }
     }
 
     private func createMainWindow() {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 320, height: 280),
+            contentRect: NSRect(x: 0, y: 0, width: 340, height: 500),
             styleMask: [.titled, .closable, .miniaturizable],
             backing: .buffered,
             defer: false
@@ -48,6 +59,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self?.toggleTracking()
         }, onFPSChanged: { [weak self] fps in
             self?.coordinator?.syncSettings()
+        }, onStopSpeaking: { [weak self] in
+            self?.coordinator?.stopSpeaking()
         }))
         window.makeKeyAndOrderFront(nil)
         mainWindow = window
@@ -56,7 +69,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func createIslandPanel() {
         guard let screen = NSScreen.main else { return }
 
-        let panelSize = NSSize(width: 400, height: 100)
+        let panelSize = NSSize(width: 300, height: 200)
         let hasNotch = screen.safeAreaInsets.top > 0
         let offset: CGFloat = hasNotch ? screen.safeAreaInsets.top : 0
         let origin = NSPoint(
@@ -64,7 +77,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             y: screen.frame.maxY - panelSize.height - offset
         )
 
-        let panel = NSPanel(
+        let panel = ClickThroughPanel(
             contentRect: NSRect(origin: origin, size: panelSize),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
@@ -84,23 +97,32 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             .ignoresCycle
         ]
 
-        panel.contentView?.wantsLayer = true
-        panel.contentView?.layer?.isOpaque = false
-        panel.contentView?.layer?.backgroundColor = .clear
+        let containerView = ClickThroughContainerView()
+        containerView.wantsLayer = true
+        containerView.layer?.isOpaque = false
+        containerView.layer?.backgroundColor = .clear
+        panel.contentView = containerView
 
         let hostView = ClickThroughHostingView(rootView:
             DynamicIslandView(appState: appState, onToggle: { [weak self] in
                 self?.toggleTracking()
             }, onTap: { [weak self] in
                 self?.showWindow()
+            }, onAgentDismiss: { [weak self] in
+                self?.coordinator?.clearAgentSession()
+                self?.coordinator?.stopSpeaking()
+            }, onStopSpeaking: { [weak self] in
+                self?.coordinator?.stopSpeaking()
+            }, onAgentTerminate: { [weak self] in
+                self?.coordinator?.terminateAgent()
             })
         )
         hostView.wantsLayer = true
         hostView.layer?.isOpaque = false
         hostView.layer?.backgroundColor = .clear
-        hostView.frame = panel.contentView?.bounds ?? .zero
+        hostView.frame = containerView.bounds
         hostView.autoresizingMask = [.width, .height]
-        panel.contentView?.addSubview(hostView)
+        containerView.addSubview(hostView)
 
         panel.orderFrontRegardless()
         islandPanel = panel
@@ -157,6 +179,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 final class ClickThroughHostingView<Content: View>: NSHostingView<Content> {
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+}
+
+final class ClickThroughContainerView: NSView {
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        guard let result = super.hitTest(point) else { return nil }
+        if result === self { return nil }
+        return result
+    }
+}
+
+final class ClickThroughPanel: NSPanel {
+    override var canBecomeKey: Bool { false }
 }
 
 @main

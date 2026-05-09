@@ -2,7 +2,7 @@ import Foundation
 
 final class SpeechController {
     private let speechEngine = SpeechEngine()
-    private var startTime: Date?
+    private(set) var startTime: Date?
     private(set) var isActive = false
     private var committedLen = 0
     private let holdDuration: TimeInterval = 1.0
@@ -15,7 +15,10 @@ final class SpeechController {
     private static let partialWaitDelay: TimeInterval = 0.8
 
     var onLabelUpdate: ((String) -> Void)?
+    var onTranscriptUpdate: ((String) -> Void)?
     var commandFlashUntil: Date = .distantPast
+    private var fadeWork: DispatchWorkItem?
+    private var displayedTranscript: String = ""
 
     func reset() {
         if startTime != nil || isActive {
@@ -28,6 +31,7 @@ final class SpeechController {
             if isActive {
                 isActive = false
                 speechEngine.stopListening()
+                onTranscriptUpdate?("")
             }
         }
     }
@@ -72,8 +76,9 @@ final class SpeechController {
         // Store latest cumulative text and restart debounce timer
         pendingText = text
         debounceWork?.cancel()
-
-        let delta = String(text.dropFirst(committedLen))
+        displayedTranscript = text
+        onTranscriptUpdate?(text)
+        scheduleFade()
 
         let work = DispatchWorkItem { [weak self] in
             self?.commitPendingText()
@@ -142,10 +147,43 @@ final class SpeechController {
     }
 
     private func flashCommandFeedback(_ displayName: String) {
-        commandFlashUntil = Date().addingTimeInterval(1.0)
+        commandFlashUntil = Date().addingTimeInterval(3.0)
         onLabelUpdate?("⌨️ \(displayName)")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-            self?.onLabelUpdate?("🎤 Listening...")
+        onTranscriptUpdate?("⌨️ \(displayName)")
+        fadeWork?.cancel()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { [weak self] in
+            guard let self, self.isActive else { return }
+            self.onLabelUpdate?("🎤 Listening...")
+            self.onTranscriptUpdate?(self.displayedTranscript)
+            self.scheduleFade()
         }
+    }
+
+    private func scheduleFade() {
+        fadeWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            self?.fadeOneWord()
+        }
+        fadeWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0, execute: work)
+    }
+
+    private func fadeOneWord() {
+        guard isActive, !displayedTranscript.isEmpty else { return }
+        var words = displayedTranscript.split(separator: " ", omittingEmptySubsequences: true)
+        guard words.count > 1 else {
+            displayedTranscript = ""
+            onTranscriptUpdate?("")
+            return
+        }
+        words.removeFirst()
+        displayedTranscript = words.joined(separator: " ")
+        onTranscriptUpdate?(displayedTranscript)
+
+        let work = DispatchWorkItem { [weak self] in
+            self?.fadeOneWord()
+        }
+        fadeWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: work)
     }
 }

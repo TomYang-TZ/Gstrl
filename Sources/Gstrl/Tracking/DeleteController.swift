@@ -2,13 +2,13 @@ import Foundation
 import Carbon.HIToolbox
 
 final class DeleteController {
-    private var startTime: Date?
-    private var fired: Bool = false
+    private(set) var startTime: Date?
+    private(set) var fired: Bool = false
     private var lastRepeat: Date = .distantPast
     private var repeatCount: Int = 0
     private var thumbPinkyFrames: Int = 0
-    private let holdDuration: TimeInterval = 1.0
-    private let requiredFrames: Int = 5
+    let holdDuration: TimeInterval = 1.0
+    private let requiredFrames: Int = 3
 
     struct Status {
         let label: String

@@ -6,9 +6,9 @@
 
 > Sometimes a pinch is faster than reaching for the mouse.
 
-**Gstrl** adds gesture and voice control to macOS. **Pinch to move cursor. Swipe for arrows. Circle to screenshot. Speak to run commands.** All on-device via Apple Vision + SFSpeechRecognizer.
+**Gstrl** adds gesture, voice, and AI agent control to macOS. **Pinch to move cursor. Swipe for arrows. Hold fists to talk to Claude. Circle to screenshot.** All on-device via Apple Vision + SFSpeechRecognizer.
 
-For when you're lying back, presenting, tired of gripping a mouse all day, or just tired of reaching across your desk.
+For when you're lying back, vibe coding, presenting, or just tired of reaching across your desk.
 
 ## Install
 
@@ -33,7 +33,7 @@ App auto-opens permission pages on first launch (Camera, Accessibility, Screen R
 | Gesture | Action |
 |---------|--------|
 | 👌 Quick pinch (thumb + index) | Click |
-| 👌 Long pinch (hold 1s) | Right click |
+| 👌 Long pinch + right hand present (hold 1s) | Right click |
 | ☝️ Hold 1–3 fingers | Type 1, 2, or 3 |
 | ✊ Hold fist | Enter |
 | 🤙 Six (hold) | Escape |
@@ -44,6 +44,7 @@ App auto-opens permission pages on first launch (Camera, Accessibility, Screen R
 |---------|--------|
 | 👌 Pinch + move | Move cursor |
 | 👌 Pinch + draw circle | Screenshot circled area → clipboard |
+| ✊ Fist (hold, only hand) | Speech-to-text |
 | 🖐 Open hand + swipe ↑↓←→ | Arrow keys |
 | 🤙 Six (hold) | Delete (chars → words → lines → all) |
 
@@ -51,9 +52,9 @@ App auto-opens permission pages on first launch (Camera, Accessibility, Screen R
 
 | Gesture | Action |
 |---------|--------|
+| ✊✊ Both fists (hold 1s) | AI Agent (ask Claude a question) |
 | L pinch + R pinch + move | Drag and drop |
 | L pinch + R fist + move | Scroll (velocity-based, accelerates over time) |
-| Both fists | Speech-to-text |
 | L open + R swipe ←→ | Tab / Shift+Tab |
 | Both 🤙 six | Delete lines (escalates to select all) |
 | ✕ Both hands held together | Ctrl+C ×2 (cancel/kill) |
@@ -68,11 +69,21 @@ While speech-to-text is active, say "press" + keyword to execute actions instead
 | press enter / press tab / press escape | Enter / Tab / Escape |
 | press delete / press click | Backspace / Click |
 | command [any letter] | Cmd+key (e.g. command t, command w) |
+| control [any letter] | Ctrl+key (e.g. control c, control z) |
 | command click | Cmd+Click |
 | shift left/right/up/down | Select text |
 | option left/right/delete | Jump/delete by word |
 | command shift [key] | Cmd+Shift+key (e.g. command shift z = redo) |
 | shift option [key] | Shift+Option+key |
+
+### AI Agent (both fists)
+
+Hold both fists for 1 second to activate the AI agent. Speak your question — after 3 seconds of silence, it sends to Claude Code and reads the response aloud.
+
+- Captures selected text as context (Cmd+C before sending)
+- Multi-turn conversations within same session
+- Dismiss the response overlay (X) to start a new session
+- Full chat history in the app's Agent tab
 
 ### "Pro" tip: Keyboard + Gesture
 
@@ -80,22 +91,20 @@ Hold a modifier key while gesturing — they combine. Shift + swipe = select tex
 
 ## Dynamic Island
 
-A floating pill at the top of your screen with Apple Liquid Glass styling (macOS 26+):
-- SF Symbol hand indicators (orange = left, cyan = right)
-- Current gesture label and progress bar
-- Screenshot preview thumbnail on circle capture
-
-Always visible, never steals focus.
+A floating glass overlay at the top of your screen (macOS 26+ Liquid Glass):
+- Expands downward to show live transcription, agent thinking/actions, or response text
+- Inline controls: terminate agent, collapse response, dismiss
 
 ## Requirements
 
 - macOS 14+ (Liquid Glass needs macOS 26+, falls back gracefully)
 - Webcam
 - Swift 5.9+
+- [Claude Code CLI](https://claude.ai/claude-code) (for AI agent feature, optional)
 
 ## How It Works
 
-Gstrl uses Apple's Vision framework (`VNDetectHumanHandPoseRequest`) to detect hand landmarks from your webcam feed. A gesture classifier maps hand poses to actions — pinch detection via palm center tracking, displacement-based swipe recognition (requires open hand pose), and two-hand combo tracking. Scroll uses velocity-based joystick control. Speech mode uses Apple's `SFSpeechRecognizer` for on-device dictation and voice commands. 30fps default, configurable up to 120fps. All processing runs locally with zero network dependency.
+Gstrl uses Apple's Vision framework (`VNDetectHumanHandPoseRequest`) to detect hand landmarks from your webcam feed. A gesture classifier maps hand poses to actions — pinch detection via palm center tracking, velocity-based swipe recognition (requires open hand pose), and two-hand combo tracking. Scroll uses velocity-based joystick control. Speech mode uses Apple's `SFSpeechRecognizer` for on-device dictation and voice commands. The AI agent pipes questions to Claude Code CLI and reads responses aloud via macOS system voice. 30fps default, configurable up to 120fps. All gesture/speech processing runs locally with zero network dependency (agent mode requires internet for Claude).
 
 ## License
 

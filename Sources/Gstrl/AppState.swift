@@ -4,16 +4,66 @@ import AppKit
 @Observable
 final class AppState {
     var isEnabled: Bool = false
-    var trackingState: TrackingState = .inactive
-    var isCalibrated: Bool = false
+    @ObservationIgnored var trackingState: TrackingState = .inactive
+    @ObservationIgnored var isCalibrated: Bool = false
     var leftHandDetected: Bool = false
     var rightHandDetected: Bool = false
-    var handsCount: Int = 0
+    @ObservationIgnored var handsCount: Int = 0
     var debugInfo: String = ""
     var gestureLabel: String = ""
-    var gestureProgress: Double = 0.0
+    @ObservationIgnored var gestureProgress: Double = 0.0
     var progressMode: ProgressMode = .countdown
+    @ObservationIgnored var gestureHand: GestureHand = .none
+    var gestureCountdownStart: Date?
+    var gestureCountdownDuration: TimeInterval = 1.0
+
+    enum GestureHand {
+        case left, right, both, none
+    }
     var screenshotPreview: NSImage? = nil
+    var speechTranscript: String = ""
+
+    // Agent mode
+    var agentActive: Bool = false
+    var agentSpeaking: Bool = false
+    var agentSilenceStart: Date?
+    var agentResponse: String = ""
+    var agentTranscript: String = ""
+    var agentHistory: [AgentEntry] = []
+    var agentSelectedLines: Int = 0
+    var agentThinking: String = ""
+    var agentCurrentAction: String = ""
+
+    struct AgentAction: Identifiable {
+        let id = UUID()
+        let tool: String
+        let summary: String
+    }
+
+    struct AgentEntry: Identifiable {
+        let id = UUID()
+        let sessionId: String
+        let query: String
+        let response: String
+        let screenshotPath: String?
+        let durationMs: Int
+        let turns: Int
+        let costUSD: Double
+        let actions: [AgentAction]
+        let timestamp: Date
+
+        init(sessionId: String, query: String, response: String, screenshotPath: String? = nil, durationMs: Int = 0, turns: Int = 0, costUSD: Double = 0, actions: [AgentAction] = []) {
+            self.sessionId = sessionId
+            self.query = query
+            self.response = response
+            self.screenshotPath = screenshotPath
+            self.durationMs = durationMs
+            self.turns = turns
+            self.costUSD = costUSD
+            self.actions = actions
+            self.timestamp = Date()
+        }
+    }
 
     // User-configurable settings
     var fps: FPS = .thirty

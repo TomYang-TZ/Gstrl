@@ -9,6 +9,7 @@ final class TrackingCoordinator {
     private let swipeDetector = SwipeDetector()
     private let deleteController = DeleteController()
     private let speechController = SpeechController()
+    private let agentController = AgentController()
     private let cursorDrag = CursorDragController()
     private let scrollController = ScrollController()
     private var lastClickTime: Date = .distantPast
@@ -17,9 +18,10 @@ final class TrackingCoordinator {
     private var leftGestureStartTime: Date?
     private var leftGestureValue: Int = -1
     private var leftGestureStableFrames: Int = 0
-    private let stableFramesRequired: Int = 5
+    private let stableFramesRequired: Int = 3
     private let holdDuration: TimeInterval = 1.0
     private var leftHandEntryFrames: Int = 0
+    private var rightHandEntryFrames: Int = 0
     private let handEntryGraceFrames: Int = 15
 
     // Crossed fingers (X) = Ctrl+C
@@ -32,6 +34,14 @@ final class TrackingCoordinator {
     // Left pinch timing (short = click, long = right click)
     private var leftPinchStartTime: Date?
     private var leftPinchFired: Bool = false
+
+    // Cache to avoid redundant AppState writes
+    private var cachedLeft = false
+    private var cachedRight = false
+    private var cachedDebug = ""
+    private var cachedLabel = ""
+
+    private let countdownDelay: TimeInterval = 0.15
 
     // UI label management
     private var rightHandLabelActive: Bool = false
@@ -54,6 +64,87 @@ final class TrackingCoordinator {
 
         speechController.onLabelUpdate = { [weak self] label in
             DispatchQueue.main.async { self?.appState.gestureLabel = label }
+        }
+
+        speechController.onTranscriptUpdate = { [weak self] text in
+            DispatchQueue.main.async { self?.appState.speechTranscript = text }
+        }
+
+        agentController.onStateChanged = { [weak self] (label: String, progress: Double, mode: AppState.ProgressMode) in
+            DispatchQueue.main.async {
+                self?.appState.gestureLabel = label
+                self?.appState.gestureProgress = progress
+                self?.appState.progressMode = mode
+                if label.contains("Thinking") || label.contains("Listening") {
+                    self?.appState.agentActive = true
+                    self?.appState.agentSilenceStart = nil
+                    self?.appState.agentResponse = ""
+                }
+                if label.isEmpty {
+                    self?.appState.agentActive = false
+                    self?.appState.agentSilenceStart = nil
+                }
+            }
+        }
+
+        agentController.onTranscriptUpdate = { [weak self] (text: String) in
+            DispatchQueue.main.async {
+                self?.appState.agentTranscript = text
+            }
+        }
+
+        agentController.onSilenceReset = { [weak self] in
+            DispatchQueue.main.async {
+                self?.appState.agentSilenceStart = Date()
+            }
+        }
+
+        agentController.onSpeakingChanged = { [weak self] (speaking: Bool) in
+            DispatchQueue.main.async {
+                self?.appState.agentSpeaking = speaking
+            }
+        }
+
+        agentController.onSelectionCaptured = { [weak self] (lineCount: Int) in
+            DispatchQueue.main.async {
+                self?.appState.agentSelectedLines = lineCount
+            }
+        }
+
+        agentController.onThinkingUpdate = { [weak self] (text: String) in
+            DispatchQueue.main.async {
+                self?.appState.agentThinking = text
+                self?.appState.agentCurrentAction = ""
+            }
+        }
+
+        agentController.onActionUpdate = { [weak self] (tool: String, summary: String) in
+            DispatchQueue.main.async {
+                self?.appState.agentThinking = ""
+                self?.appState.agentCurrentAction = summary.isEmpty ? tool : "\(tool) \(summary)"
+            }
+        }
+
+        agentController.onResponse = { [weak self] (query: String, response: String, screenshotPath: String?, durationMs: Int, turns: Int, costUSD: Double, actions: [(tool: String, summary: String)]) in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                let sid = self.agentController.sessionId ?? UUID().uuidString
+                self.appState.agentActive = false
+                self.appState.agentResponse = response
+                self.appState.agentTranscript = ""
+                let agentActions = actions.map { AppState.AgentAction(tool: $0.tool, summary: $0.summary) }
+                self.appState.agentHistory.append(AppState.AgentEntry(
+                    sessionId: sid, query: query, response: response,
+                    screenshotPath: screenshotPath,
+                    durationMs: durationMs, turns: turns, costUSD: costUSD,
+                    actions: agentActions
+                ))
+                self.appState.gestureLabel = "🤖 Done"
+                self.appState.gestureProgress = 0
+                self.appState.agentSelectedLines = 0
+                self.appState.agentThinking = ""
+                self.appState.agentCurrentAction = ""
+            }
         }
 
         cursorDrag.onCircleScreenshot = { [weak self] rect in
@@ -102,6 +193,26 @@ final class TrackingCoordinator {
         cameraManager.stop()
     }
 
+    func clearAgentSession() {
+        agentController.clearSession()
+    }
+
+    func stopSpeaking() {
+        agentController.stopSpeaking()
+    }
+
+    func terminateAgent() {
+        agentController.terminateAgent()
+        DispatchQueue.main.async { [weak self] in
+            self?.appState.agentActive = false
+            self?.appState.agentResponse = ""
+            self?.appState.agentTranscript = ""
+            self?.appState.agentThinking = ""
+            self?.appState.agentCurrentAction = ""
+            self?.appState.gestureLabel = ""
+        }
+    }
+
     func emergencyKill() {
         stop()
         DispatchQueue.main.async { [weak self] in
@@ -109,10 +220,18 @@ final class TrackingCoordinator {
         }
     }
 
+    private func setLabel(_ label: String) {
+        guard label != cachedLabel else { return }
+        cachedLabel = label
+        DispatchQueue.main.async { [weak self] in
+            self?.appState.gestureLabel = label
+            if label.isEmpty {
+                self?.appState.gestureCountdownStart = nil
+            }
+        }
+    }
+
     private func processFrame(_ pixelBuffer: CVPixelBuffer) {
-        cursorDrag.sensitivity = appState.cursorSensitivity
-        scrollController.sensitivityMultiplier = appState.scrollSensitivity
-        scrollController.naturalScroll = appState.naturalScroll
 
         let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, options: [:])
         let handRequest = VNDetectHumanHandPoseRequest()
@@ -127,13 +246,17 @@ final class TrackingCoordinator {
         let results = handRequest.results ?? []
 
         if results.isEmpty {
+            let agentBusy = agentController.isActive || agentController.isProcessing
             DispatchQueue.main.async { [weak self] in
                 self?.appState.trackingState = .inactive
                 self?.appState.handsCount = 0
                 self?.appState.leftHandDetected = false
                 self?.appState.rightHandDetected = false
-                self?.appState.gestureLabel = ""
-                self?.appState.gestureProgress = 0
+                if !agentBusy {
+                    self?.appState.gestureLabel = ""
+                    self?.appState.gestureProgress = 0
+                    self?.appState.gestureCountdownStart = nil
+                }
             }
             resetLeftGesture()
             cursorDrag.reset()
@@ -163,12 +286,18 @@ final class TrackingCoordinator {
         let lFingers = leftHand != nil ? GestureClassifier.countExtendedFingers(leftHand!) : 0
         let rFingers = rightHand != nil ? GestureClassifier.countExtendedFingers(rightHand!) : 0
 
-        DispatchQueue.main.async { [weak self] in
-            self?.appState.handsCount = results.count
-            self?.appState.leftHandDetected = leftHand != nil
-            self?.appState.rightHandDetected = rightHand != nil
-            self?.appState.debugInfo = leftHand != nil || rightHand != nil
-                ? "L:\(lFingers)f R:\(rFingers)f" : ""
+        let newLeft = leftHand != nil
+        let newRight = rightHand != nil
+        let newDebug = newLeft || newRight ? "L:\(lFingers)f R:\(rFingers)f" : ""
+        if newLeft != cachedLeft || newRight != cachedRight || newDebug != cachedDebug {
+            cachedLeft = newLeft
+            cachedRight = newRight
+            cachedDebug = newDebug
+            DispatchQueue.main.async { [weak self] in
+                self?.appState.leftHandDetected = newLeft
+                self?.appState.rightHandDetected = newRight
+                self?.appState.debugInfo = newDebug
+            }
         }
 
         // === GLOBAL COOLDOWN — no actions during cooldown ===
@@ -188,6 +317,7 @@ final class TrackingCoordinator {
                 let progress = min(1.0, elapsed / holdDuration)
                 DispatchQueue.main.async { [weak self] in
                     self?.appState.progressMode = .countdown
+                    self?.appState.gestureHand = .both
                     self?.appState.gestureLabel = "✕ Cancel"
                     self?.appState.gestureProgress = progress
                 }
@@ -212,31 +342,15 @@ final class TrackingCoordinator {
 
         // === LEFT PINCH + RIGHT FIST = scroll ===
         let rightFist = rightHand != nil && GestureClassifier.countExtendedFingers(rightHand!) == 0
-            && !GestureClassifier.isPinching(rightHand!) && !GestureClassifier.isThumbPinky(rightHand!)
+            && !GestureClassifier.isThumbPinky(rightHand!)
         let scrollActive = leftHand != nil && rightFist && GestureClassifier.isPinching(leftHand!)
 
         if scrollActive {
             cursorDrag.reset()
-            if scrollStartTime == nil {
-                scrollStartTime = Date()
-            }
-            let elapsed = Date().timeIntervalSince(scrollStartTime!)
-            let countdown: TimeInterval = 0.6
-            if elapsed < countdown {
-                let progress = min(1.0, elapsed / countdown)
-                DispatchQueue.main.async { [weak self] in
-                    self?.appState.trackingState = .pinching
-                    self?.appState.progressMode = .countdown
-                    self?.appState.gestureLabel = "↕ Scroll"
-                    self?.appState.gestureProgress = progress
-                }
-            } else {
-                scrollController.process(leftHand!)
-                DispatchQueue.main.async { [weak self] in
-                    self?.appState.trackingState = .pinching
-                    self?.appState.gestureLabel = "↕ Scrolling"
-                    self?.appState.gestureProgress = 0
-                }
+            scrollController.process(leftHand!)
+            DispatchQueue.main.async { [weak self] in
+                self?.appState.trackingState = .pinching
+                self?.appState.gestureLabel = "↕ Scrolling"
             }
             return
         } else {
@@ -250,10 +364,20 @@ final class TrackingCoordinator {
 
         if bothThumbPinky {
             if let status = deleteController.processBothHands() {
+                let countdownStart = deleteController.bothHandsStartTime
+                let holdDur = deleteController.holdDuration
+                let elapsed = countdownStart.map { Date().timeIntervalSince($0) } ?? 0
+                let showCountdown = elapsed < holdDur
                 DispatchQueue.main.async { [weak self] in
                     self?.appState.progressMode = status.progressMode
                     self?.appState.gestureLabel = status.label
                     self?.appState.gestureProgress = status.progress
+                    if showCountdown, let start = countdownStart {
+                        self?.appState.gestureCountdownStart = start
+                        self?.appState.gestureCountdownDuration = holdDur
+                    } else {
+                        self?.appState.gestureCountdownStart = nil
+                    }
                 }
             }
             return
@@ -261,45 +385,101 @@ final class TrackingCoordinator {
             deleteController.resetBothHands()
         }
 
-        // === SPEECH: both fists ===
+        // === AGENT: both fists ===
         let bothFists = leftHand != nil && rightHand != nil
+            && rightHandEntryFrames > handEntryGraceFrames
             && GestureClassifier.countExtendedFingers(leftHand!) == 0
             && GestureClassifier.countExtendedFingers(rightHand!) == 0
-            && !GestureClassifier.isPinching(leftHand!) && !GestureClassifier.isPinching(rightHand!)
             && !GestureClassifier.isThumbPinky(leftHand!) && !GestureClassifier.isThumbPinky(rightHand!)
 
         if bothFists {
+            speechController.reset()
+            agentController.stopSpeaking()
+            let status = agentController.process()
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                self.appState.progressMode = status.progressMode
+                self.appState.gestureLabel = status.label
+                self.appState.agentActive = status.activated
+                self.appState.agentResponse = ""
+                if !status.activated, let start = self.agentController.startTime {
+                    self.appState.gestureCountdownStart = start
+                    self.appState.gestureCountdownDuration = 1.0
+                }
+            }
+            return
+        } else {
+            if agentController.isActive || agentController.isProcessing {
+                agentController.handsReleased()
+                return
+            }
+            agentController.reset()
+        }
+
+        // Right hand grace period
+        if rightHand != nil {
+            rightHandEntryFrames += 1
+        } else {
+            rightHandEntryFrames = 0
+        }
+
+        // === RIGHT FIST ONLY → Speech ===
+        let rightFistOnly = rightHand != nil && leftHand == nil
+            && rightHandEntryFrames > handEntryGraceFrames
+            && GestureClassifier.countExtendedFingers(rightHand!) == 0
+            && !GestureClassifier.isThumbPinky(rightHand!)
+
+        if rightFistOnly {
+            deleteController.reset()
+            cursorDrag.reset()
+            swipeDetector.reset()
             let status = speechController.process()
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
                 self.appState.progressMode = status.progressMode
-                self.appState.gestureProgress = status.progress
-                // Don't overwrite command flash display
+                if !status.activated, let start = self.speechController.startTime {
+                    self.appState.gestureCountdownStart = start
+                    self.appState.gestureCountdownDuration = 1.0
+                } else if status.activated {
+                    self.appState.gestureCountdownStart = nil
+                }
                 if Date() > self.speechController.commandFlashUntil {
                     self.appState.gestureLabel = status.label
                 }
             }
             return
-        } else {
-            if speechController.isActive {
-                speechController.reset()
-                DispatchQueue.main.async { [weak self] in
-                    self?.appState.gestureLabel = ""
-                    self?.appState.gestureProgress = 0
-                }
-            } else {
-                speechController.reset()
-            }
         }
 
         // === RIGHT HAND ===
         if let rh = rightHand {
             let rThumbPinky = GestureClassifier.isThumbPinky(rh) && leftHand == nil
 
-            if GestureClassifier.isPinching(rh) {
+            if rThumbPinky {
+                cursorDrag.reset()
+                speechController.reset()
+                swipeDetector.reset()
+                rightHandLabelActive = true
+                if let status = deleteController.processSingleHand() {
+                    let showCountdown = !deleteController.fired
+                    let countdownStart = deleteController.startTime
+                    DispatchQueue.main.async { [weak self] in
+                        self?.appState.progressMode = status.progressMode
+                        self?.appState.gestureLabel = status.label
+                        self?.appState.gestureProgress = status.progress
+                        if showCountdown, let start = countdownStart {
+                            self?.appState.gestureCountdownStart = start
+                            self?.appState.gestureCountdownDuration = 1.0
+                        } else {
+                            self?.appState.gestureCountdownStart = nil
+                        }
+                    }
+                }
+            } else if GestureClassifier.isPinching(rh) {
                 deleteController.reset()
+                speechController.reset()
                 swipeDetector.resetEntryFrames()
                 swipeDetector.reset()
+                DispatchQueue.main.async { [weak self] in self?.appState.gestureCountdownStart = nil }
                 let leftPinching = leftHand != nil && GestureClassifier.isPinching(leftHand!)
                 cursorDrag.process(rh, holdingClick: leftPinching)
                 if leftPinching {
@@ -307,20 +487,11 @@ final class TrackingCoordinator {
                         self?.appState.gestureLabel = "🔀 Drag"
                     }
                 }
-            } else if rThumbPinky {
-                cursorDrag.reset()
-                swipeDetector.reset()
-                rightHandLabelActive = true
-                if let status = deleteController.processSingleHand() {
-                    DispatchQueue.main.async { [weak self] in
-                        self?.appState.progressMode = status.progressMode
-                        self?.appState.gestureLabel = status.label
-                        self?.appState.gestureProgress = status.progress
-                    }
-                }
             } else {
                 deleteController.reset()
                 cursorDrag.reset()
+                speechController.reset()
+                DispatchQueue.main.async { [weak self] in self?.appState.gestureCountdownStart = nil }
                 if Date() >= rightHandLabelUntil {
                     rightHandLabelActive = false
                 }
@@ -331,6 +502,8 @@ final class TrackingCoordinator {
             deleteController.reset()
             cursorDrag.reset()
             swipeDetector.reset()
+            speechController.reset()
+            DispatchQueue.main.async { [weak self] in self?.appState.gestureCountdownStart = nil }
             if Date() >= rightHandLabelUntil {
                 rightHandLabelActive = false
             }
@@ -343,13 +516,14 @@ final class TrackingCoordinator {
 
             if GestureClassifier.isPinching(lh) {
                 let rightIsPinching = rightHand != nil && GestureClassifier.isPinching(rightHand!)
+                let rightPresent = rightHand != nil
                 if rightIsPinching {
                     // Drag mode — don't fire click, right-hand section handles it
                     leftPinchStartTime = nil
                     leftPinchFired = true
                     resetLeftGesture()
-                } else {
-                    // Long pinch = right click, short pinch = left click
+                } else if rightPresent {
+                    // Right hand present + left pinch hold = right click
                     if leftPinchStartTime == nil {
                         leftPinchStartTime = Date()
                     }
@@ -357,21 +531,26 @@ final class TrackingCoordinator {
                     let longPinchDuration: TimeInterval = 1.0
 
                     if elapsed < longPinchDuration {
-                        let progress = elapsed / longPinchDuration
                         DispatchQueue.main.async { [weak self] in
                             self?.appState.trackingState = .pinching
                             self?.appState.progressMode = .countdown
                             self?.appState.gestureLabel = "👆 Hold → Right Click"
-                            self?.appState.gestureProgress = progress
+                            self?.appState.gestureCountdownStart = self?.leftPinchStartTime
+                            self?.appState.gestureCountdownDuration = longPinchDuration
                         }
                     } else if !leftPinchFired {
                         leftPinchFired = true
                         InputDispatch.perform(.rightClick)
                         DispatchQueue.main.async { [weak self] in
                             self?.appState.gestureLabel = "👆 Right Click"
-                            self?.appState.gestureProgress = 0
+                            self?.appState.gestureCountdownStart = nil
                         }
                         startCooldownProgress()
+                    }
+                } else {
+                    // Left pinch only (no right hand) — track for click on release
+                    if leftPinchStartTime == nil {
+                        leftPinchStartTime = Date()
                     }
                 }
             } else {
@@ -413,6 +592,7 @@ final class TrackingCoordinator {
                     if gestureValue == -1 {
                         self?.appState.gestureLabel = ""
                         self?.appState.gestureProgress = 0
+                        self?.appState.gestureCountdownStart = nil
                     } else if gestureValue == -2 {
                         self?.appState.gestureLabel = "🤙 Esc"
                     } else if gestureValue == 0 {
@@ -429,16 +609,14 @@ final class TrackingCoordinator {
                     guard leftGestureStableFrames >= stableFramesRequired else { return }
                     if let start = leftGestureStartTime {
                         let elapsed = Date().timeIntervalSince(start)
-                        let progress = min(1.0, elapsed / holdDuration)
-                        DispatchQueue.main.async { [weak self] in
-                            self?.appState.progressMode = .countdown
-                            self?.appState.gestureProgress = progress
-                        }
                         if elapsed >= holdDuration {
                             fireGesture(gestureValue)
                             leftGestureStartTime = Date()
+                        } else {
                             DispatchQueue.main.async { [weak self] in
-                                self?.appState.gestureProgress = 0
+                                self?.appState.progressMode = .countdown
+                                self?.appState.gestureCountdownStart = start
+                                self?.appState.gestureCountdownDuration = self?.holdDuration ?? 1.0
                             }
                         }
                     }
@@ -447,7 +625,7 @@ final class TrackingCoordinator {
                     leftGestureStableFrames = 0
                     leftGestureStartTime = Date()
                     DispatchQueue.main.async { [weak self] in
-                        self?.appState.gestureProgress = 0
+                        self?.appState.gestureCountdownStart = nil
                     }
                 }
             }
@@ -460,6 +638,7 @@ final class TrackingCoordinator {
                 if rightLabelActive { return }
                 self?.appState.gestureLabel = ""
                 self?.appState.gestureProgress = 0
+                self?.appState.gestureCountdownStart = nil
             }
         }
     }
@@ -481,6 +660,7 @@ final class TrackingCoordinator {
         case 3: InputDispatch.perform(.pressKey(UInt16(kVK_ANSI_3)))
         default: break
         }
+        startCooldownProgress()
     }
 
     private func handleSwipe(_ direction: SwipeDetector.SwipeDirection, leftOpen: Bool) {
@@ -514,29 +694,13 @@ final class TrackingCoordinator {
     }
 
     private func startCooldownProgress() {
-        let startTime = Date()
         let duration: TimeInterval = 1.0
-        rightHandLabelUntil = startTime.addingTimeInterval(duration)
-        DispatchQueue.main.async { [weak self] in
-            self?.appState.progressMode = .cooldown
-            self?.appState.gestureProgress = 1.0
+        rightHandLabelUntil = Date().addingTimeInterval(duration)
+        DispatchQueue.main.asyncAfter(deadline: .now() + duration) { [weak self] in
+            self?.rightHandLabelActive = false
+            self?.appState.gestureLabel = ""
+            self?.appState.gestureCountdownStart = nil
         }
-        func tick() {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
-                guard let self else { return }
-                let elapsed = Date().timeIntervalSince(startTime)
-                let remaining = max(0, 1.0 - elapsed / duration)
-                self.appState.gestureProgress = remaining
-                if remaining > 0 {
-                    tick()
-                } else {
-                    self.rightHandLabelActive = false
-                    self.appState.gestureLabel = ""
-                    self.appState.gestureProgress = 0
-                }
-            }
-        }
-        tick()
     }
 
 }

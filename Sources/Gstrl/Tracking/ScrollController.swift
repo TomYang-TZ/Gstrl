@@ -34,7 +34,7 @@ final class ScrollController {
         let elapsed = Date().timeIntervalSince(scrollStartTime ?? Date())
         let timeMultiplier = 1.0 + min(2.0, elapsed / 2.5)
 
-        let direction: CGFloat = naturalScroll ? 1 : -1
+        let direction: CGFloat = naturalScroll ? -1 : 1
         let sign: CGFloat = (displacement > 0 ? 1 : -1) * direction
         let magnitude = abs(displacement) - deadZone
         let normalized = magnitude / 0.1

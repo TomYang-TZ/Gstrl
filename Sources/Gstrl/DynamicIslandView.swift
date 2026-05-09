@@ -84,15 +84,14 @@ struct DynamicIslandView: View {
 
             if isExpanded {
                 expandedSection
-                    .frame(maxWidth: .infinity, maxHeight: 150, alignment: .top)
+                    .frame(maxWidth: .infinity, maxHeight: 150)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
         .frame(width: 280)
-        .fixedSize(horizontal: false, vertical: true)
         .modifier(IslandGlassModifier(cornerRadius: 14))
-        .animation(.easeInOut(duration: 0.25), value: isExpanded)
-        .animation(.easeInOut(duration: 0.25), value: islandMode == .response)
-        .animation(.easeInOut(duration: 0.25), value: responseExpanded)
+        .animation(.easeOut(duration: 0.2), value: isExpanded)
+        .animation(.easeOut(duration: 0.2), value: responseExpanded)
     }
 
     private var expandedSection: some View {

@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gstrl — Control Your Mac With Hand Gestures</title>
-    <meta name="description" content="Gstrl is a free, open-source macOS app that lets you control your computer with hand gestures through your webcam. Move the cursor, click, scroll, swipe, and dictate text — hands-free.">
-    <meta name="keywords" content="hand gesture control mac, hands-free mac cursor, webcam gesture recognition macos, control computer with hand gestures, gesture mouse mac, accessibility mac app, hand tracking macos, vision framework hand detection">
+    <meta name="description" content="Gstrl is a free, open-source macOS app that lets you control your computer with hand gestures through your webcam. Move the cursor, click, scroll, swipe, dictate text, and talk to an AI agent — hands-free.">
+    <meta name="keywords" content="hand gesture control mac, hands-free mac cursor, webcam gesture recognition macos, control computer with hand gestures, gesture mouse mac, accessibility mac app, hand tracking macos, vision framework hand detection, ai agent voice control mac, claude code voice">
     <link rel="canonical" href="https://tomyang-tz.github.io/Gstrl/">
 
     <!-- Open Graph -->
@@ -47,12 +47,13 @@
             "Pinch-to-click, long pinch for right-click",
             "Circle-to-screenshot — pinch and draw a circle to capture",
             "Open hand swipe detection for arrow keys",
-            "Speech-to-text with voice commands",
+            "Speech-to-text with voice commands (press/command/control)",
+            "AI agent via Claude Code — ask questions with your voice",
             "Drag-and-drop with two-hand gestures",
             "Velocity-based scroll with time acceleration",
-            "Apple Liquid Glass Dynamic Island overlay",
-            "Real-time hand tracking at 60fps",
-            "Zero network dependency — all processing on-device"
+            "Apple Liquid Glass Dynamic Island overlay with live transcription",
+            "Real-time hand tracking at 30-120fps",
+            "Gesture processing on-device, AI agent uses Claude API"
         ]
     }
     </script>
@@ -151,19 +152,20 @@
         <a href="https://github.com/TomYang-TZ/Gstrl" class="cta">View on GitHub</a>
 
         <h2>What is Gstrl?</h2>
-        <p>Gesture + voice control for macOS. Pinch to move cursor. Circle to screenshot. Speak to run commands. All on-device via Apple Vision + SFSpeechRecognizer.</p>
+        <p>Gesture, voice, and AI agent control for macOS. Pinch to move cursor. Circle to screenshot. Speak to run commands. Hold fists to talk to Claude. All via Apple Vision + SFSpeechRecognizer.</p>
         <p>For when you're lying back, presenting, or just tired of reaching across your desk.</p>
 
         <h2>Highlights</h2>
         <ul class="features">
             <li><strong>Pinch → cursor</strong> — drag your cursor by pinching and moving</li>
             <li><strong>Circle → screenshot</strong> — draw a circle to capture that region to clipboard</li>
-            <li><strong>Speak → commands</strong> — "press enter", "command z", or just dictate text</li>
+            <li><strong>Fists → AI agent</strong> — hold both fists, ask a question, get a spoken answer from Claude</li>
+            <li><strong>Speak → commands</strong> — "press enter", "command z", "control c", or just dictate text</li>
             <li><strong>Swipe → arrows</strong> — open hand flick in any direction</li>
-            <li><strong>Scroll → joystick</strong> — accelerates the longer you hold</li>
+            <li><strong>Scroll → instant</strong> — left pinch + right fist, move to scroll</li>
             <li><strong>Delete → escalating</strong> — hold 🤙: chars → words → lines → all</li>
-            <li><strong>Liquid Glass island</strong> — floating status pill, macOS 26+ native</li>
-            <li><strong>Keyboard combos</strong> — hold Cmd/Shift/Option on keyboard, gesture inherits it (Cmd+Click, Shift+Arrow, etc.)</li>
+            <li><strong>Liquid Glass island</strong> — floating status pill with live transcription + countdown borders</li>
+            <li><strong>Keyboard combos</strong> — hold Cmd/Shift/Option on keyboard, gesture inherits it</li>
             <li><strong>Configurable</strong> — FPS, cursor speed, scroll speed. Tweak to taste.</li>
         </ul>
 
@@ -179,7 +181,8 @@
                 <tr><td>Right open hand swipe</td><td>Arrow keys</td></tr>
                 <tr><td>L pinch + R fist + move</td><td>Scroll</td></tr>
                 <tr><td>Both pinch + move</td><td>Drag and drop</td></tr>
-                <tr><td>Both fists</td><td>Speech-to-text</td></tr>
+                <tr><td>Right fist (hold 1s)</td><td>Speech-to-text</td></tr>
+                <tr><td>Both fists (hold 1s)</td><td>AI Agent (ask Claude)</td></tr>
                 <tr><td>Right 🤙 hold</td><td>Delete (escalating)</td></tr>
                 <tr><td>Both hands held together</td><td>Ctrl+C ×2 (cancel/kill)</td></tr>
                 <tr><td>Right pinch + draw circle</td><td>Screenshot region → clipboard</td></tr>
@@ -190,10 +193,11 @@
         <pre><code>git clone https://github.com/TomYang-TZ/Gstrl.git
 cd Gstrl
 make install</code></pre>
-        <p>Requires macOS 14+, a webcam, and Swift 5.9+. Grant Camera, Accessibility, Screen Recording, and Speech Recognition permissions when prompted (app opens settings pages automatically).</p>
+        <p>Requires macOS 14+, a webcam, Swift 5.9+, and optionally <a href="https://claude.ai/claude-code" style="color:#a3a3a3">Claude Code CLI</a> for the AI agent. Permissions are prompted automatically on first launch.</p>
 
         <h2>When to use it</h2>
         <p>📸 Want to screenshot something — just circle it.</p>
+        <p>🤖 Need a quick answer — hold fists and ask Claude.</p>
         <p>🎤 Presenting — swipe through slides from across the room.</p>
         <p>🦾 RSI — alternate between mouse and gestures.</p>
         <p>♿ Accessibility — another input channel beyond mouse/keyboard.</p>

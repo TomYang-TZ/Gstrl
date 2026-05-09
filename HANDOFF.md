@@ -37,65 +37,70 @@ make stop      # kill running instance
 
 ## Dynamic Island — Current Design
 
-### Structure
+### Panel Structure
 - `ClickThroughPanel` (NSPanel, statusBar level, canBecomeKey=false, 300x200)
   - `ClickThroughContainerView` (hitTest returns nil for self → click-through)
-    - `ClickThroughHostingView` (SwiftUI content)
+    - `ClickThroughHostingView` (SwiftUI content, acceptsFirstMouse=true)
 
 ### Layout (DynamicIslandView)
-```
-┌──────────────────────────────────────┐  280px fixed, cornerRadius 14
-│  🖐         [ON/gesture]         🖐  │  32px compact row (always visible)
-│──────────────────────────────────────│
-│  expanded content (fits to content)  │  max 150px, sizes to text
-└──────────────────────────────────────┘
-```
+- Single glass container, fixed 280px wide, cornerRadius 14
+- `.glassEffect(.regular, in: .rect(cornerRadius: 14))` on macOS 26+
+- `.clipShape(RoundedRectangle)` BEFORE `.glassEffect`
+- Compact row (32px): hands at edges via `Spacer()`, StatusButton center
+- Expanded section: always in tree, height animates via `maxHeight` + `.clipped()`
+- `.fixedSize(horizontal: false, vertical: true)` so height fits content (max 150px)
+- `.easeOut(duration: 0.2)` animation on `isExpanded` and `responseExpanded`
+- `PointerButtonStyle` on all buttons (cursor change + press dim)
 
-- Single glass container, fixed 280px width, `.glassEffect(.regular, in: .rect(cornerRadius: 14))`
-- `.clipShape(RoundedRectangle)` BEFORE `.glassEffect` — glass doesn't clip content
-- Compact row always at top, hands at edges via `Spacer()`
-- Expanded section appears/disappears with `.easeInOut(0.25)` animation
-- Uses `.fixedSize(horizontal: false, vertical: true)` so height fits content (max 150px cap)
-- `PointerButtonStyle` on all buttons — cursor change + press dim
-
-### Island Modes
-- **compact**: just top row
-- **transcript**: top row + HStack (text + waveform/sendCircle/stopButton)
-- **response**: top row + HStack (text + chevron + xmark, alignment: .top)
-
-### Key Constraints
-- `.glassEffect` does NOT animate shape changes — width must stay fixed
-- NSPanel must be large enough (300x200) for expanded content
-- `ClickThroughContainerView.hitTest` returns nil for self → transparent areas pass clicks through
+### Key Constraints Learned
+- `.glassEffect` does NOT clip content — explicit `.clipShape` needed before it
+- `.glassEffect` does NOT animate shape changes smoothly — keep width fixed
+- Conditional `if` views cause jarring transitions — keep views in tree, animate height
+- NSPanel size must accommodate expanded content (300x200 minimum)
+- `ClickThroughContainerView.hitTest` returns nil for self → transparent areas pass clicks
 
 ## Agent System
 
-- Uses `claude -p --output-format stream-json --verbose`
+- `claude -p --output-format stream-json --verbose`
 - `readabilityHandler` on pipe streams events in real-time
-- Parses `type: "assistant"` messages for `tool_use` blocks → live action display
+- Parses `type: "assistant"` for `tool_use` → live action display in island
 - Parses `type: "result"` for final response
 - `--add-dir ~/.claude` for user context
 - `--add-dir /tmp/gstrl/<session>` for session files
 - `--resume <session_id>` for multi-turn
-- Clipboard image only attached if clipboard changed within last 60s
+- "No response" or empty results silently dismissed (not shown or spoken)
+- Clipboard image only attached if changed within last 60s
 
-## Completed (This Session — 2026-05-09)
+## Completed (2026-05-09)
 
-- **Island follow-up listening** — both fists during response clears response, re-enters listening
-- **Collapsible chat entries** — `CollapsibleChatEntry` in Agent History, latest expanded by default
-- **Agent actions in history** — tool_use blocks parsed from stream-json, shown with purple icons
-- **Live agent activity in island** — thinking/action events stream to island in real-time
-- **Terminate agent button** — kills running claude process
-- **STT command flash** — voice commands show in transcript for 3s
-- **Delete countdown border** — properly sets gestureCountdownStart
-- **Island redesign** — single glass container, expandable downward, fixed width
-- **Click-through panel** — ClickThroughContainerView + ClickThroughPanel
-- **PointerButtonStyle** — all buttons show pointing hand cursor on hover
-- **Clipboard freshness** — only attaches images < 60s old
+- Agent streaming with live thinking/action display in island
+- Dynamic Island redesign: single glass container, expandable downward, content-fit height
+- Click-through panel (transparent areas pass clicks to windows below)
+- Collapsible chat entries in Agent History tab
+- Agent actions tracked from stream-json tool_use blocks
+- Terminate agent button (kills claude process)
+- STT command flash (3s display in transcript area)
+- Delete countdown border properly wired
+- Follow-up listening (both fists during response re-enters listening)
+- PointerButtonStyle for all interactive elements
+- "No response" suppression (not shown, not spoken)
 
-## Remaining Tasks
+## Next Steps
 
-1. **Landing page redesign** — color, motion, personality, demo video hero
-2. **Launch strategy** — Reddit, X, RedNote posts with demo GIF
-3. **Two-finger directional hold** — needs ML classifier approach
-4. **App window resizable** — needs proper approach (caused layout gaps before)
+### Priority: Cursor Jitter Fix
+When holding the right hand still in pinch position (cursor drag mode), the cursor jitters/vibrates instead of staying still. This is because Vision framework hand landmark detection has per-frame noise (~1-3px), and CursorDragController directly maps position delta to cursor movement without any smoothing.
+
+**Approach to fix:**
+1. Look at `Sources/Gstrl/Tracking/CursorDragController.swift`
+2. The `process()` method computes delta from current vs previous palm center position
+3. Add a **dead zone** — ignore movement below a threshold (e.g. 0.005 normalized units)
+4. Add **exponential smoothing** — blend current position with previous (e.g. `smoothed = 0.7 * current + 0.3 * previous`)
+5. Consider a **velocity gate** — only move cursor when velocity exceeds a minimum, stops instantly when below
+
+The key insight: Vision's hand pose estimation has inherent jitter even on a perfectly still hand. The fix is signal processing (smoothing + dead zone), not changing the detection.
+
+### Other Remaining Tasks
+- Landing page redesign (color, motion, demo video)
+- Launch strategy (Reddit, X, RedNote)
+- Two-finger directional hold (needs ML classifier)
+- App window resizable (caused layout gaps before)

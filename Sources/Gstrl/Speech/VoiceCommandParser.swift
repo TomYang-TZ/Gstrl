@@ -127,11 +127,13 @@ enum VoiceCommandParser {
 
     private static let pressAliases: Set<String> = ["press", "pres", "prex", "breast", "rest"]
     private static let commandAliases: Set<String> = ["command", "commander", "commend", "commence", "comet", "comment", "come in", "come on", "common", "comma"]
+    private static let controlAliases: Set<String> = ["control", "controls", "controlled", "ctrl"]
 
     private static func normalizePrefix(_ word: String) -> String? {
         let w = word.lowercased()
         if pressAliases.contains(w) { return "press" }
         if commandAliases.contains(w) { return "command" }
+        if controlAliases.contains(w) { return "control" }
         return nil
     }
 
@@ -214,14 +216,20 @@ enum VoiceCommandParser {
                     }
                     return .command(.pressModifiedKey(keyCode, shift: false, control: false, option: false, command: true), wordCount: 2, displayName: name)
                 }
+                if normalized == "control", let keyCode = commandKeyCode(keyword) {
+                    let normalizedKey = normalizeKeyword(keyword)
+                    let name = "⌃\(normalizedKey)"
+                    return .command(.pressModifiedKey(keyCode, shift: false, control: true, option: false, command: false), wordCount: 2, displayName: name)
+                }
             }
         }
 
-        // Check for partial: "command shift" / "shift option" / "option" etc waiting for keyword
+        // Check for partial: "command shift" / "control shift" / "shift option" / "option" etc waiting for keyword
         if words.count >= 2 {
             let secondLast = words[words.count - 2].lowercased()
             let last = words[words.count - 1].lowercased()
-            let isSecondLastPrefix = normalizePrefix(secondLast) == "command" || isModifier(secondLast)
+            let norm = normalizePrefix(secondLast)
+            let isSecondLastPrefix = norm == "command" || norm == "control" || isModifier(secondLast)
             if isSecondLastPrefix && isModifier(last) {
                 return .partial(prefix: "\(secondLast) \(last)", wordCount: 2)
             }

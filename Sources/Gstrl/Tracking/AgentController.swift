@@ -412,8 +412,13 @@ final class AgentController {
 
     private func handleResponse(query: String, screenshotPath: String?, result: ClaudeResult) {
         isProcessing = false
-        onResponse?(query, result.text, screenshotPath, result.durationMs, result.turns, result.costUSD, result.actions)
-        speak(result.text)
+        let text = result.text
+        if text == "No response" || text.isEmpty {
+            onStateChanged?("", 0, .countdown)
+            return
+        }
+        onResponse?(query, text, screenshotPath, result.durationMs, result.turns, result.costUSD, result.actions)
+        speak(text)
     }
 
     private func speak(_ text: String) {

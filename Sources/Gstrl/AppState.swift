@@ -27,6 +27,7 @@ final class AppState {
     }
 
     enum FPS: String, CaseIterable {
+        case fifteen = "15"
         case thirty = "30"
         case sixty = "60"
         case ninety = "90"
@@ -34,6 +35,7 @@ final class AppState {
 
         var timescale: Int32 {
             switch self {
+            case .fifteen: return 15
             case .thirty: return 30
             case .sixty: return 60
             case .ninety: return 90

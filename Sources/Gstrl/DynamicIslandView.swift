@@ -94,13 +94,15 @@ struct DynamicIslandView: View {
         .padding(.horizontal, 16)
     }
 
+    @State private var dotHovered = false
+
     private var statusIndicator: some View {
         Button { onToggle() } label: {
             ZStack {
                 if appState.isEnabled {
                     Circle()
                         .fill(.green.opacity(0.3))
-                        .frame(width: 16, height: 16)
+                        .frame(width: 20, height: 20)
                         .blur(radius: 4)
                         .phaseAnimator([false, true]) { content, phase in
                             content.opacity(phase ? 0.4 : 1.0)
@@ -110,11 +112,19 @@ struct DynamicIslandView: View {
                 }
                 Circle()
                     .fill(appState.isEnabled ? .green : .primary.opacity(0.3))
-                    .frame(width: 8, height: 8)
+                    .frame(width: 10, height: 10)
+                    .overlay {
+                        Circle()
+                            .strokeBorder(.white.opacity(dotHovered ? 0.5 : 0.15), lineWidth: 1.5)
+                    }
+                    .scaleEffect(dotHovered ? 1.3 : 1.0)
             }
-            .frame(width: 20, height: 20)
+            .frame(width: 24, height: 24)
+            .contentShape(Circle())
         }
         .buttonStyle(.plain)
+        .onHover { dotHovered = $0 }
+        .animation(.easeInOut(duration: 0.15), value: dotHovered)
         .animation(.easeInOut(duration: 0.25), value: appState.isEnabled)
     }
 

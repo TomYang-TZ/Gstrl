@@ -174,15 +174,12 @@ struct DynamicIslandView: View {
 struct LiquidGlassModifier: ViewModifier {
     func body(content: Content) -> some View {
         if #available(macOS 26.0, *) {
-            content.glassEffect(.clear, in: .capsule)
+            content.glassEffect(.regular, in: .capsule)
         } else {
             content
                 .environment(\.colorScheme, .dark)
                 .background {
-                    ZStack {
-                        Rectangle().fill(.thinMaterial)
-                        Color.black.opacity(0.5)
-                    }
+                    Capsule().fill(.ultraThinMaterial)
                 }
                 .clipShape(Capsule())
         }

@@ -32,11 +32,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         AVCaptureDevice.requestAccess(for: .video) { _ in }
         AVCaptureDevice.requestAccess(for: .audio) { _ in }
         SFSpeechRecognizer.requestAuthorization { _ in }
-
-        if !AXIsProcessTrusted() {
-            let options = [kAXTrustedCheckOptionPrompt.takeRetainedValue(): true] as CFDictionary
-            AXIsProcessTrustedWithOptions(options)
-        }
     }
 
     private func createMainWindow() {
@@ -95,6 +90,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.showWindow()
             })
         )
+        hostView.wantsLayer = true
+        hostView.layer?.isOpaque = false
+        hostView.layer?.backgroundColor = .clear
         hostView.frame = panel.contentView?.bounds ?? .zero
         hostView.autoresizingMask = [.width, .height]
         panel.contentView?.addSubview(hostView)

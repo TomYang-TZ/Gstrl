@@ -12,7 +12,6 @@ build:
 	@cp .build/arm64-apple-macosx/debug/$(APP_NAME) $(APP_BUNDLE)/Contents/MacOS/$(APP_NAME)
 	@cp Info.plist $(APP_BUNDLE)/Contents/Info.plist
 	@cp Sources/Gstrl/Resources/AppIcon.icns $(APP_BUNDLE)/Contents/Resources/AppIcon.icns
-	@codesign --force --sign - $(APP_BUNDLE)
 	@echo "✓ $(APP_BUNDLE) built"
 
 install: build

@@ -33,6 +33,7 @@ final class AppState {
     var agentSelectedLines: Int = 0
     var agentThinking: String = ""
     var agentCurrentAction: String = ""
+    @ObservationIgnored var islandHeight: CGFloat = 36
 
     struct AgentAction: Identifiable {
         let id = UUID()

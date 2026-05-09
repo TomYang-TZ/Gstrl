@@ -90,6 +90,12 @@ struct DynamicIslandView: View {
         }
         .frame(width: 280)
         .modifier(IslandGlassModifier(cornerRadius: 14))
+        .background(GeometryReader { geo in
+            Color.clear.onChange(of: geo.size.height) { _, newHeight in
+                appState.islandHeight = newHeight
+            }
+            .onAppear { appState.islandHeight = geo.size.height }
+        })
         .animation(.easeOut(duration: 0.2), value: isExpanded)
         .animation(.easeOut(duration: 0.2), value: responseExpanded)
     }

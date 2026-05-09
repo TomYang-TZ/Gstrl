@@ -183,12 +183,7 @@ final class ClickThroughHostingView<Content: View>: NSHostingView<Content> {
             guard let self, let window else { return }
             let mouseScreen = NSEvent.mouseLocation
             let windowFrame = window.frame
-            let isExpanded = self.appState.map {
-                !$0.agentResponse.isEmpty || !$0.agentTranscript.isEmpty ||
-                !$0.speechTranscript.isEmpty || $0.agentActive ||
-                !$0.agentThinking.isEmpty || !$0.agentCurrentAction.isEmpty
-            } ?? false
-            let height: CGFloat = isExpanded ? 200 : 36
+            let height = self.appState?.islandHeight ?? 36
             let islandFrame = NSRect(
                 x: windowFrame.midX - 140,
                 y: windowFrame.maxY - height,

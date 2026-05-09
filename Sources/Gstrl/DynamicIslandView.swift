@@ -96,9 +96,33 @@ struct DynamicIslandView: View {
 
     private var statusIndicator: some View {
         Button { onToggle() } label: {
-            Circle()
-                .fill(appState.isEnabled ? .green : .white.opacity(0.6))
-                .frame(width: 8, height: 8)
+            ZStack {
+                // Outer ring (the "C" part of the power symbol)
+                Circle()
+                    .strokeBorder(
+                        appState.isEnabled ? .green : .white.opacity(0.5),
+                        lineWidth: 2
+                    )
+                    .frame(width: 16, height: 16)
+                    // Gap at top for the line
+                    .mask {
+                        Rectangle()
+                            .overlay {
+                                Rectangle()
+                                    .frame(width: 4, height: 10)
+                                    .offset(y: -6)
+                                    .blendMode(.destinationOut)
+                            }
+                            .compositingGroup()
+                    }
+
+                // Top line (the "I" part)
+                RoundedRectangle(cornerRadius: 1)
+                    .fill(appState.isEnabled ? .green : .white.opacity(0.5))
+                    .frame(width: 2, height: 7)
+                    .offset(y: -5)
+            }
+            .frame(width: 20, height: 20)
         }
         .buttonStyle(.plain)
         .animation(.easeInOut(duration: 0.2), value: appState.isEnabled)

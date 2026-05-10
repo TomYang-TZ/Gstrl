@@ -76,7 +76,7 @@ While speech-to-text is active, say "press" + keyword to execute actions instead
 | command shift [key] | Cmd+Shift+key (e.g. command shift z = redo) |
 | shift option [key] | Shift+Option+key |
 
-### AI Agent (both fists)
+### AI Agent (both fists) — requires [Claude Code CLI](https://claude.ai/claude-code)
 
 Hold both fists for 1 second to activate the AI agent. Speak your question — after 3 seconds of silence, it sends to Claude Code and reads the response aloud.
 
@@ -102,7 +102,10 @@ A floating glass overlay at the top of your screen (macOS 26+ Liquid Glass):
 - macOS 14+ (Liquid Glass needs macOS 26+, falls back gracefully)
 - Webcam
 - Swift 5.9+
-- [Claude Code CLI](https://claude.ai/claude-code) (for AI agent feature, optional)
+
+### Optional
+
+- [Claude Code CLI](https://claude.ai/claude-code) — enables the AI agent feature (both-fists hold). Everything else works without it.
 
 ## How It Works
 

@@ -134,6 +134,5 @@ VStack(spacing: 0) {
 ## Next Steps
 
 - Launch strategy (Reddit, X, RedNote)
-- Landing page 3D title: consider pre-rendered 3D balloon text PNG for higher quality (Three.js glass doesn't look good on light bg)
 - Two-finger directional hold (ML classifier)
 - Two-finger directional hold (ML classifier)

@@ -133,7 +133,7 @@ VStack(spacing: 0) {
 
 ## Next Steps
 
-### Other
-- Landing page redesigned: Apple-style scroll-snap sections, interactive gesture cards, animated SVG logo with rotating arcs, warm/white theme
 - Launch strategy (Reddit, X, RedNote)
+- Landing page 3D title: consider pre-rendered 3D balloon text PNG for higher quality (Three.js glass doesn't look good on light bg)
+- Two-finger directional hold (ML classifier)
 - Two-finger directional hold (ML classifier)

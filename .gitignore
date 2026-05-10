@@ -25,7 +25,6 @@ __pycache__/
 
 # Project
 .superpowers/
-iGest.app/
 
 # Temp
 *.log

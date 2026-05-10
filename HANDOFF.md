@@ -111,13 +111,15 @@ VStack(spacing: 0) {
 - PointerButtonStyle for all elements
 - "No response" suppression
 
-## Next Steps
+## Completed (2026-05-09, continued)
 
-### Priority: Cursor Jitter Fix
-When holding right hand still in pinch, cursor vibrates. Vision has per-frame noise (~1-3px). Fix in `CursorDragController.swift`:
-1. Dead zone — ignore delta below threshold (0.005 normalized)
-2. Exponential smoothing — `smoothed = 0.7 * current + 0.3 * previous`
-3. Velocity gate — only move when velocity exceeds minimum
+- Cursor jitter fix in `CursorDragController.swift`:
+  - Exponential smoothing (0.7 current + 0.3 previous) on palm position
+  - Dead zone (0.002 normalized) with continuous re-anchoring to prevent exit jumps
+  - Velocity gate (0.001 minimum) to suppress sub-pixel noise
+  - Thresholds tuned low since smoothing handles most noise — gates only catch residual
+
+## Next Steps
 
 ### Other
 - Landing page redesign

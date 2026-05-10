@@ -81,6 +81,17 @@ struct DynamicIslandView: View {
         VStack(spacing: 0) {
             compactContent
                 .frame(height: 32)
+                .contentShape(Rectangle())
+                .scaleEffect(isPressed ? 0.95 : 1.0)
+                .animation(.easeOut(duration: 0.1), value: isPressed)
+                .simultaneousGesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { _ in isPressed = true }
+                        .onEnded { _ in
+                            isPressed = false
+                            onTap?()
+                        }
+                )
 
             if isExpanded {
                 expandedSection

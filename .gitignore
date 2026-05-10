@@ -13,6 +13,7 @@ default.profraw
 xcuserdata/
 *.xcworkspace
 *.xcodeproj/
+default.profraw
 
 # Swift
 .swiftpm/
@@ -24,6 +25,7 @@ __pycache__/
 
 # Project
 .superpowers/
+iGest.app/
 
 # Temp
 *.log

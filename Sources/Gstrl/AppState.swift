@@ -71,10 +71,27 @@ final class AppState {
     var cursorSensitivity: Double = 2.5
     var scrollSensitivity: Double = 1.0
     var naturalScroll: Bool = false
+    var speechLanguage: SpeechLanguage = .english
 
     enum ProgressMode {
         case countdown
         case cooldown
+    }
+
+    enum SpeechLanguage: String, CaseIterable {
+        case english = "EN"
+        case chinese = "中文"
+        case cantonese = "粵語"
+        case spanish = "ES"
+
+        var localeIdentifier: String {
+            switch self {
+            case .english: return "en-US"
+            case .chinese: return "zh-Hans"
+            case .cantonese: return "zh-HK"
+            case .spanish: return "es-ES"
+            }
+        }
     }
 
     enum FPS: String, CaseIterable {

@@ -11,6 +11,7 @@ struct MainStatusView: View {
         case settings = "Settings"
         case history = "Agent"
         case gestures = "Gestures"
+        case voice = "Voice"
     }
 
     var body: some View {
@@ -84,6 +85,9 @@ struct MainStatusView: View {
             case .gestures:
                 gesturesContent
                     .frame(height: 280)
+            case .voice:
+                voiceCommandsContent
+                    .frame(height: 280)
             }
         }
         .frame(width: 340)
@@ -127,6 +131,21 @@ struct MainStatusView: View {
 
             Toggle("Natural scroll", isOn: $appState.naturalScroll)
                 .font(.caption)
+
+            HStack {
+                Text("Speech").font(.caption)
+                Spacer()
+                Picker("", selection: $appState.speechLanguage) {
+                    ForEach(AppState.SpeechLanguage.allCases, id: \.self) { lang in
+                        Text(lang.rawValue).tag(lang)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .frame(width: 180)
+                .onChange(of: appState.speechLanguage) { _, _ in
+                    onFPSChanged?(0)
+                }
+            }
         }
         .padding(16)
     }
@@ -164,6 +183,94 @@ struct MainStatusView: View {
                 }
             }
             .padding(16)
+        }
+    }
+
+    // MARK: - Voice Commands Tab
+
+    private var voiceCommandsContent: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 8) {
+                switch appState.speechLanguage {
+                case .english:
+                    sectionHeader("QUICK", color: .green)
+                    voiceRow("enter", "↵ Enter")
+                    voiceRow("delete", "⌫ Delete")
+                    voiceRow("escape", "⎋ Escape")
+                    voiceRow("tab", "⇥ Tab")
+                    voiceRow("click", "👆 Click")
+                    voiceRow("undo / redo", "⌘Z / ⌘⇧Z")
+                    voiceRow("copy / paste", "⌘C / ⌘V")
+                    voiceRow("save", "⌘S")
+                    voiceRow("select all", "⌘A")
+                    voiceRow("go up/down/left/right", "Arrow keys")
+
+                    Divider().padding(.vertical, 4)
+
+                    sectionHeader("PREFIX", color: .cyan)
+                    voiceRow("press + key", "Press key")
+                    voiceRow("command + key", "⌘ + key")
+                    voiceRow("control + key", "⌃ + key")
+                    voiceRow("shift + direction", "Select text")
+                    voiceRow("option + direction", "Jump by word")
+                    voiceRow("command shift + key", "⌘⇧ + key")
+
+                case .chinese, .cantonese:
+                    sectionHeader("快捷指令", color: .green)
+                    voiceRow("回车 / 确认 / 换行", "↵ Enter")
+                    voiceRow("删除", "⌫ Delete")
+                    voiceRow("取消", "⎋ Escape")
+                    voiceRow("点击 / 按一下", "👆 Click")
+                    voiceRow("撤销", "⌘Z Undo")
+                    voiceRow("复制 / 粘贴", "⌘C / ⌘V")
+                    voiceRow("全选", "⌘A")
+                    voiceRow("保存", "⌘S")
+
+                    Divider().padding(.vertical, 4)
+
+                    sectionHeader("方向", color: .cyan)
+                    voiceRow("按上 / 按下 / 按左 / 按右", "Arrow keys")
+
+                    Divider().padding(.vertical, 4)
+
+                    sectionHeader("前缀指令", color: .purple)
+                    voiceRow("按 + 关键词", "按键")
+                    voiceRow("命令 + 字母", "⌘ + key")
+                    voiceRow("控制 + 字母", "⌃ + key")
+
+                case .spanish:
+                    sectionHeader("RÁPIDO", color: .green)
+                    voiceRow("intro", "↵ Enter")
+                    voiceRow("borrar / eliminar", "⌫ Delete")
+                    voiceRow("escapar", "⎋ Escape")
+                    voiceRow("clic", "👆 Click")
+
+                    Divider().padding(.vertical, 4)
+
+                    sectionHeader("DIRECCIÓN", color: .cyan)
+                    voiceRow("pulsa arriba/abajo", "↑ / ↓")
+                    voiceRow("pulsa izquierda/derecha", "← / →")
+
+                    Divider().padding(.vertical, 4)
+
+                    sectionHeader("PREFIJO", color: .purple)
+                    voiceRow("pulsa / presiona + key", "Press key")
+                    voiceRow("comando + key", "⌘ + key")
+                    voiceRow("control + key", "⌃ + key")
+                }
+            }
+            .padding(16)
+        }
+    }
+
+    private func voiceRow(_ command: String, _ action: String) -> some View {
+        HStack {
+            Text(command)
+                .font(.system(.caption, design: .monospaced))
+            Spacer()
+            Text(action)
+                .font(.system(.caption2, design: .monospaced))
+                .foregroundStyle(.secondary)
         }
     }
 

@@ -12,8 +12,12 @@ final class SpeechEngine {
     private let queue = DispatchQueue(label: "com.gstrl.speech")
     var onResult: ((String) -> Void)?
 
-    init() {
-        recognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
+    init(localeIdentifier: String = "en-US") {
+        recognizer = SFSpeechRecognizer(locale: Locale(identifier: localeIdentifier))
+    }
+
+    func updateLocale(_ identifier: String) {
+        recognizer = SFSpeechRecognizer(locale: Locale(identifier: identifier))
     }
 
     func startListening() {

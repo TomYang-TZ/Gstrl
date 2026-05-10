@@ -187,6 +187,8 @@ final class TrackingCoordinator {
         cursorDrag.sensitivity = appState.cursorSensitivity
         scrollController.sensitivityMultiplier = appState.scrollSensitivity
         scrollController.naturalScroll = appState.naturalScroll
+        speechController.updateLocale(appState.speechLanguage.localeIdentifier)
+        agentController.updateLocale(appState.speechLanguage.localeIdentifier)
     }
 
     func stop() {

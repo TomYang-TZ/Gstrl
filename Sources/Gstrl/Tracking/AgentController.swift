@@ -6,6 +6,10 @@ import Speech
 final class AgentController {
     private let speechEngine = SpeechEngine()
     private(set) var startTime: Date?
+
+    func updateLocale(_ identifier: String) {
+        speechEngine.updateLocale(identifier)
+    }
     private(set) var isActive = false
     private(set) var isProcessing = false
     private let holdDuration: TimeInterval = 1.0

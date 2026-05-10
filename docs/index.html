@@ -58,6 +58,11 @@
     }
     </script>
 
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Nunito:wght@800;900&display=swap" rel="stylesheet">
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -68,9 +73,11 @@
             --accent: #1d1d1f;
             --card-bg: #fff;
             --card-border: #e8e4df;
-            --gradient-1: #e8590c;
-            --gradient-2: #d6336c;
-            --gradient-3: #f76707;
+            --gradient-1: #e8a4c8;
+            --gradient-2: #c49de8;
+            --gradient-3: #f0b0d0;
+            --font-display: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         html {
@@ -79,12 +86,36 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+            font-family: var(--font-body);
             background: var(--bg);
             color: var(--text);
             line-height: 1.5;
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
+            position: relative;
+        }
+
+        /* Noise texture overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            pointer-events: none;
+            opacity: 0.025;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        }
+
+        /* Scroll progress bar */
+        .scroll-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #e8a4c8, #c49de8, #f0b0d0);
+            z-index: 10000;
+            width: 0%;
+            transition: width 0.1s linear;
         }
 
         /* Sections */
@@ -99,7 +130,7 @@
             scroll-snap-align: start;
         }
 
-        /* Reveal animation */
+        /* Reveal animations */
         .reveal {
             opacity: 0;
             transform: translateY(40px);
@@ -110,20 +141,68 @@
             opacity: 1;
             transform: translateY(0);
         }
+        .reveal-left {
+            opacity: 0;
+            transform: translateX(-30px);
+            transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                        transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .reveal-left.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .reveal-right {
+            opacity: 0;
+            transform: translateX(30px);
+            transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                        transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .reveal-right.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .reveal-scale {
+            opacity: 0;
+            transform: scale(0.92);
+            transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                        transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .reveal-scale.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
         .reveal-delay-1 { transition-delay: 0.1s; }
         .reveal-delay-2 { transition-delay: 0.2s; }
         .reveal-delay-3 { transition-delay: 0.3s; }
         .reveal-delay-4 { transition-delay: 0.4s; }
+        .reveal-delay-5 { transition-delay: 0.5s; }
 
         /* Hero */
         .hero {
             text-align: center;
             min-height: 100vh;
+            
+        }
+        .hero-icon-wrapper {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 32px;
+        }
+        .hero-icon-glow {
+            position: absolute;
+            inset: -40px;
+            background: radial-gradient(circle, rgba(232, 89, 12, 0.08) 0%, rgba(247, 103, 7, 0.04) 40%, transparent 70%);
+            border-radius: 50%;
+            z-index: -1;
+            animation: glow-pulse 4s ease-in-out infinite;
+        }
+        @keyframes glow-pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
         }
         .hero-icon {
             width: 120px;
             height: 120px;
-            margin-bottom: 32px;
         }
         .arc {
             transform-origin: 128px 128px;
@@ -143,22 +222,16 @@
         @keyframes spin-ccw {
             to { transform: rotate(-360deg); }
         }
-        .hero h1 {
-            font-size: clamp(3.5rem, 10vw, 7rem);
-            font-weight: 700;
-            letter-spacing: -0.04em;
-            line-height: 1.05;
-            margin-bottom: 24px;
-            background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2), var(--gradient-3));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        #glass-3d canvas {
+            display: block;
+            width: 100% !important;
+            height: 100% !important;
         }
         .hero .tagline {
-            font-size: clamp(1.25rem, 3vw, 2rem);
+            font-size: clamp(1rem, 2.5vw, 1.3rem);
             color: var(--text-muted);
-            max-width: 600px;
-            margin: 0 auto 48px;
+            max-width: 500px;
+            margin: 0 auto 40px;
             font-weight: 400;
         }
         .hero .cta-row {
@@ -173,11 +246,11 @@
             gap: 8px;
             background: var(--accent);
             color: #fff;
-            padding: 14px 32px;
+            padding: 12px 28px;
             border-radius: 980px;
             text-decoration: none;
             font-weight: 600;
-            font-size: 1.05rem;
+            font-size: 0.95rem;
             transition: transform 0.2s, opacity 0.2s;
         }
         .cta-primary:hover { transform: scale(1.04); opacity: 0.85; }
@@ -187,11 +260,11 @@
             gap: 8px;
             border: 1px solid var(--card-border);
             color: var(--text);
-            padding: 14px 32px;
+            padding: 12px 28px;
             border-radius: 980px;
             text-decoration: none;
             font-weight: 500;
-            font-size: 1.05rem;
+            font-size: 0.95rem;
             transition: transform 0.2s, border-color 0.2s;
         }
         .cta-secondary:hover { transform: scale(1.04); border-color: var(--text-muted); }
@@ -212,18 +285,19 @@
 
         /* Section titles */
         .section-title {
-            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-family: var(--font-display);
+            font-size: clamp(1.8rem, 4vw, 2.8rem);
             font-weight: 700;
             letter-spacing: -0.03em;
             text-align: center;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
         .section-subtitle {
-            font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+            font-size: clamp(0.95rem, 2vw, 1.1rem);
             color: var(--text-muted);
             text-align: center;
-            max-width: 540px;
-            margin-bottom: 64px;
+            max-width: 480px;
+            margin-bottom: 48px;
         }
 
         /* Gesture Grid */
@@ -236,38 +310,63 @@
         }
         .gesture-card {
             background: var(--card-bg);
-            border: 1px solid var(--card-border);
             border-radius: 20px;
             padding: 32px 28px;
             cursor: default;
-            transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-                        border-color 0.3s,
-                        box-shadow 0.3s;
             position: relative;
             overflow: hidden;
+            transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                        box-shadow 0.3s;
+            /* Gradient border via background trick */
+            border: 1px solid var(--card-border);
+        }
+        .gesture-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 20px;
+            padding: 1.5px;
+            background: conic-gradient(from var(--card-angle, 0deg), var(--gradient-1), var(--gradient-3), var(--gradient-2), var(--gradient-1));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+        .gesture-card:hover::before {
+            opacity: 1;
+            animation: border-spin 3s linear infinite;
+        }
+        @keyframes border-spin {
+            to { --card-angle: 360deg; }
+        }
+        @property --card-angle {
+            syntax: '<angle>';
+            initial-value: 0deg;
+            inherits: false;
         }
         .gesture-card:hover {
             transform: translateY(-4px) scale(1.02);
-            border-color: var(--gradient-1);
-            box-shadow: 0 8px 40px rgba(232, 89, 12, 0.08);
+            border-color: transparent;
+            box-shadow: 0 12px 48px rgba(232, 89, 12, 0.08);
         }
         .gesture-card .emoji {
-            font-size: 2.5rem;
-            margin-bottom: 16px;
+            font-size: 2rem;
+            margin-bottom: 12px;
             display: block;
             transition: transform 0.3s;
         }
         .gesture-card:hover .emoji {
-            transform: scale(1.15);
+            transform: scale(1.15) rotate(-5deg);
         }
         .gesture-card h3 {
-            font-size: 1.2rem;
+            font-size: 1.05rem;
             font-weight: 600;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
         .gesture-card p {
             color: var(--text-muted);
-            font-size: 0.95rem;
+            font-size: 0.875rem;
             line-height: 1.5;
         }
         .gesture-card .hint {
@@ -300,7 +399,8 @@
         }
         .step:last-child { border-bottom: none; }
         .step-num {
-            font-size: 3rem;
+            font-family: var(--font-display);
+            font-size: 2.2rem;
             font-weight: 700;
             background: linear-gradient(135deg, var(--gradient-1), var(--gradient-3));
             -webkit-background-clip: text;
@@ -308,77 +408,69 @@
             background-clip: text;
             line-height: 1;
             min-width: 48px;
+            transition: transform 0.3s;
+        }
+        .step:hover .step-num {
+            transform: translateY(-3px) scale(1.05);
         }
         .step h3 {
-            font-size: 1.2rem;
+            font-size: 1.05rem;
             font-weight: 600;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
         .step p {
             color: var(--text-muted);
-            font-size: 0.95rem;
+            font-size: 0.875rem;
         }
 
-        /* Use cases */
-        .use-cases {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 24px;
-            max-width: 800px;
-            width: 100%;
-        }
-        .use-case {
-            text-align: center;
-            padding: 40px 24px;
-            border-radius: 20px;
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            transition: transform 0.3s, border-color 0.3s;
-        }
-        .use-case:hover {
-            transform: translateY(-2px);
-            border-color: var(--text-muted);
-        }
-        .use-case .icon {
-            font-size: 2.5rem;
-            margin-bottom: 16px;
-            display: block;
-        }
-        .use-case h3 {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-        .use-case p {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-
-        /* Install */
+        /* Install — Terminal chrome */
         .install-block {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: 16px;
-            padding: 32px;
             max-width: 560px;
             width: 100%;
+            overflow: hidden;
+        }
+        .terminal-chrome {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: #f8f6f3;
+            border-bottom: 1px solid var(--card-border);
+        }
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .terminal-dot--red { background: #ff5f57; }
+        .terminal-dot--yellow { background: #febc2e; }
+        .terminal-dot--green { background: #28c840; }
+        .terminal-title {
+            flex: 1;
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 500;
         }
         .install-block pre {
-            background: #f5f2ef;
-            padding: 20px;
-            border-radius: 10px;
+            background: #faf8f5;
+            padding: 24px;
             overflow-x: auto;
-            font-size: 0.95rem;
-            line-height: 1.7;
+            font-size: 0.9rem;
+            line-height: 1.8;
             color: #1d1d1f;
+            margin: 0;
         }
         .install-block pre code {
             font-family: 'SF Mono', 'Fira Code', 'Menlo', monospace;
         }
         .install-note {
-            margin-top: 16px;
+            padding: 12px 24px 20px;
             color: var(--text-muted);
-            font-size: 0.85rem;
+            font-size: 0.82rem;
         }
 
         /* Footer */
@@ -393,42 +485,117 @@
         footer a { color: var(--text-muted); text-decoration: underline; }
         footer a:hover { color: var(--text); }
 
+
+        /* CSS 3D Text */
+        .text3d {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            transform-style: preserve-3d;
+            transform: rotateX(-5deg) rotateY(-5deg);
+            transition: transform 0.1s ease-out;
+            gap: clamp(2px, 0.5vw, 8px);
+            
+        }
+        .char3d {
+            font-family: var(--font-display);
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 900;
+            color: #1d1d1f;
+            position: relative;
+            display: inline-block;
+            transform-style: preserve-3d;
+            
+            animation: char-float 3s ease-in-out infinite;
+            animation-delay: calc(var(--i, 0) * 0.15s);
+        }
+        .text3d-gradient {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            transform-style: preserve-3d;
+            transform: rotateX(-5deg) rotateY(-5deg);
+            transition: transform 0.1s ease-out;
+            gap: clamp(2px, 0.5vw, 8px);
+            background: linear-gradient(90deg, #FF9400, #33ADE5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .char3d:nth-child(1) { --i: 0; }
+        .char3d:nth-child(2) { --i: 1; }
+        .char3d:nth-child(3) { --i: 2; }
+        .char3d:nth-child(4) { --i: 3; }
+        .char3d:nth-child(5) { --i: 4; }
+
+        @keyframes char-float {
+            0%, 100% { transform: translateY(0) translateZ(0); }
+            50% { transform: translateY(-4px) translateZ(5px); }
+        }
+
+        /* 3D depth layers */
+        .char3d::before,
+        .char3d::after {
+            content: attr(data-char);
+            position: absolute;
+            top: 0;
+            left: 0;
+            color: var(--char-shadow);
+            -webkit-text-stroke: 0;
+        }
+        .char3d::before {
+            transform: translateZ(-4px);
+            opacity: 0.7;
+        }
+        .char3d::after {
+            transform: translateZ(-8px);
+            opacity: 0.4;
+        }
         /* Responsive */
         @media (max-width: 600px) {
             section { padding: 80px 20px; }
             .gesture-grid { grid-template-columns: 1fr; }
-            .use-cases { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 
+    <div class="scroll-progress" id="scrollProgress"></div>
+
     <!-- Hero -->
     <section class="hero">
         <div class="reveal">
-            <svg class="hero-icon" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <!-- Outer ring: 2 arcs (90° each), radius ~73, lw 6 -->
-                <g class="arc arc-outer">
-                    <path d="M 128 55 A 73 73 0 0 1 193 97" stroke="#FF9400" stroke-width="6" stroke-linecap="butt" fill="none" opacity="0.85"/>
-                    <path d="M 193 97 A 73 73 0 0 1 182 179" stroke="#33ADE5" stroke-width="6" stroke-linecap="butt" fill="none" opacity="0.85"/>
-                </g>
-                <!-- Mid ring: 2 arcs (90° each), radius ~52, lw 4 -->
-                <g class="arc arc-middle">
-                    <path d="M 76 128 A 52 52 0 0 1 128 76" stroke="#FF9400" stroke-width="4" stroke-linecap="butt" fill="none" opacity="0.6"/>
-                    <path d="M 180 128 A 52 52 0 0 1 128 180" stroke="#33ADE5" stroke-width="4" stroke-linecap="butt" fill="none" opacity="0.6"/>
-                </g>
-                <!-- Inner ring: 2 arcs (90° each), radius ~33, lw 2.5 -->
-                <g class="arc arc-inner">
-                    <path d="M 128 95 A 33 33 0 0 1 161 128" stroke="#FF9400" stroke-width="2.5" stroke-linecap="butt" fill="none" opacity="0.45"/>
-                    <path d="M 128 161 A 33 33 0 0 1 95 128" stroke="#33ADE5" stroke-width="2.5" stroke-linecap="butt" fill="none" opacity="0.45"/>
-                </g>
-                <!-- Left fingertip (orange) -->
-                <rect x="109" y="118" width="14" height="22" rx="7" fill="#FF9400" transform="rotate(15 116 129)"/>
-                <!-- Right fingertip (cyan) -->
-                <rect x="133" y="118" width="14" height="22" rx="7" fill="#33ADE5" transform="rotate(-15 140 129)"/>
-            </svg>
+            <div class="hero-icon-wrapper">
+                <div class="hero-icon-glow"></div>
+                <svg class="hero-icon" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <g class="arc arc-outer">
+                        <path d="M 128 55 A 73 73 0 0 1 193 97" stroke="#FF9400" stroke-width="6" stroke-linecap="butt" fill="none" opacity="0.85"/>
+                        <path d="M 193 97 A 73 73 0 0 1 182 179" stroke="#33ADE5" stroke-width="6" stroke-linecap="butt" fill="none" opacity="0.85"/>
+                    </g>
+                    <g class="arc arc-middle">
+                        <path d="M 76 128 A 52 52 0 0 1 128 76" stroke="#FF9400" stroke-width="4" stroke-linecap="butt" fill="none" opacity="0.6"/>
+                        <path d="M 180 128 A 52 52 0 0 1 128 180" stroke="#33ADE5" stroke-width="4" stroke-linecap="butt" fill="none" opacity="0.6"/>
+                    </g>
+                    <g class="arc arc-inner">
+                        <path d="M 128 95 A 33 33 0 0 1 161 128" stroke="#FF9400" stroke-width="2.5" stroke-linecap="butt" fill="none" opacity="0.45"/>
+                        <path d="M 128 161 A 33 33 0 0 1 95 128" stroke="#33ADE5" stroke-width="2.5" stroke-linecap="butt" fill="none" opacity="0.45"/>
+                    </g>
+                    <rect x="109" y="118" width="14" height="22" rx="7" fill="#FF9400" transform="rotate(15 116 129)"/>
+                    <rect x="133" y="118" width="14" height="22" rx="7" fill="#33ADE5" transform="rotate(-15 140 129)"/>
+                </svg>
+            </div>
         </div>
-        <h1 class="reveal reveal-delay-1">Gstrl</h1>
+        <div class="reveal reveal-delay-1" id="glass-3d" style="width: 100%; height: clamp(100px, 18vw, 180px); margin-bottom: 20px; cursor: grab; perspective: 800px;">
+            <div class="text3d" id="text3d">
+                <span class="char3d" style="--char-color: #1d1d1f; --char-shadow: #666;" data-char="G">G</span>
+                <span class="char3d" style="--char-color: #1d1d1f; --char-shadow: #666;" data-char="s">s</span>
+                <span class="char3d" style="--char-color: #1d1d1f; --char-shadow: #666;" data-char="t">t</span>
+                <span class="char3d" style="--char-color: #1d1d1f; --char-shadow: #666;" data-char="r">r</span>
+                <span class="char3d" style="--char-color: #1d1d1f; --char-shadow: #666;" data-char="l">l</span>
+            </div>
+        </div>
         <p class="tagline reveal reveal-delay-2">Gesture, voice, and AI control for macOS.</p>
         <div class="cta-row reveal reveal-delay-3">
             <a href="https://github.com/TomYang-TZ/Gstrl" class="cta-primary">View on GitHub</a>
@@ -442,55 +609,55 @@
         <h2 class="section-title reveal">Gestures.</h2>
         <p class="section-subtitle reveal reveal-delay-1">Just your Mac's webcam. No special hardware.</p>
         <div class="gesture-grid">
-            <div class="gesture-card reveal reveal-delay-1">
+            <div class="gesture-card reveal-left reveal-delay-1">
                 <span class="emoji">👌</span>
                 <h3>Pinch to move</h3>
                 <p>Right hand pinch — move your hand to drag the cursor anywhere on screen.</p>
                 <span class="hint">Right hand</span>
             </div>
-            <div class="gesture-card reveal reveal-delay-2">
+            <div class="gesture-card reveal-scale reveal-delay-2">
                 <span class="emoji">🫰</span>
                 <h3>Pinch to click</h3>
                 <p>Quick left pinch for click. Hold for 1 second for right-click.</p>
                 <span class="hint">Left hand</span>
             </div>
-            <div class="gesture-card reveal reveal-delay-3">
+            <div class="gesture-card reveal-right reveal-delay-3">
                 <span class="emoji">⭕</span>
                 <h3>Circle to screenshot</h3>
                 <p>Draw a circle while pinching — captures that region to your clipboard instantly.</p>
                 <span class="hint">Right hand</span>
             </div>
-            <div class="gesture-card reveal reveal-delay-4">
+            <div class="gesture-card reveal-right reveal-delay-1">
                 <span class="emoji">🖐</span>
                 <h3>Swipe for arrows</h3>
                 <p>Open hand flick in any direction — up, down, left, right arrow keys.</p>
                 <span class="hint">Right hand</span>
             </div>
-            <div class="gesture-card reveal reveal-delay-1">
+            <div class="gesture-card reveal-scale reveal-delay-2">
                 <span class="emoji">✊</span>
                 <h3>Fist to speak</h3>
                 <p>Hold a fist to activate speech-to-text. Say "press enter" or just dictate.</p>
                 <span class="hint">Right hand</span>
             </div>
-            <div class="gesture-card reveal reveal-delay-2">
+            <div class="gesture-card reveal-left reveal-delay-3">
                 <span class="emoji">✊✊</span>
                 <h3>Both fists for AI</h3>
                 <p>Hold both fists — ask Claude anything. Gets spoken back to you.</p>
                 <span class="hint">Both hands &middot; Claude Code</span>
             </div>
-            <div class="gesture-card reveal reveal-delay-3">
+            <div class="gesture-card reveal-left reveal-delay-1">
                 <span class="emoji">🤏🤛</span>
                 <h3>Pinch + fist to scroll</h3>
                 <p>Left pinch, right fist. Move to scroll. Accelerates the longer you hold.</p>
                 <span class="hint">Both hands</span>
             </div>
-            <div class="gesture-card reveal reveal-delay-4">
+            <div class="gesture-card reveal-scale reveal-delay-2">
                 <span class="emoji">🤙</span>
                 <h3>Six to delete</h3>
                 <p>Hold the shaka — deletes characters, then words, then lines, then all.</p>
                 <span class="hint">Escalating</span>
             </div>
-            <div class="gesture-card reveal reveal-delay-1">
+            <div class="gesture-card reveal-right reveal-delay-3">
                 <span class="emoji">🤌🤌</span>
                 <h3>Both pinch to drag</h3>
                 <p>Both hands pinching — drag and drop files, text, anything.</p>
@@ -499,11 +666,18 @@
         </div>
     </section>
 
-    <!-- How it works -->
+    <!-- Install -->
     <section>
         <h2 class="section-title reveal">Get started.</h2>
         <p class="section-subtitle reveal reveal-delay-1">Clone, build, run. No accounts needed.</p>
-        <div class="install-block reveal reveal-delay-2">
+        <div class="install-block reveal-scale reveal-delay-2">
+            <div class="terminal-chrome">
+                <span class="terminal-dot terminal-dot--red"></span>
+                <span class="terminal-dot terminal-dot--yellow"></span>
+                <span class="terminal-dot terminal-dot--green"></span>
+                <span class="terminal-title">Terminal</span>
+                <span style="width: 36px;"></span>
+            </div>
             <pre><code>git clone https://github.com/TomYang-TZ/Gstrl.git
 cd Gstrl
 make install
@@ -512,7 +686,7 @@ make run</code></pre>
         </div>
     </section>
 
-    <!-- How it works (technical) -->
+    <!-- How it works -->
     <section>
         <h2 class="section-title reveal">How it works.</h2>
         <p class="section-subtitle reveal reveal-delay-1">All processing on-device. Zero latency. Zero cloud.</p>
@@ -548,12 +722,11 @@ make run</code></pre>
         </div>
     </section>
 
-
     <footer>
         <p>MIT License &middot; Built with Apple Vision + SwiftUI.</p>
     </footer>
-
     <script>
+        // Reveal observer (handles all reveal variants)
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
@@ -562,7 +735,50 @@ make run</code></pre>
             });
         }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
 
-        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale').forEach(el => observer.observe(el));
+
+        
+        // 3D text mouse follow
+        const text3d = document.getElementById('text3d');
+        const container3d = document.getElementById('glass-3d');
+        let isDragging = false;
+        let startX, startY, rotX = -5, rotY = -5;
+
+        container3d.addEventListener('pointerdown', (e) => {
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            container3d.style.cursor = 'grabbing';
+        });
+        window.addEventListener('pointermove', (e) => {
+            if (!isDragging) {
+                // Subtle follow on hover
+                const rect = container3d.getBoundingClientRect();
+                const cx = rect.left + rect.width / 2;
+                const cy = rect.top + rect.height / 2;
+                const dx = (e.clientX - cx) / rect.width;
+                const dy = (e.clientY - cy) / rect.height;
+                text3d.style.transform = "rotateX(" + Math.max(-10, Math.min(10, -dy * 10)) + "deg) rotateY(" + Math.max(-10, Math.min(10, dx * 10)) + "deg)";
+                return;
+            }
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            rotY = Math.max(-20, Math.min(20, dx * 0.3));
+            rotX = Math.max(-15, Math.min(15, -dy * 0.3));
+            text3d.style.transform = "rotateX(" + rotX + "deg) rotateY(" + rotY + "deg)";
+        });
+        window.addEventListener('pointerup', () => {
+            isDragging = false;
+            container3d.style.cursor = 'grab';
+        });
+
+// Scroll progress bar
+        window.addEventListener('scroll', () => {
+            const scrollTop = document.documentElement.scrollTop;
+            const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const progress = (scrollTop / scrollHeight) * 100;
+            document.getElementById('scrollProgress').style.width = progress + '%';
+        });
     </script>
 </body>
 </html>

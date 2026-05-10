@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" fill="none">
+  <defs>
+    <!-- Base glass fill -->
+    <linearGradient id="glass-fill" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#d4eef5"/>
+      <stop offset="35%" stop-color="#a8d8e8"/>
+      <stop offset="65%" stop-color="#8ecadc"/>
+      <stop offset="100%" stop-color="#b0dce9"/>
+    </linearGradient>
+    <!-- Highlight streak -->
+    <linearGradient id="highlight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="white" stop-opacity="0"/>
+      <stop offset="30%" stop-color="white" stop-opacity="0.7"/>
+      <stop offset="50%" stop-color="white" stop-opacity="0.9"/>
+      <stop offset="70%" stop-color="white" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="white" stop-opacity="0"/>
+    </linearGradient>
+    <!-- Dark edge for depth -->
+    <linearGradient id="edge" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#5a9eb5" stop-opacity="0.6"/>
+      <stop offset="50%" stop-color="#4a8ea5" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#6aaeC5" stop-opacity="0.5"/>
+    </linearGradient>
+    <!-- Inflate filter -->
+    <filter id="inflate" x="-5%" y="-15%" width="110%" height="140%">
+      <feMorphology in="SourceAlpha" operator="dilate" radius="1.5" result="dilated"/>
+      <feGaussianBlur in="dilated" stdDeviation="1" result="blurred-edge"/>
+      <feSpecularLighting in="blurred-edge" surfaceScale="4" specularConstant="0.8" specularExponent="25" result="specular">
+        <fePointLight x="150" y="-40" z="120"/>
+      </feSpecularLighting>
+      <feComposite in="specular" in2="SourceAlpha" operator="in" result="specular-cropped"/>
+      <feMerge>
+        <feMergeNode in="SourceGraphic"/>
+        <feMergeNode in="specular-cropped"/>
+      </feMerge>
+    </filter>
+    <!-- Drop shadow -->
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#4a8ea5" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+
+  <!-- Shadow layer -->
+  <text x="200" y="90" text-anchor="middle" font-family="Nunito, Quicksand, -apple-system, sans-serif" font-weight="900" font-size="88" letter-spacing="-2" filter="url(#shadow)" fill="url(#glass-fill)">Gstrl</text>
+
+  <!-- Main glass body -->
+  <text x="200" y="90" text-anchor="middle" font-family="Nunito, Quicksand, -apple-system, sans-serif" font-weight="900" font-size="88" letter-spacing="-2" filter="url(#inflate)" fill="url(#glass-fill)">Gstrl</text>
+
+  <!-- Dark outline for depth -->
+  <text x="200" y="90" text-anchor="middle" font-family="Nunito, Quicksand, -apple-system, sans-serif" font-weight="900" font-size="88" letter-spacing="-2" fill="none" stroke="url(#edge)" stroke-width="1.2">Gstrl</text>
+
+  <!-- Specular highlight overlay -->
+  <text x="200" y="90" text-anchor="middle" font-family="Nunito, Quicksand, -apple-system, sans-serif" font-weight="900" font-size="88" letter-spacing="-2" fill="url(#highlight)" opacity="0.6">Gstrl</text>
+</svg>

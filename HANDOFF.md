@@ -121,10 +121,17 @@ VStack(spacing: 0) {
 - Screenshot preview moved inside island glass (was floating separately)
 - Spring transition animation on screenshot appear/dismiss
 
-## Next Steps
+## Completed (2026-05-10)
 
-### Priority: Improve Agent System Prompt
-The Claude Code agent launched via both-fists doesn't know what tools it has access to. Update the system prompt (in `AgentController.swift`) to explicitly tell the agent it has access to: Read, Write, Glob, Grep, Bash, and other file/system tools. This lets it take action rather than just answer questions.
+- Agent system prompt added (`AgentController.swift`): G.S.T.R.L. identity, tool list, safety guardrails
+- Landing page redesign (`docs/index.html`):
+  - CSS 3D interactive title (mouse-follow tilt, clamped ±20°)
+  - Scroll-snap sections, animated gesture cards (left/right/scale reveals)
+  - Terminal chrome on install block, gradient progress bar
+  - Noise overlay, animated SVG logo with rotating arcs
+  - Warm cream theme with DM Sans typography
+
+## Next Steps
 
 ### Other
 - Landing page redesigned: Apple-style scroll-snap sections, interactive gesture cards, animated SVG logo with rotating arcs, warm/white theme

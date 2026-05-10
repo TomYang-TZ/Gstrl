@@ -1,13 +1,29 @@
+# macOS
 .DS_Store
+*.swp
+*~
+
+# Build
 .build/
-xcuserdata/
 DerivedData/
-*.xcworkspace
-.swiftpm/
-.superpowers/
-.venv/
-Gstrl.app/
-*.xcodeproj/
 default.profraw
-iGest.app/
 *.app/
+
+# Xcode
+xcuserdata/
+*.xcworkspace
+*.xcodeproj/
+
+# Swift
+.swiftpm/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Project
+.superpowers/
+
+# Temp
+*.log

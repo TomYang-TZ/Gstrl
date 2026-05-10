@@ -60,151 +60,509 @@
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #fefcfa;
+            --text: #1d1d1f;
+            --text-muted: #6e6e73;
+            --accent: #1d1d1f;
+            --card-bg: #fff;
+            --card-border: #e8e4df;
+            --gradient-1: #e8590c;
+            --gradient-2: #d6336c;
+            --gradient-3: #f76707;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scroll-snap-type: y mandatory;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
-            background: #0a0a0a;
-            color: #e5e5e5;
-            line-height: 1.6;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Sections */
+        section {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 120px 24px;
+            position: relative;
+            scroll-snap-align: start;
+        }
+
+        /* Reveal animation */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                        transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .reveal-delay-1 { transition-delay: 0.1s; }
+        .reveal-delay-2 { transition-delay: 0.2s; }
+        .reveal-delay-3 { transition-delay: 0.3s; }
+        .reveal-delay-4 { transition-delay: 0.4s; }
+
+        /* Hero */
+        .hero {
+            text-align: center;
             min-height: 100vh;
         }
-        .container { max-width: 720px; margin: 0 auto; padding: 80px 24px; }
-        h1 {
-            font-size: 3rem;
+        .hero-icon {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 32px;
+        }
+        .arc {
+            transform-origin: 128px 128px;
+        }
+        .arc-outer {
+            animation: spin-cw 8s linear infinite;
+        }
+        .arc-middle {
+            animation: spin-ccw 12s linear infinite;
+        }
+        .arc-inner {
+            animation: spin-cw 6s linear infinite;
+        }
+        @keyframes spin-cw {
+            to { transform: rotate(360deg); }
+        }
+        @keyframes spin-ccw {
+            to { transform: rotate(-360deg); }
+        }
+        .hero h1 {
+            font-size: clamp(3.5rem, 10vw, 7rem);
             font-weight: 700;
-            letter-spacing: -0.02em;
-            margin-bottom: 16px;
+            letter-spacing: -0.04em;
+            line-height: 1.05;
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2), var(--gradient-3));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-        .tagline {
-            font-size: 1.25rem;
-            color: #a3a3a3;
-            margin-bottom: 48px;
+        .hero .tagline {
+            font-size: clamp(1.25rem, 3vw, 2rem);
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto 48px;
+            font-weight: 400;
         }
-        .cta {
-            display: inline-block;
-            background: #fff;
-            color: #0a0a0a;
-            padding: 12px 28px;
-            border-radius: 8px;
+        .hero .cta-row {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .cta-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--accent);
+            color: #fff;
+            padding: 14px 32px;
+            border-radius: 980px;
             text-decoration: none;
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 1.05rem;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+        .cta-primary:hover { transform: scale(1.04); opacity: 0.85; }
+        .cta-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid var(--card-border);
+            color: var(--text);
+            padding: 14px 32px;
+            border-radius: 980px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1.05rem;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .cta-secondary:hover { transform: scale(1.04); border-color: var(--text-muted); }
+
+        .scroll-hint {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            animation: float 2s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(8px); }
+        }
+
+        /* Section titles */
+        .section-title {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        .section-subtitle {
+            font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+            color: var(--text-muted);
+            text-align: center;
+            max-width: 540px;
             margin-bottom: 64px;
-            transition: opacity 0.2s;
         }
-        .cta:hover { opacity: 0.85; }
-        h2 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin: 48px 0 16px;
-            color: #fff;
-        }
-        p { margin-bottom: 16px; color: #d4d4d4; }
-        .features {
-            list-style: none;
-            padding: 0;
-        }
-        .features li {
-            padding: 12px 0;
-            border-bottom: 1px solid #262626;
-            color: #d4d4d4;
-        }
-        .features li:last-child { border-bottom: none; }
-        .gesture-table {
+
+        /* Gesture Grid */
+        .gesture-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            max-width: 960px;
             width: 100%;
-            border-collapse: collapse;
-            margin: 16px 0 32px;
         }
-        .gesture-table th,
-        .gesture-table td {
-            text-align: left;
-            padding: 10px 12px;
-            border-bottom: 1px solid #262626;
+        .gesture-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 32px 28px;
+            cursor: default;
+            transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                        border-color 0.3s,
+                        box-shadow 0.3s;
+            position: relative;
+            overflow: hidden;
         }
-        .gesture-table th { color: #a3a3a3; font-weight: 500; font-size: 0.875rem; }
-        code {
-            background: #1a1a1a;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.9em;
+        .gesture-card:hover {
+            transform: translateY(-4px) scale(1.02);
+            border-color: var(--gradient-1);
+            box-shadow: 0 8px 40px rgba(232, 89, 12, 0.08);
         }
-        pre {
-            background: #1a1a1a;
-            padding: 16px;
-            border-radius: 8px;
+        .gesture-card .emoji {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+            display: block;
+            transition: transform 0.3s;
+        }
+        .gesture-card:hover .emoji {
+            transform: scale(1.15);
+        }
+        .gesture-card h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .gesture-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        .gesture-card .hint {
+            display: none;
+            position: absolute;
+            bottom: 16px;
+            right: 20px;
+            font-size: 0.75rem;
+            color: var(--gradient-1);
+            font-weight: 500;
+        }
+        .gesture-card:hover .hint {
+            display: block;
+        }
+
+        /* How it works */
+        .how-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            max-width: 640px;
+            width: 100%;
+        }
+        .step {
+            display: flex;
+            gap: 24px;
+            align-items: flex-start;
+            padding: 32px 0;
+            border-bottom: 1px solid var(--card-border);
+        }
+        .step:last-child { border-bottom: none; }
+        .step-num {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--gradient-1), var(--gradient-3));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            min-width: 48px;
+        }
+        .step h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .step p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* Use cases */
+        .use-cases {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+            max-width: 800px;
+            width: 100%;
+        }
+        .use-case {
+            text-align: center;
+            padding: 40px 24px;
+            border-radius: 20px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            transition: transform 0.3s, border-color 0.3s;
+        }
+        .use-case:hover {
+            transform: translateY(-2px);
+            border-color: var(--text-muted);
+        }
+        .use-case .icon {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+            display: block;
+        }
+        .use-case h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .use-case p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Install */
+        .install-block {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 560px;
+            width: 100%;
+        }
+        .install-block pre {
+            background: #f5f2ef;
+            padding: 20px;
+            border-radius: 10px;
             overflow-x: auto;
-            margin: 16px 0;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: #1d1d1f;
         }
-        pre code { background: none; padding: 0; }
+        .install-block pre code {
+            font-family: 'SF Mono', 'Fira Code', 'Menlo', monospace;
+        }
+        .install-note {
+            margin-top: 16px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* Footer */
         footer {
-            margin-top: 80px;
-            padding-top: 24px;
-            border-top: 1px solid #262626;
-            color: #737373;
-            font-size: 0.875rem;
+            text-align: center;
+            padding: 48px 24px;
+            border-top: 1px solid var(--card-border);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            scroll-snap-align: end;
         }
-        footer a { color: #a3a3a3; }
+        footer a { color: var(--text-muted); text-decoration: underline; }
+        footer a:hover { color: var(--text); }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            section { padding: 80px 20px; }
+            .gesture-grid { grid-template-columns: 1fr; }
+            .use-cases { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Gstrl 🤌</h1>
-        <p class="tagline">Sometimes a pinch is faster than reaching for the mouse.</p>
-        <a href="https://github.com/TomYang-TZ/Gstrl" class="cta">View on GitHub</a>
 
-        <h2>What is Gstrl?</h2>
-        <p>Gesture, voice, and AI agent control for macOS. Pinch to move cursor. Circle to screenshot. Speak to run commands. Hold fists to talk to Claude. All via Apple Vision + SFSpeechRecognizer.</p>
-        <p>For when you're lying back, presenting, or just tired of reaching across your desk.</p>
+    <!-- Hero -->
+    <section class="hero">
+        <div class="reveal">
+            <svg class="hero-icon" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Outer ring: 2 arcs (90° each), radius ~73, lw 6 -->
+                <g class="arc arc-outer">
+                    <path d="M 128 55 A 73 73 0 0 1 193 97" stroke="#FF9400" stroke-width="6" stroke-linecap="butt" fill="none" opacity="0.85"/>
+                    <path d="M 193 97 A 73 73 0 0 1 182 179" stroke="#33ADE5" stroke-width="6" stroke-linecap="butt" fill="none" opacity="0.85"/>
+                </g>
+                <!-- Mid ring: 2 arcs (90° each), radius ~52, lw 4 -->
+                <g class="arc arc-middle">
+                    <path d="M 76 128 A 52 52 0 0 1 128 76" stroke="#FF9400" stroke-width="4" stroke-linecap="butt" fill="none" opacity="0.6"/>
+                    <path d="M 180 128 A 52 52 0 0 1 128 180" stroke="#33ADE5" stroke-width="4" stroke-linecap="butt" fill="none" opacity="0.6"/>
+                </g>
+                <!-- Inner ring: 2 arcs (90° each), radius ~33, lw 2.5 -->
+                <g class="arc arc-inner">
+                    <path d="M 128 95 A 33 33 0 0 1 161 128" stroke="#FF9400" stroke-width="2.5" stroke-linecap="butt" fill="none" opacity="0.45"/>
+                    <path d="M 128 161 A 33 33 0 0 1 95 128" stroke="#33ADE5" stroke-width="2.5" stroke-linecap="butt" fill="none" opacity="0.45"/>
+                </g>
+                <!-- Left fingertip (orange) -->
+                <rect x="109" y="118" width="14" height="22" rx="7" fill="#FF9400" transform="rotate(15 116 129)"/>
+                <!-- Right fingertip (cyan) -->
+                <rect x="133" y="118" width="14" height="22" rx="7" fill="#33ADE5" transform="rotate(-15 140 129)"/>
+            </svg>
+        </div>
+        <h1 class="reveal reveal-delay-1">Gstrl</h1>
+        <p class="tagline reveal reveal-delay-2">Gesture, voice, and AI control for macOS.</p>
+        <div class="cta-row reveal reveal-delay-3">
+            <a href="https://github.com/TomYang-TZ/Gstrl" class="cta-primary">View on GitHub</a>
+            <a href="#gestures" class="cta-secondary">See gestures</a>
+        </div>
+        <span class="scroll-hint">&#8595; Scroll to explore</span>
+    </section>
 
-        <h2>Highlights</h2>
-        <ul class="features">
-            <li><strong>Pinch → cursor</strong> — drag your cursor by pinching and moving</li>
-            <li><strong>Circle → screenshot</strong> — draw a circle to capture that region to clipboard</li>
-            <li><strong>Fists → AI agent</strong> — hold both fists, ask a question, get a spoken answer from Claude</li>
-            <li><strong>Speak → commands</strong> — "press enter", "command z", "control c", or just dictate text</li>
-            <li><strong>Swipe → arrows</strong> — open hand flick in any direction</li>
-            <li><strong>Scroll → instant</strong> — left pinch + right fist, move to scroll</li>
-            <li><strong>Delete → escalating</strong> — hold 🤙: chars → words → lines → all</li>
-            <li><strong>Liquid Glass island</strong> — floating status pill with live transcription + countdown borders</li>
-            <li><strong>Keyboard combos</strong> — hold Cmd/Shift/Option on keyboard, gesture inherits it</li>
-            <li><strong>Configurable</strong> — FPS, cursor speed, scroll speed. Tweak to taste.</li>
-        </ul>
+    <!-- Gestures -->
+    <section id="gestures">
+        <h2 class="section-title reveal">Gestures.</h2>
+        <p class="section-subtitle reveal reveal-delay-1">Just your Mac's webcam. No special hardware.</p>
+        <div class="gesture-grid">
+            <div class="gesture-card reveal reveal-delay-1">
+                <span class="emoji">👌</span>
+                <h3>Pinch to move</h3>
+                <p>Right hand pinch — move your hand to drag the cursor anywhere on screen.</p>
+                <span class="hint">Right hand</span>
+            </div>
+            <div class="gesture-card reveal reveal-delay-2">
+                <span class="emoji">🫰</span>
+                <h3>Pinch to click</h3>
+                <p>Quick left pinch for click. Hold for 1 second for right-click.</p>
+                <span class="hint">Left hand</span>
+            </div>
+            <div class="gesture-card reveal reveal-delay-3">
+                <span class="emoji">⭕</span>
+                <h3>Circle to screenshot</h3>
+                <p>Draw a circle while pinching — captures that region to your clipboard instantly.</p>
+                <span class="hint">Right hand</span>
+            </div>
+            <div class="gesture-card reveal reveal-delay-4">
+                <span class="emoji">🖐</span>
+                <h3>Swipe for arrows</h3>
+                <p>Open hand flick in any direction — up, down, left, right arrow keys.</p>
+                <span class="hint">Right hand</span>
+            </div>
+            <div class="gesture-card reveal reveal-delay-1">
+                <span class="emoji">✊</span>
+                <h3>Fist to speak</h3>
+                <p>Hold a fist to activate speech-to-text. Say "press enter" or just dictate.</p>
+                <span class="hint">Right hand</span>
+            </div>
+            <div class="gesture-card reveal reveal-delay-2">
+                <span class="emoji">✊✊</span>
+                <h3>Both fists for AI</h3>
+                <p>Hold both fists — ask Claude anything. Gets spoken back to you.</p>
+                <span class="hint">Both hands &middot; Claude Code</span>
+            </div>
+            <div class="gesture-card reveal reveal-delay-3">
+                <span class="emoji">🤏🤛</span>
+                <h3>Pinch + fist to scroll</h3>
+                <p>Left pinch, right fist. Move to scroll. Accelerates the longer you hold.</p>
+                <span class="hint">Both hands</span>
+            </div>
+            <div class="gesture-card reveal reveal-delay-4">
+                <span class="emoji">🤙</span>
+                <h3>Six to delete</h3>
+                <p>Hold the shaka — deletes characters, then words, then lines, then all.</p>
+                <span class="hint">Escalating</span>
+            </div>
+            <div class="gesture-card reveal reveal-delay-1">
+                <span class="emoji">🤌🤌</span>
+                <h3>Both pinch to drag</h3>
+                <p>Both hands pinching — drag and drop files, text, anything.</p>
+                <span class="hint">Both hands</span>
+            </div>
+        </div>
+    </section>
 
-        <h2>Gestures</h2>
-        <table class="gesture-table">
-            <thead>
-                <tr><th>Gesture</th><th>Action</th></tr>
-            </thead>
-            <tbody>
-                <tr><td>Right pinch + move</td><td>Move cursor</td></tr>
-                <tr><td>Left pinch</td><td>Click</td></tr>
-                <tr><td>Left long pinch (hold 1s)</td><td>Right-click</td></tr>
-                <tr><td>Right open hand swipe</td><td>Arrow keys</td></tr>
-                <tr><td>L pinch + R fist + move</td><td>Scroll</td></tr>
-                <tr><td>Both pinch + move</td><td>Drag and drop</td></tr>
-                <tr><td>Right fist (hold 1s)</td><td>Speech-to-text</td></tr>
-                <tr><td>Both fists (hold 1s)</td><td>AI Agent (ask Claude)</td></tr>
-                <tr><td>Right 🤙 hold</td><td>Delete (escalating)</td></tr>
-                <tr><td>Both hands held together</td><td>Ctrl+C ×2 (cancel/kill)</td></tr>
-                <tr><td>Right pinch + draw circle</td><td>Screenshot region → clipboard</td></tr>
-            </tbody>
-        </table>
-
-        <h2>Install</h2>
-        <pre><code>git clone https://github.com/TomYang-TZ/Gstrl.git
+    <!-- How it works -->
+    <section>
+        <h2 class="section-title reveal">Get started.</h2>
+        <p class="section-subtitle reveal reveal-delay-1">Clone, build, run. No accounts needed.</p>
+        <div class="install-block reveal reveal-delay-2">
+            <pre><code>git clone https://github.com/TomYang-TZ/Gstrl.git
 cd Gstrl
-make install</code></pre>
-        <p>Requires macOS 14+, a webcam, Swift 5.9+, and optionally <a href="https://claude.ai/claude-code" style="color:#a3a3a3">Claude Code CLI</a> for the AI agent. Permissions are prompted automatically on first launch.</p>
+make install
+make run</code></pre>
+            <p class="install-note">Requires macOS 14+, a webcam, and Swift 5.9+. Permissions auto-prompt on first launch. Claude Code CLI optional for AI agent.</p>
+        </div>
+    </section>
 
-        <h2>When to use it</h2>
-        <p>📸 Want to screenshot something — just circle it.</p>
-        <p>🤖 Need a quick answer — hold fists and ask Claude.</p>
-        <p>🎤 Presenting — swipe through slides from across the room.</p>
-        <p>🦾 RSI — alternate between mouse and gestures.</p>
-        <p>♿ Accessibility — another input channel beyond mouse/keyboard.</p>
+    <!-- How it works (technical) -->
+    <section>
+        <h2 class="section-title reveal">How it works.</h2>
+        <p class="section-subtitle reveal reveal-delay-1">All processing on-device. Zero latency. Zero cloud.</p>
+        <div class="how-steps">
+            <div class="step reveal reveal-delay-1">
+                <span class="step-num">1</span>
+                <div>
+                    <h3>Webcam captures frames</h3>
+                    <p>AVCaptureSession at 30fps (configurable to 120fps) feeds frames to Apple Vision.</p>
+                </div>
+            </div>
+            <div class="step reveal reveal-delay-2">
+                <span class="step-num">2</span>
+                <div>
+                    <h3>Vision detects hand poses</h3>
+                    <p>VNDetectHumanHandPoseRequest identifies 21 joints per hand, every frame.</p>
+                </div>
+            </div>
+            <div class="step reveal reveal-delay-3">
+                <span class="step-num">3</span>
+                <div>
+                    <h3>Classifier maps to actions</h3>
+                    <p>Pinch detection, velocity-based swipes, and combo tracking turn poses into CGEvents.</p>
+                </div>
+            </div>
+            <div class="step reveal reveal-delay-4">
+                <span class="step-num">4</span>
+                <div>
+                    <h3>Speech + voice commands</h3>
+                    <p>Hold a fist to activate SFSpeechRecognizer. Dictate text or say "press enter", "command z", "control c" to trigger actions.</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
-        <footer>
-            <p>MIT License. Built by <a href="https://github.com/TomYang-TZ">Tom Yang</a>.</p>
-        </footer>
-    </div>
+
+    <footer>
+        <p>MIT License &middot; Built with Apple Vision + SwiftUI.</p>
+    </footer>
+
+    <script>
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    </script>
 </body>
 </html>

@@ -4,7 +4,6 @@
 
 # Gstrl
 
-> Sometimes a pinch is faster than reaching for the mouse.
 
 **Gstrl** adds gesture, voice, and AI agent control to macOS. **Pinch to move cursor. Swipe for arrows. Hold fists to talk to Claude. Circle to screenshot.** All on-device via Apple Vision + SFSpeechRecognizer.
 

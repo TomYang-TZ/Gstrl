@@ -123,7 +123,10 @@ VStack(spacing: 0) {
 
 ## Next Steps
 
+### Priority: Improve Agent System Prompt
+The Claude Code agent launched via both-fists doesn't know what tools it has access to. Update the system prompt (in `AgentController.swift`) to explicitly tell the agent it has access to: Read, Write, Glob, Grep, Bash, and other file/system tools. This lets it take action rather than just answer questions.
+
 ### Other
-- Landing page redesign
+- Landing page redesigned: Apple-style scroll-snap sections, interactive gesture cards, animated SVG logo with rotating arcs, warm/white theme
 - Launch strategy (Reddit, X, RedNote)
 - Two-finger directional hold (ML classifier)

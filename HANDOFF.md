@@ -118,6 +118,8 @@ VStack(spacing: 0) {
   - Dead zone (0.002 normalized) with continuous re-anchoring to prevent exit jumps
   - Velocity gate (0.001 minimum) to suppress sub-pixel noise
   - Thresholds tuned low since smoothing handles most noise — gates only catch residual
+- Screenshot preview moved inside island glass (was floating separately)
+- Spring transition animation on screenshot appear/dismiss
 
 ## Next Steps
 

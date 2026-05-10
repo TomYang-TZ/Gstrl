@@ -48,11 +48,6 @@ struct DynamicIslandView: View {
     var body: some View {
         VStack(spacing: 8) {
             islandContent
-
-            if let preview = appState.screenshotPreview {
-                screenshotThumbnail(preview)
-                    .transition(.scale.combined(with: .opacity))
-            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
@@ -98,6 +93,11 @@ struct DynamicIslandView: View {
                     .frame(maxWidth: .infinity, maxHeight: 150)
                     .fixedSize(horizontal: false, vertical: true)
             }
+
+            if let preview = appState.screenshotPreview {
+                screenshotThumbnail(preview)
+                    .transition(.scale.combined(with: .opacity))
+            }
         }
         .frame(width: 280)
         .modifier(IslandGlassModifier(cornerRadius: 14))
@@ -109,6 +109,7 @@ struct DynamicIslandView: View {
         })
         .animation(.easeOut(duration: 0.2), value: isExpanded)
         .animation(.easeOut(duration: 0.2), value: responseExpanded)
+        .animation(.spring(duration: 0.3, bounce: 0.2), value: appState.screenshotPreview != nil)
     }
 
     private var expandedSection: some View {

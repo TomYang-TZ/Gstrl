@@ -433,8 +433,9 @@ struct AgentHistoryContent: View {
                     .font(.system(size: 9, design: .monospaced))
                     .foregroundStyle(.tertiary)
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .contentShape(Capsule())
             .background {
                 Capsule().fill(isSelected ? .cyan.opacity(0.12) : .clear)
             }

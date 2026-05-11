@@ -11,8 +11,10 @@ final class CursorDragController {
     private var isDragging = false
 
     private var smoothedPosition: CGPoint?
+    private var doubleSmoothed: CGPoint?
     private var previousSmoothed: CGPoint?
-    private let smoothingFactor: CGFloat = 0.7
+    private let smoothingFactor: CGFloat = 0.55
+    private let secondSmoothing: CGFloat = 0.4
     private let deadZone: CGFloat = 0.002
     private let minVelocity: CGFloat = 0.001
 
@@ -38,6 +40,7 @@ final class CursorDragController {
         anchor = nil
         cursorAnchor = nil
         smoothedPosition = nil
+        doubleSmoothed = nil
         previousSmoothed = nil
     }
 
@@ -49,13 +52,14 @@ final class CursorDragController {
             anchor = current
             cursorAnchor = CGEvent(source: nil)?.location ?? .zero
             smoothedPosition = current
+            doubleSmoothed = current
             previousSmoothed = current
             pathBuffer.removeAll()
             if holdingClick && !isDragging {
                 pressMouseDown()
             }
         } else if let anc = anchor, let curAnc = cursorAnchor {
-            // Exponential smoothing
+            // Double exponential smoothing
             let prev = smoothedPosition ?? current
             let smoothed = CGPoint(
                 x: smoothingFactor * current.x + (1 - smoothingFactor) * prev.x,
@@ -63,23 +67,30 @@ final class CursorDragController {
             )
             smoothedPosition = smoothed
 
+            let prevDouble = doubleSmoothed ?? smoothed
+            let final = CGPoint(
+                x: secondSmoothing * smoothed.x + (1 - secondSmoothing) * prevDouble.x,
+                y: secondSmoothing * smoothed.y + (1 - secondSmoothing) * prevDouble.y
+            )
+            doubleSmoothed = final
+
             // Velocity gate — skip if movement is below noise floor
-            let velocity = hypot(smoothed.x - (previousSmoothed ?? smoothed).x,
-                                 smoothed.y - (previousSmoothed ?? smoothed).y)
-            previousSmoothed = smoothed
+            let velocity = hypot(final.x - (previousSmoothed ?? final).x,
+                                 final.y - (previousSmoothed ?? final).y)
+            previousSmoothed = final
 
             // Dead zone — ignore sub-threshold displacement from anchor
-            let displacement = hypot(smoothed.x - anc.x, smoothed.y - anc.y)
+            let displacement = hypot(final.x - anc.x, final.y - anc.y)
             guard displacement > deadZone && velocity > minVelocity else {
                 // Re-anchor so exiting dead zone starts from zero delta
-                anchor = smoothed
+                anchor = final
                 cursorAnchor = CGEvent(source: nil)?.location ?? curAnc
                 if !holdingClick && isDragging { releaseMouseDown() }
                 return
             }
 
-            let deltaX = -(smoothed.x - anc.x) * screenW * sensitivity
-            let deltaY = -(smoothed.y - anc.y) * screenH * sensitivity
+            let deltaX = -(final.x - anc.x) * screenW * sensitivity
+            let deltaY = -(final.y - anc.y) * screenH * sensitivity
             let newX = max(0, min(screenW, curAnc.x + deltaX))
             let newY = max(0, min(screenH, curAnc.y + deltaY))
             let pos = CGPoint(x: newX, y: newY)

@@ -44,7 +44,7 @@ enum InputDispatch {
             guard let down = CGEvent(keyboardEventSource: eventSource, virtualKey: keyCode, keyDown: true),
                   let up = CGEvent(keyboardEventSource: eventSource, virtualKey: keyCode, keyDown: false) else { return }
             down.flags = flags
-            up.flags = flags
+            up.flags = []
             down.post(tap: .cghidEventTap)
             usleep(30000)
             up.post(tap: .cghidEventTap)
@@ -59,7 +59,7 @@ enum InputDispatch {
             guard let down = CGEvent(mouseEventSource: eventSource, mouseType: downType, mouseCursorPosition: pos, mouseButton: button),
                   let up = CGEvent(mouseEventSource: eventSource, mouseType: upType, mouseCursorPosition: pos, mouseButton: button) else { return }
             down.flags = modifiers
-            up.flags = modifiers
+            up.flags = []
             down.post(tap: .cghidEventTap)
             usleep(50000)
             up.post(tap: .cghidEventTap)

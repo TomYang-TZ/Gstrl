@@ -60,20 +60,50 @@ App auto-opens permission pages on first launch (Camera, Accessibility, Screen R
 
 ### Voice Commands (during speech mode)
 
-While speech-to-text is active, say "press" + keyword to execute actions instead of typing:
+Supports **English, 中文, 粵語, and Spanish** — switch in Settings.
+
+#### English — just say the word:
 
 | Command | Action |
 |---------|--------|
-| press up/down/left/right | Arrow keys |
-| press enter / press tab / press escape | Enter / Tab / Escape |
-| press delete / press click | Backspace / Click |
-| command [any letter] | Cmd+key (e.g. command t, command w) |
-| control [any letter] | Ctrl+key (e.g. control c, control z) |
-| command click | Cmd+Click |
-| shift left/right/up/down | Select text |
-| option left/right/delete | Jump/delete by word |
-| command shift [key] | Cmd+Shift+key (e.g. command shift z = redo) |
-| shift option [key] | Shift+Option+key |
+| enter / delete / escape / tab | Key press |
+| click | Click |
+| undo / redo | ⌘Z / ⌘⇧Z |
+| copy / paste / save | ⌘C / ⌘V / ⌘S |
+| select all | ⌘A |
+| go up / go down / go left / go right | Arrow keys |
+
+#### English — prefix commands:
+
+| Command | Action |
+|---------|--------|
+| press + key | Press key |
+| command + key | ⌘+key (e.g. command t, command w) |
+| control + key | ⌃+key (e.g. control c, control z) |
+| shift + direction | Select text |
+| option + direction | Jump by word |
+| command shift + key | ⌘⇧+key (e.g. command shift z = redo) |
+
+#### 中文:
+
+| 指令 | 动作 |
+|------|------|
+| 回车 / 确认 / 换行 | Enter |
+| 删除 | Backspace |
+| 取消 | Escape |
+| 点击 / 按一下 | Click |
+| 撤销 / 复制 / 粘贴 / 全选 / 保存 | ⌘Z / ⌘C / ⌘V / ⌘A / ⌘S |
+| 按上 / 按下 / 按左 / 按右 | Arrow keys |
+
+#### Español:
+
+| Comando | Acción |
+|---------|--------|
+| pulsa arriba/abajo/izquierda/derecha | Arrow keys |
+| pulsa intro / borrar / eliminar | Enter / Delete |
+| pulsa clic | Click |
+| comando + key | ⌘+key |
+| control + key | ⌃+key |
 
 ### AI Agent (both fists) — requires [Claude Code CLI](https://claude.ai/claude-code)
 

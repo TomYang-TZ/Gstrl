@@ -16,8 +16,8 @@ final class SpeechController {
     private var pendingText = ""
     private var debounceWork: DispatchWorkItem?
     private var flushedPrefix: String?
-    private static let debounceDelay: TimeInterval = 0.3
-    private static let partialWaitDelay: TimeInterval = 0.8
+    private static let debounceDelay: TimeInterval = 0.15
+    private static let partialWaitDelay: TimeInterval = 0.5
 
     var onLabelUpdate: ((String) -> Void)?
     var onTranscriptUpdate: ((String) -> Void)?

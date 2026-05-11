@@ -136,11 +136,9 @@ VStack(spacing: 0) {
 - Multilingual speech: language picker (EN/中文/粵語/ES) in Settings tab
   - `SpeechEngine.updateLocale()` swaps recognizer (only when locale changes AND not listening)
   - `SpeechController` and `AgentController` both sync via `TrackingCoordinator.syncSettings()`
-- Chinese voice commands (suffix-matching, no prefix needed):
-  - 回车/确认/换行, 删除, 取消, 点击, 右键, 撤销, 复制, 粘贴, 全选, 全删, 保存
-  - Trailing 键 stripped before matching (回车键 → 回车)
-- Spanish voice commands: pulsa/presiona prefix, arriba/abajo/izquierda/derecha, clic/clic derecho
-- English: click/right click without prefix, all others require prefix (press/command/control/shift/option)
+- Voice commands: English only (click/right click without prefix, all others require prefix)
+  - Chinese/Spanish voice commands removed (too many edge cases with recognizer revisions)
+  - Language picker remains for STT dictation language
 - Voice tab in app: language-specific command reference, switches with language setting
 - TTS language sync: agent responses spoken in matching voice (Tingting/Sinji/Mónica)
 - Island tap: whole compact bar opens window, ON/OFF button only toggles
@@ -162,7 +160,14 @@ VStack(spacing: 0) {
 
 6. **Voice commands must not read physical modifiers.** During speech, no physical keys are held — but system state can be stale from prior CGEvents. Voice path uses `InputDispatch.perform(action, usePhysicalModifiers: false)`.
 
+## Completed (2026-05-11)
+
+- Voice command latency reduced: debounce 0.3s→0.15s, partial wait 0.8s→0.5s
+- Island repositions on display change (observes `didChangeScreenParametersNotification`)
+- Landing page: emoji gestures replaced with keycap badges + inline SVG icons
+
 ## Next Steps
 
 - Two-finger directional hold (ML classifier)
 - Video demo for launch
+- GitHub Release with pre-built .app binary

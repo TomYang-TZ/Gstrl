@@ -119,6 +119,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         panel.orderFrontRegardless()
         islandPanel = panel
+
+        NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.repositionIsland()
+        }
+    }
+
+    private func repositionIsland() {
+        guard let panel = islandPanel, let screen = NSScreen.main else { return }
+        let panelSize = panel.frame.size
+        let hasNotch = screen.safeAreaInsets.top > 0
+        let offset: CGFloat = hasNotch ? screen.safeAreaInsets.top : 0
+        let origin = NSPoint(
+            x: screen.frame.midX - panelSize.width / 2,
+            y: screen.frame.maxY - panelSize.height - offset
+        )
+        panel.setFrameOrigin(origin)
     }
 
     private func createMenuBarItem() {

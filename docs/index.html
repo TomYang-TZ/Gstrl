@@ -350,21 +350,24 @@
             border-color: transparent;
             box-shadow: 0 12px 48px rgba(232, 89, 12, 0.08);
         }
-        .gesture-card .emoji {
-            font-size: 2rem;
-            margin-bottom: 12px;
-            display: block;
-            transition: transform 0.3s;
-        }
-        .gesture-card .emoji.flipped {
+        .gesture-card .keycap {
             display: inline-block;
-            transform: scaleX(-1);
+            font-family: 'SF Mono', 'Fira Code', 'Menlo', monospace;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text);
+            background: #f5f2ed;
+            border: 1px solid var(--card-border);
+            border-radius: 6px;
+            padding: 4px 10px;
+            margin-bottom: 12px;
+            letter-spacing: 0.02em;
+            transition: transform 0.3s, background 0.3s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
         }
-        .gesture-card:hover .emoji {
-            transform: scale(1.15) rotate(-5deg);
-        }
-        .gesture-card:hover .emoji.flipped {
-            transform: scaleX(-1) scale(1.15) rotate(5deg);
+        .gesture-card:hover .keycap {
+            transform: translateY(-2px);
+            background: #edeae5;
         }
         .gesture-card h3 {
             font-size: 1.05rem;
@@ -375,18 +378,6 @@
             color: var(--text-muted);
             font-size: 0.875rem;
             line-height: 1.5;
-        }
-        .gesture-card .hint {
-            display: none;
-            position: absolute;
-            bottom: 16px;
-            right: 20px;
-            font-size: 0.75rem;
-            color: var(--gradient-1);
-            font-weight: 500;
-        }
-        .gesture-card:hover .hint {
-            display: block;
         }
 
         /* How it works */
@@ -619,58 +610,49 @@
         <p class="section-subtitle reveal reveal-delay-1">Just your Mac's webcam. No special hardware.</p>
         <div class="gesture-grid">
             <div class="gesture-card reveal-left reveal-delay-1">
-                <span class="emoji">🤏</span>
+                <span class="keycap"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="vertical-align:-2px;margin-right:4px"><path d="M3 3l5.5 12 2-5 5-2L3 3z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>cursor</span>
                 <h3>Pinch to move</h3>
                 <p>Right hand pinch — move your hand to drag the cursor anywhere on screen.</p>
-                <span class="hint">Right hand</span>
             </div>
             <div class="gesture-card reveal-scale reveal-delay-2">
-                <span class="emoji flipped">🤏</span>
+                <span class="keycap"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="vertical-align:-2px;margin-right:4px"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="2" fill="currentColor"/></svg>click</span>
                 <h3>Pinch to click</h3>
                 <p>Quick left pinch for click. Hold for 1 second for right-click.</p>
-                <span class="hint">Left hand</span>
             </div>
             <div class="gesture-card reveal-right reveal-delay-3">
-                <span class="emoji">⭕</span>
+                <span class="keycap"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="vertical-align:-2px;margin-right:4px"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.3" stroke-dasharray="3 2"/></svg>screenshot</span>
                 <h3>Circle to screenshot</h3>
                 <p>Draw a circle while pinching — captures that region to your clipboard instantly.</p>
-                <span class="hint">Right hand</span>
             </div>
             <div class="gesture-card reveal-right reveal-delay-1">
-                <span class="emoji">🖐</span>
+                <span class="keycap">↑ ↓ ← →</span>
                 <h3>Swipe for arrows</h3>
                 <p>Open hand flick in any direction — up, down, left, right arrow keys.</p>
-                <span class="hint">Right hand</span>
             </div>
             <div class="gesture-card reveal-scale reveal-delay-2">
-                <span class="emoji">✊</span>
+                <span class="keycap"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="vertical-align:-2px;margin-right:4px"><rect x="5" y="2" width="6" height="8" rx="3" stroke="currentColor" stroke-width="1.3"/><path d="M3 8a5 5 0 0010 0M8 13v2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>dictate</span>
                 <h3>Fist to speak</h3>
                 <p>Hold a fist to activate speech-to-text. Say "press enter" or just dictate.</p>
-                <span class="hint">Right hand</span>
             </div>
             <div class="gesture-card reveal-left reveal-delay-3">
-                <span class="emoji">✊✊</span>
+                <span class="keycap"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="vertical-align:-2px;margin-right:4px"><path d="M8 1l1.5 4.5L14 7l-4.5 1.5L8 13l-1.5-4.5L2 7l4.5-1.5L8 1z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>AI agent</span>
                 <h3>Both fists for AI</h3>
                 <p>Hold both fists — ask Claude anything. Gets spoken back to you.</p>
-                <span class="hint">Both hands &middot; Claude Code</span>
             </div>
             <div class="gesture-card reveal-left reveal-delay-1">
-                <span class="emoji"><span style="display:inline-block;transform:scaleX(-1)">🤏</span>✊</span>
+                <span class="keycap">scroll ↕</span>
                 <h3>Pinch + fist to scroll</h3>
                 <p>Left pinch, right fist. Move to scroll. Accelerates the longer you hold.</p>
-                <span class="hint">Both hands</span>
             </div>
             <div class="gesture-card reveal-scale reveal-delay-2">
-                <span class="emoji">🤙</span>
+                <span class="keycap">⌫ delete</span>
                 <h3>Six to delete</h3>
                 <p>Hold the shaka — deletes characters, then words, then lines, then all.</p>
-                <span class="hint">Escalating</span>
             </div>
             <div class="gesture-card reveal-right reveal-delay-3">
-                <span class="emoji"><span style="display:inline-block;transform:scaleX(-1)">🤏</span>🤏</span>
+                <span class="keycap">drag / select</span>
                 <h3>Both pinch to drag</h3>
-                <p>Both hands pinching — drag and drop files, text, anything.</p>
-                <span class="hint">Both hands</span>
+                <p>Both hands pinching — drag and drop files, select text, anything.</p>
             </div>
         </div>
     </section>
@@ -678,7 +660,7 @@
     <!-- Voice Commands -->
     <section id="voice">
         <h2 class="section-title reveal">Voice commands.</h2>
-        <p class="section-subtitle reveal reveal-delay-1">Say "press" + keyword to trigger actions. Dictation supports English, 中文, 粵語, Spanish.</p>
+        <p class="section-subtitle reveal reveal-delay-1">Say commands to trigger actions instead of typing. Dictation supports multiple languages.</p>
         <div class="gesture-grid">
             <div class="gesture-card reveal-left reveal-delay-1">
                 <span class="emoji">👆</span>

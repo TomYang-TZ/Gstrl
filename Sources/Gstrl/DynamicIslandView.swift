@@ -59,7 +59,7 @@ struct DynamicIslandView: View {
             .aspectRatio(contentMode: .fit)
             .frame(maxWidth: 240, maxHeight: 160)
             .clipShape(RoundedRectangle(cornerRadius: 12))
-            .modifier(LiquidGlassModifier())
+            .shadow(radius: 4)
             .padding(4)
     }
 

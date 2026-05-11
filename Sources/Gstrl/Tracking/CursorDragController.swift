@@ -127,7 +127,7 @@ final class CursorDragController {
     }
 
     private func detectCircleRegion() -> CGRect? {
-        guard pathBuffer.count >= 15 else { return nil }
+        guard pathBuffer.count >= 12 else { return nil }
 
         let points = pathBuffer
 
@@ -140,7 +140,7 @@ final class CursorDragController {
         let avgRadius = radii.reduce(0, +) / CGFloat(radii.count)
 
         // Need at least 50px radius to be intentional
-        guard avgRadius > 50 else { return nil }
+        guard avgRadius > 30 else { return nil }
 
         // Radius consistency
         let radiusVariance = radii.map { ($0 - avgRadius) * ($0 - avgRadius) }.reduce(0, +) / CGFloat(radii.count)
@@ -151,7 +151,7 @@ final class CursorDragController {
         let start = points.first!
         let end = points.last!
         let closureDist = hypot(end.x - start.x, end.y - start.y)
-        guard closureDist < avgRadius * 0.6 else { return nil }
+        guard closureDist < avgRadius * 0.8 else { return nil }
 
         // Angular sweep check
         var totalAngle: CGFloat = 0
@@ -164,7 +164,7 @@ final class CursorDragController {
             totalAngle += delta
         }
 
-        guard abs(totalAngle) > 4.7 else { return nil }
+        guard abs(totalAngle) > 4.0 else { return nil }
 
         // Return bounding rect of the circle in screen coordinates
         let minX = points.map(\.x).min()!

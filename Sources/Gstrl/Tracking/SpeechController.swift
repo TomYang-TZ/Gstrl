@@ -16,7 +16,7 @@ final class SpeechController {
     private var pendingText = ""
     private var debounceWork: DispatchWorkItem?
     private var flushedPrefix: String?
-    private static let debounceDelay: TimeInterval = 0.15
+    private static let debounceDelay: TimeInterval = 0.3
     private static let partialWaitDelay: TimeInterval = 0.5
 
     var onLabelUpdate: ((String) -> Void)?
@@ -114,17 +114,18 @@ final class SpeechController {
             return
         }
 
-        // If we previously flushed a prefix as text, check if this delta completes the command
+        // If we previously had a partial prefix, check if this delta completes the command
         if let prefix = flushedPrefix {
             let combined = prefix + " " + delta.trimmingCharacters(in: .whitespaces)
             if case .command(let action, _, let displayName) = VoiceCommandParser.parse(newText: combined) {
-                speechEngine.deleteChars(prefix.count)
                 InputDispatch.perform(action, usePhysicalModifiers: false)
                 flushedPrefix = nil
                 flashCommandFeedback(displayName)
                 resetAfterCommand()
                 return
             }
+            // Prefix didn't complete a command — type it now along with the new text
+            speechEngine.typeText(prefix + " ")
             flushedPrefix = nil
         }
 
@@ -163,7 +164,6 @@ final class SpeechController {
         let text = pendingText
         let delta = String(text.dropFirst(committedLen))
         guard !delta.isEmpty else { return }
-        speechEngine.typeText(delta)
         flushedPrefix = delta.trimmingCharacters(in: .whitespaces)
         committedLen = text.count
     }
@@ -184,12 +184,15 @@ final class SpeechController {
     private func scheduleFade() {
         fadeWork?.cancel()
         let work = DispatchWorkItem { [weak self] in
-            self?.fadeOneWord()
+            guard let self, self.isActive else { return }
+            self.displayedTranscript = ""
+            self.onTranscriptUpdate?("")
         }
         fadeWork = work
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0, execute: work)
     }
 
+    // kept for reference but no longer used
     private func fadeOneWord() {
         guard isActive, !displayedTranscript.isEmpty else { return }
         var words = displayedTranscript.split(separator: " ", omittingEmptySubsequences: true)

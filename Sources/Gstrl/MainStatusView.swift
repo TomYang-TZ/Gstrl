@@ -192,7 +192,7 @@ struct MainStatusView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 8) {
                 sectionHeader("COMMANDS", color: .green)
-                voiceRow("click / right click", "👆 Click / Right Click")
+                voiceRow("click / right click / double click", "👆 Click variants")
                 voiceRow("press + key", "Press key")
                 voiceRow("command + key", "⌘ + key")
                 voiceRow("control + key", "⌃ + key")

@@ -95,6 +95,8 @@ Hold both fists for 1 second to activate the AI agent. Speak your question — a
 ## Dynamic Island
 
 A floating glass overlay at the top of your screen (macOS 26+ Liquid Glass):
+- Hand indicators light up when detected, so you know when gestures are armed
+- Countdown border shows hold progress for timed gestures (speech, agent, delete, etc.)
 - Expands downward to show live transcription, agent thinking/actions, or response text
 - Inline controls: terminate agent, collapse response, dismiss
 

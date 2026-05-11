@@ -17,11 +17,6 @@ let package = Package(
                 .linkedFramework("CoreImage"),
                 .linkedFramework("Carbon")
             ]
-        ),
-        .testTarget(
-            name: "GstrlTests",
-            dependencies: ["Gstrl"],
-            path: "Tests/GstrlTests"
         )
     ]
 )

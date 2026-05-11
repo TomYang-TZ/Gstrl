@@ -18,6 +18,7 @@ final class AgentController {
     private let silenceTimeout: TimeInterval = 3.0
 
     private var transcribedText = ""
+    private var lastSelectedText: String?
     private var lastUpdateTime: Date?
     private var silenceTimer: DispatchWorkItem?
     private var ttsProcess: Process?
@@ -27,7 +28,7 @@ final class AgentController {
     var onStateChanged: ((String, Double, AppState.ProgressMode) -> Void)?
     var onTranscriptUpdate: ((String) -> Void)?
     var onSilenceReset: (() -> Void)?
-    var onResponse: ((String, String, String?, Int, Int, Double, [(tool: String, summary: String)]) -> Void)?
+    var onResponse: ((String, String, String?, String?, Int, Int, Double, [(tool: String, summary: String)]) -> Void)?
     var onSelectionCaptured: ((Int) -> Void)?
     var onSpeakingChanged: ((Bool) -> Void)?
     var onThinkingUpdate: ((String) -> Void)?
@@ -171,6 +172,7 @@ final class AgentController {
 
         // Capture selected text as context via Cmd+C
         let selectedText = captureSelection()
+        lastSelectedText = selectedText
         if let sel = selectedText {
             let lineCount = sel.components(separatedBy: .newlines).count
             onSelectionCaptured?(lineCount)
@@ -444,7 +446,7 @@ final class AgentController {
             onStateChanged?("", 0, .countdown)
             return
         }
-        onResponse?(query, text, screenshotPath, result.durationMs, result.turns, result.costUSD, result.actions)
+        onResponse?(query, text, screenshotPath, lastSelectedText, result.durationMs, result.turns, result.costUSD, result.actions)
         speak(text)
     }
 

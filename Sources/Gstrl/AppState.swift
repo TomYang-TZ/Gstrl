@@ -47,17 +47,21 @@ final class AppState {
         let query: String
         let response: String
         let screenshotPath: String?
+        let selectedLines: Int
+        let selectedText: String?
         let durationMs: Int
         let turns: Int
         let costUSD: Double
         let actions: [AgentAction]
         let timestamp: Date
 
-        init(sessionId: String, query: String, response: String, screenshotPath: String? = nil, durationMs: Int = 0, turns: Int = 0, costUSD: Double = 0, actions: [AgentAction] = []) {
+        init(sessionId: String, query: String, response: String, screenshotPath: String? = nil, selectedLines: Int = 0, selectedText: String? = nil, durationMs: Int = 0, turns: Int = 0, costUSD: Double = 0, actions: [AgentAction] = []) {
             self.sessionId = sessionId
             self.query = query
             self.response = response
             self.screenshotPath = screenshotPath
+            self.selectedLines = selectedLines
+            self.selectedText = selectedText
             self.durationMs = durationMs
             self.turns = turns
             self.costUSD = costUSD

@@ -154,6 +154,10 @@ struct DynamicIslandView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
 
+            if appState.agentSelectedLines > 0 && isAgentMode {
+                selectionBadge
+            }
+
             if isAgentProcessing {
                 Button { onAgentTerminate?() } label: {
                     Image(systemName: "stop.fill")
@@ -175,11 +179,13 @@ struct DynamicIslandView: View {
 
     private var agentResponseBody: some View {
         HStack(alignment: .top, spacing: 6) {
-            Text(appState.agentResponse)
-                .font(.system(size: 10, design: .rounded))
-                .foregroundStyle(.primary)
-                .lineLimit(responseExpanded ? nil : 1)
-                .frame(maxWidth: .infinity, alignment: .topLeading)
+            ScrollView {
+                Text(appState.agentResponse)
+                    .font(.system(size: 10, design: .rounded))
+                    .foregroundStyle(.primary)
+                    .lineLimit(responseExpanded ? nil : 1)
+                    .frame(maxWidth: .infinity, alignment: .topLeading)
+            }
 
             HStack(spacing: 6) {
                 if appState.agentSpeaking {

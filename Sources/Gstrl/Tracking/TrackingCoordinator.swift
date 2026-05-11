@@ -126,7 +126,7 @@ final class TrackingCoordinator {
             }
         }
 
-        agentController.onResponse = { [weak self] (query: String, response: String, screenshotPath: String?, durationMs: Int, turns: Int, costUSD: Double, actions: [(tool: String, summary: String)]) in
+        agentController.onResponse = { [weak self] (query: String, response: String, screenshotPath: String?, selectedText: String?, durationMs: Int, turns: Int, costUSD: Double, actions: [(tool: String, summary: String)]) in
             DispatchQueue.main.async {
                 guard let self else { return }
                 let sid = self.agentController.sessionId ?? UUID().uuidString
@@ -137,6 +137,8 @@ final class TrackingCoordinator {
                 self.appState.agentHistory.append(AppState.AgentEntry(
                     sessionId: sid, query: query, response: response,
                     screenshotPath: screenshotPath,
+                    selectedLines: self.appState.agentSelectedLines,
+                    selectedText: selectedText,
                     durationMs: durationMs, turns: turns, costUSD: costUSD,
                     actions: agentActions
                 ))

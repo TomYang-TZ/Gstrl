@@ -162,9 +162,34 @@ VStack(spacing: 0) {
 
 ## Completed (2026-05-11)
 
-- Voice command latency reduced: debounce 0.3s→0.15s, partial wait 0.8s→0.5s
+- Voice command latency: debounce 0.3s, partial wait 0.5s
 - Island repositions on display change (observes `didChangeScreenParametersNotification`)
-- Landing page: emoji gestures replaced with keycap badges + inline SVG icons
+- Island positioned left of notch on notch Macs
+- Landing page: keycap badges + inline SVG icons, gesture emojis in card titles
+- Double-click: quick double-pinch gesture + "double click" voice command
+- Cursor: double exponential smoothing, removed dead-zone re-anchoring (was causing jumps)
+- Scroll: removed time-based acceleration (constant speed), light wrist Y smoothing, FPS-independent
+- Screenshot circle detection thresholds relaxed (easier to trigger)
+- Screenshot preview: removed pill-shaped glass backdrop
+- Modifier key-up fix: up events clear flags to prevent system state contamination
+- Private CGEventSource: events don't inherit/pollute system modifier state
+- Voice `usePhysicalModifiers: false`: voice commands ignore stale system state
+- Partial prefix no longer typed as text (waits silently, discards if no keyword)
+- Transcript clears all at once after 2s (no word-by-word fade)
+- Agent history: stores selected text, clickable "📄 N lines" opens popover with full context
+- Cursor sensitivity default 2.5x, max 10x
+- Repo made public, GitHub Pages enabled
+- Removed Chinese/Spanish voice commands (English only, kept language picker for STT dictation)
+
+## Key Learnings (2026-05-11)
+
+7. **CGEvent key-up must clear modifier flags.** If `up.flags = flags` (same as down), the system thinks the modifier is still held. Fix: `up.flags = []`.
+
+8. **`CGEvent(keyboardEventSource: nil)` inherits combined session state.** Use `CGEventSource(stateID: .privateState)` to isolate events from each other.
+
+9. **`results.isEmpty` flickers during active hand tracking.** Vision can miss a hand for 1-2 frames. Use a frame counter (`noHandFrames > 10`) before resetting speech — don't kill it on a single empty frame.
+
+10. **Partial prefixes that match common words ("right", "double") add unwanted latency.** Better to rely on the debounce window (0.3s) keeping both words in the same commit, and accept occasional split-word failures.
 
 ## Next Steps
 

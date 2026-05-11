@@ -71,11 +71,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         let panelSize = NSSize(width: 300, height: 200)
         let hasNotch = screen.safeAreaInsets.top > 0
-        let offset: CGFloat = hasNotch ? screen.safeAreaInsets.top : 0
-        let origin = NSPoint(
-            x: screen.frame.midX - panelSize.width / 2,
-            y: screen.frame.maxY - panelSize.height - offset
-        )
+        let origin: NSPoint
+        if hasNotch {
+            let notchWidth: CGFloat = 180
+            let notchLeftEdge = screen.frame.midX - notchWidth / 2
+            origin = NSPoint(
+                x: notchLeftEdge - panelSize.width - 4,
+                y: screen.frame.maxY - panelSize.height
+            )
+        } else {
+            origin = NSPoint(
+                x: screen.frame.midX - panelSize.width / 2,
+                y: screen.frame.maxY - panelSize.height
+            )
+        }
 
         let panel = NSPanel(
             contentRect: NSRect(origin: origin, size: panelSize),
@@ -129,11 +138,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard let panel = islandPanel, let screen = NSScreen.main else { return }
         let panelSize = panel.frame.size
         let hasNotch = screen.safeAreaInsets.top > 0
-        let offset: CGFloat = hasNotch ? screen.safeAreaInsets.top : 0
-        let origin = NSPoint(
-            x: screen.frame.midX - panelSize.width / 2,
-            y: screen.frame.maxY - panelSize.height - offset
-        )
+        let origin: NSPoint
+        if hasNotch {
+            let notchWidth: CGFloat = 180
+            let notchLeftEdge = screen.frame.midX - notchWidth / 2
+            origin = NSPoint(
+                x: notchLeftEdge - panelSize.width - 4,
+                y: screen.frame.maxY - panelSize.height
+            )
+        } else {
+            origin = NSPoint(
+                x: screen.frame.midX - panelSize.width / 2,
+                y: screen.frame.maxY - panelSize.height
+            )
+        }
         panel.setFrameOrigin(origin)
     }
 

@@ -15,8 +15,8 @@ final class CursorDragController {
     private var previousSmoothed: CGPoint?
     private let smoothingFactor: CGFloat = 0.55
     private let secondSmoothing: CGFloat = 0.4
-    private let deadZone: CGFloat = 0.002
-    private let minVelocity: CGFloat = 0.001
+    private let deadZone: CGFloat = 0.001
+    private let minVelocity: CGFloat = 0.0001
 
     private var pathBuffer: [CGPoint] = []
     var onCircleScreenshot: ((_ rect: CGRect) -> Void)?
@@ -82,9 +82,6 @@ final class CursorDragController {
             // Dead zone — ignore sub-threshold displacement from anchor
             let displacement = hypot(final.x - anc.x, final.y - anc.y)
             guard displacement > deadZone && velocity > minVelocity else {
-                // Re-anchor so exiting dead zone starts from zero delta
-                anchor = final
-                cursorAnchor = CGEvent(source: nil)?.location ?? curAnc
                 if !holdingClick && isDragging { releaseMouseDown() }
                 return
             }

@@ -68,7 +68,7 @@ final class AppState {
 
     // User-configurable settings
     var fps: FPS = .thirty
-    var cursorSensitivity: Double = 3.5
+    var cursorSensitivity: Double = 2.5
     var scrollSensitivity: Double = 1.0
     var naturalScroll: Bool = false
     var speechLanguage: SpeechLanguage = .english

@@ -6,6 +6,7 @@ enum GestureAction {
     case pressKey(UInt16)
     case pressModifiedKey(UInt16, shift: Bool, control: Bool, option: Bool, command: Bool)
     case click
+    case doubleClick
     case rightClick
     case commandClick
 }
@@ -32,6 +33,8 @@ enum InputDispatch {
             postKey(keyCode: keyCode, flags: flags)
         case .click:
             postClick(button: .left, modifiers: mods)
+        case .doubleClick:
+            postDoubleClick(modifiers: mods)
         case .rightClick:
             postClick(button: .right, modifiers: mods)
         case .commandClick:
@@ -48,6 +51,31 @@ enum InputDispatch {
             down.post(tap: .cghidEventTap)
             usleep(30000)
             up.post(tap: .cghidEventTap)
+        }
+    }
+
+    private static func postDoubleClick(modifiers: CGEventFlags) {
+        DispatchQueue.main.async {
+            guard let pos = CGEvent(source: nil)?.location else { return }
+            guard let down1 = CGEvent(mouseEventSource: eventSource, mouseType: .leftMouseDown, mouseCursorPosition: pos, mouseButton: .left),
+                  let up1 = CGEvent(mouseEventSource: eventSource, mouseType: .leftMouseUp, mouseCursorPosition: pos, mouseButton: .left),
+                  let down2 = CGEvent(mouseEventSource: eventSource, mouseType: .leftMouseDown, mouseCursorPosition: pos, mouseButton: .left),
+                  let up2 = CGEvent(mouseEventSource: eventSource, mouseType: .leftMouseUp, mouseCursorPosition: pos, mouseButton: .left) else { return }
+            down1.setIntegerValueField(.mouseEventClickState, value: 1)
+            up1.setIntegerValueField(.mouseEventClickState, value: 1)
+            down2.setIntegerValueField(.mouseEventClickState, value: 2)
+            up2.setIntegerValueField(.mouseEventClickState, value: 2)
+            down1.flags = modifiers
+            up1.flags = []
+            down2.flags = modifiers
+            up2.flags = []
+            down1.post(tap: .cghidEventTap)
+            usleep(30000)
+            up1.post(tap: .cghidEventTap)
+            usleep(30000)
+            down2.post(tap: .cghidEventTap)
+            usleep(30000)
+            up2.post(tap: .cghidEventTap)
         }
     }
 

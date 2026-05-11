@@ -247,11 +247,14 @@ enum VoiceCommandParser {
             return .partial(prefix: lastWord, wordCount: 1)
         }
 
-        // "click" / "right click" works without prefix
+        // "click" / "right click" / "double click" works without prefix
         if words.count == 2 {
             let first = words[0].lowercased()
             if first == "right" && lastWord == "click" {
                 return .command(.rightClick, wordCount: 2, displayName: "👆 Right Click")
+            }
+            if first == "double" && lastWord == "click" {
+                return .command(.doubleClick, wordCount: 2, displayName: "👆👆 Double Click")
             }
         }
         if lastWord == "click" {

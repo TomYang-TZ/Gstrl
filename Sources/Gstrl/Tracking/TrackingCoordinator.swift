@@ -577,12 +577,18 @@ final class TrackingCoordinator {
                     }
                 }
             } else {
-                // Pinch released — fire left click if it was short
+                // Pinch released — fire click or double-click
                 if let start = leftPinchStartTime, !leftPinchFired {
                     let elapsed = Date().timeIntervalSince(start)
                     if elapsed < 0.5 {
                         let now = Date()
-                        if now.timeIntervalSince(lastClickTime) > 0.3 {
+                        if now.timeIntervalSince(lastClickTime) < 0.4 {
+                            InputDispatch.perform(.doubleClick)
+                            lastClickTime = .distantPast
+                            DispatchQueue.main.async { [weak self] in
+                                self?.appState.gestureLabel = "👆👆 Double Click"
+                            }
+                        } else {
                             lastClickTime = now
                             InputDispatch.perform(.click)
                             DispatchQueue.main.async { [weak self] in

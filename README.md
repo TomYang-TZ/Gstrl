@@ -87,9 +87,8 @@ Hold both fists for 1 second to activate the AI agent. Speak your question — a
 - Dismiss the response overlay (X) to start a new session
 - Full chat history in the app's Agent tab
 
-### "Pro" tips
+### Tips
 
-- **Keyboard + Gesture** — Hold a modifier key while gesturing (not voice). Shift + swipe = select text. Cmd + swipe = jump words.
 - **Screenshot → AI** — Circle-capture a region, then hold both fists to ask Claude about what's on screen.
 - **Select → AI** — Drag to highlight text (pinch + hold + move), then hold both fists. Claude sees your selection as context.
 

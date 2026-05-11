@@ -180,7 +180,8 @@ struct MainStatusView: View {
                     gestureRow("✊✊ Both fists (hold)", "AI Agent")
                     gestureRow("👌+✊ L pinch + R fist", "Scroll")
                     gestureRow("🤙🤙 Both six (hold)", "Delete lines → select all")
-                    gestureRow("🖐+← Open left + swipe", "Tab / Shift+Tab")
+                    gestureRow("🖐+→ Open left + swipe right", "Tab")
+                    gestureRow("🖐+← Open left + swipe left", "Shift+Tab")
                 }
             }
             .padding(16)
@@ -526,10 +527,6 @@ struct CollapsibleChatEntry: View {
     @State private var isExpanded: Bool = false
     @State private var showingSelectedText: Bool = false
 
-    private func showSelectedText(_ text: String) {
-        showingSelectedText = true
-    }
-
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Button {
@@ -607,11 +604,49 @@ struct CollapsibleChatEntry: View {
 
                     HStack(spacing: 6) {
                         if entry.selectedLines > 0 {
-                            if let text = entry.selectedText {
-                                Button { showSelectedText(text) } label: {
+                            if entry.selectedText != nil {
+                                Button { showingSelectedText = true } label: {
                                     metaTag("📄 \(entry.selectedLines) lines")
                                 }
                                 .buttonStyle(.plain)
+                                .popover(isPresented: $showingSelectedText) {
+                                    if let text = entry.selectedText {
+                                        VStack(alignment: .leading, spacing: 0) {
+                                            HStack {
+                                                Text("Context (\(entry.selectedLines) lines)")
+                                                    .font(.system(size: 10, weight: .medium))
+                                                    .foregroundStyle(.secondary)
+                                                Spacer()
+                                                Button {
+                                                    NSPasteboard.general.clearContents()
+                                                    NSPasteboard.general.setString(text, forType: .string)
+                                                } label: {
+                                                    Image(systemName: "doc.on.doc")
+                                                        .font(.system(size: 9))
+                                                        .foregroundStyle(.secondary)
+                                                }
+                                                .buttonStyle(.plain)
+                                            }
+                                            .padding(.horizontal, 12)
+                                            .padding(.top, 10)
+                                            .padding(.bottom, 6)
+
+                                            Divider()
+
+                                            ScrollView(.vertical, showsIndicators: true) {
+                                                ScrollView(.horizontal, showsIndicators: false) {
+                                                    Text(text)
+                                                        .font(.system(size: 10, design: .monospaced))
+                                                        .foregroundStyle(.primary)
+                                                        .textSelection(.enabled)
+                                                        .lineSpacing(2)
+                                                        .padding(12)
+                                                }
+                                            }
+                                        }
+                                        .frame(width: 340, height: 240)
+                                    }
+                                }
                             } else {
                                 metaTag("📄 \(entry.selectedLines) lines")
                             }
@@ -641,44 +676,6 @@ struct CollapsibleChatEntry: View {
         }
         .background(RoundedRectangle(cornerRadius: 6).fill(.quaternary.opacity(0.3)))
         .onAppear { isExpanded = expandedByDefault }
-        .popover(isPresented: $showingSelectedText) {
-            if let text = entry.selectedText {
-                VStack(alignment: .leading, spacing: 0) {
-                    HStack {
-                        Text("Context (\(entry.selectedLines) lines)")
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Button {
-                            NSPasteboard.general.clearContents()
-                            NSPasteboard.general.setString(text, forType: .string)
-                        } label: {
-                            Image(systemName: "doc.on.doc")
-                                .font(.system(size: 9))
-                                .foregroundStyle(.secondary)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.top, 10)
-                    .padding(.bottom, 6)
-
-                    Divider()
-
-                    ScrollView(.vertical, showsIndicators: true) {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            Text(text)
-                                .font(.system(size: 10, design: .monospaced))
-                                .foregroundStyle(.primary)
-                                .textSelection(.enabled)
-                                .lineSpacing(2)
-                                .padding(12)
-                        }
-                    }
-                }
-                .frame(width: 340, height: 240)
-            }
-        }
     }
 
     private func toolIcon(_ tool: String) -> String {

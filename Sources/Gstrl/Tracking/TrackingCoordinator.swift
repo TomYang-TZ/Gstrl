@@ -330,12 +330,12 @@ final class TrackingCoordinator {
             let elapsed = Date().timeIntervalSince(fingersCrossedStartTime!)
 
             if fingersCrossedCount == 0 {
-                let progress = min(1.0, elapsed / holdDuration)
                 DispatchQueue.main.async { [weak self] in
                     self?.appState.progressMode = .countdown
                     self?.appState.gestureHand = .both
                     self?.appState.gestureLabel = "✕ Cancel"
-                    self?.appState.gestureProgress = progress
+                    self?.appState.gestureCountdownStart = self?.fingersCrossedStartTime
+                    self?.appState.gestureCountdownDuration = self?.holdDuration ?? 1.0
                 }
                 if elapsed >= holdDuration {
                     fingersCrossedCount = 1
@@ -345,7 +345,7 @@ final class TrackingCoordinator {
                     }
                     DispatchQueue.main.async { [weak self] in
                         self?.appState.gestureLabel = "✕ Ctrl+C ×2"
-                        self?.appState.gestureProgress = 0
+                        self?.appState.gestureCountdownStart = nil
                     }
                     startCooldownProgress()
                 }

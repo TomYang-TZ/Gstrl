@@ -11,13 +11,15 @@ enum GestureAction {
 }
 
 enum InputDispatch {
+    private static let eventSource: CGEventSource? = CGEventSource(stateID: .privateState)
+
     private static var physicalModifiers: CGEventFlags {
-        let flags = CGEventSource.flagsState(.combinedSessionState)
+        let flags = CGEventSource.flagsState(.hidSystemState)
         return flags.intersection([.maskShift, .maskControl, .maskAlternate, .maskCommand])
     }
 
-    static func perform(_ action: GestureAction) {
-        let mods = physicalModifiers
+    static func perform(_ action: GestureAction, usePhysicalModifiers: Bool = true) {
+        let mods: CGEventFlags = usePhysicalModifiers ? physicalModifiers : []
         switch action {
         case .pressKey(let keyCode):
             postKey(keyCode: keyCode, flags: mods)
@@ -39,8 +41,8 @@ enum InputDispatch {
 
     private static func postKey(keyCode: UInt16, flags: CGEventFlags) {
         DispatchQueue.main.async {
-            guard let down = CGEvent(keyboardEventSource: nil, virtualKey: keyCode, keyDown: true),
-                  let up = CGEvent(keyboardEventSource: nil, virtualKey: keyCode, keyDown: false) else { return }
+            guard let down = CGEvent(keyboardEventSource: eventSource, virtualKey: keyCode, keyDown: true),
+                  let up = CGEvent(keyboardEventSource: eventSource, virtualKey: keyCode, keyDown: false) else { return }
             down.flags = flags
             up.flags = flags
             down.post(tap: .cghidEventTap)
@@ -54,8 +56,8 @@ enum InputDispatch {
             guard let pos = CGEvent(source: nil)?.location else { return }
             let downType: CGEventType = button == .left ? .leftMouseDown : .rightMouseDown
             let upType: CGEventType = button == .left ? .leftMouseUp : .rightMouseUp
-            guard let down = CGEvent(mouseEventSource: nil, mouseType: downType, mouseCursorPosition: pos, mouseButton: button),
-                  let up = CGEvent(mouseEventSource: nil, mouseType: upType, mouseCursorPosition: pos, mouseButton: button) else { return }
+            guard let down = CGEvent(mouseEventSource: eventSource, mouseType: downType, mouseCursorPosition: pos, mouseButton: button),
+                  let up = CGEvent(mouseEventSource: eventSource, mouseType: upType, mouseCursorPosition: pos, mouseButton: button) else { return }
             down.flags = modifiers
             up.flags = modifiers
             down.post(tap: .cghidEventTap)

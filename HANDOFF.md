@@ -131,8 +131,38 @@ VStack(spacing: 0) {
   - Noise overlay, animated SVG logo with rotating arcs
   - Warm cream theme with DM Sans typography
 
+## Completed (2026-05-10, continued)
+
+- Multilingual speech: language picker (EN/中文/粵語/ES) in Settings tab
+  - `SpeechEngine.updateLocale()` swaps recognizer (only when locale changes AND not listening)
+  - `SpeechController` and `AgentController` both sync via `TrackingCoordinator.syncSettings()`
+- Chinese voice commands (suffix-matching, no prefix needed):
+  - 回车/确认/换行, 删除, 取消, 点击, 右键, 撤销, 复制, 粘贴, 全选, 全删, 保存
+  - Trailing 键 stripped before matching (回车键 → 回车)
+- Spanish voice commands: pulsa/presiona prefix, arriba/abajo/izquierda/derecha, clic/clic derecho
+- English: click/right click without prefix, all others require prefix (press/command/control/shift/option)
+- Voice tab in app: language-specific command reference, switches with language setting
+- TTS language sync: agent responses spoken in matching voice (Tingting/Sinji/Mónica)
+- Island tap: whole compact bar opens window, ON/OFF button only toggles
+- Island press animation restored (scale 0.95 on press)
+- Hand indicator fix: cache reset in empty-results path so indicators update after flicker
+- Launch posts drafted (.drafts/launch-posts.md): Reddit (6 subs) + RedNote (3 posts)
+
+## Key Learnings (Speech System)
+
+1. **`CGEventSource.flagsState(.combinedSessionState)` includes our own posted events.** After posting ⌘Z, the combined state retains `.maskCommand`. Next event inherits it. Fix: use `.hidSystemState` for reading physical keys, OR pass `usePhysicalModifiers: false` for voice commands.
+
+2. **`CGEvent(keyboardEventSource: nil)` inherits system state.** Events created with nil source pick up stale modifiers. Fix: use `CGEventSource(stateID: .privateState)` as event source.
+
+3. **`SFSpeechRecognizer` is destroyed when you reassign the property.** Calling `updateLocale()` during an active recognition session kills the session silently. Fix: guard with `!isListening` and `identifier != currentLocale`.
+
+4. **Hand detection can flicker (single-frame drops).** If `results.isEmpty` immediately resets speech, the session dies. Fix: only reset speech in the empty-results path if `!speechController.isActive`, or use a frame counter.
+
+5. **SFSpeechRecognizer partial results are not monotonic.** The cumulative text can revise/shrink. Track `committedSnapshot` (full text at commit time) and skip frames where the prefix no longer matches.
+
+6. **Voice commands must not read physical modifiers.** During speech, no physical keys are held — but system state can be stale from prior CGEvents. Voice path uses `InputDispatch.perform(action, usePhysicalModifiers: false)`.
+
 ## Next Steps
 
-- Launch strategy (Reddit, X, RedNote)
 - Two-finger directional hold (ML classifier)
-- Two-finger directional hold (ML classifier)
+- Video demo for launch

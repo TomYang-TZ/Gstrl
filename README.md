@@ -60,29 +60,20 @@ App auto-opens permission pages on first launch (Camera, Accessibility, Screen R
 
 ### Voice Commands (during speech mode)
 
-Supports **English, 中文, 粵語, and Spanish** — switch in Settings.
+Supports **English, 中文, 粵語, and Spanish** — switch in Settings. Say "prefix + keyword" to trigger actions instead of typing:
 
-#### English — just say the word:
-
-| Command | Action |
-|---------|--------|
-| enter / delete / escape / tab | Key press |
-| click | Click |
-| undo / redo | ⌘Z / ⌘⇧Z |
-| copy / paste / save | ⌘C / ⌘V / ⌘S |
-| select all | ⌘A |
-| go up / go down / go left / go right | Arrow keys |
-
-#### English — prefix commands:
+#### English:
 
 | Command | Action |
 |---------|--------|
-| press + key | Press key |
-| command + key | ⌘+key (e.g. command t, command w) |
-| control + key | ⌃+key (e.g. control c, control z) |
+| click / right click | Click / Right click |
+| press up/down/left/right | Arrow keys |
+| press enter / tab / escape / delete | Key press |
+| command [key] | ⌘+key (e.g. command z, command c) |
+| control [key] | ⌃+key (e.g. control c) |
 | shift + direction | Select text |
 | option + direction | Jump by word |
-| command shift + key | ⌘⇧+key (e.g. command shift z = redo) |
+| command shift [key] | ⌘⇧+key (e.g. command shift z = redo) |
 
 #### 中文:
 
@@ -91,8 +82,8 @@ Supports **English, 中文, 粵語, and Spanish** — switch in Settings.
 | 回车 / 确认 / 换行 | Enter |
 | 删除 | Backspace |
 | 取消 | Escape |
-| 点击 / 按一下 | Click |
-| 撤销 / 复制 / 粘贴 / 全选 / 保存 | ⌘Z / ⌘C / ⌘V / ⌘A / ⌘S |
+| 点击 / 右键 / 右击 | Click / Right click |
+| 撤销 / 复制 / 粘贴 / 全选 / 全删 / 保存 | ⌘Z / ⌘C / ⌘V / ⌘A / ⌘⌫ / ⌘S |
 | 按上 / 按下 / 按左 / 按右 | Arrow keys |
 
 #### Español:
@@ -101,7 +92,7 @@ Supports **English, 中文, 粵語, and Spanish** — switch in Settings.
 |---------|--------|
 | pulsa arriba/abajo/izquierda/derecha | Arrow keys |
 | pulsa intro / borrar / eliminar | Enter / Delete |
-| pulsa clic | Click |
+| clic / clic derecho | Click / Right click |
 | comando + key | ⌘+key |
 | control + key | ⌃+key |
 
@@ -116,7 +107,7 @@ Hold both fists for 1 second to activate the AI agent. Speak your question — a
 
 ### "Pro" tips
 
-- **Keyboard + Gesture** — Hold a modifier key while gesturing. Shift + swipe = select text. Cmd + swipe = jump words.
+- **Keyboard + Gesture** — Hold a modifier key while gesturing (not voice). Shift + swipe = select text. Cmd + swipe = jump words.
 - **Screenshot → AI** — Circle-capture a region, then hold both fists to ask Claude about what's on screen.
 - **Select → AI** — Drag to highlight text (pinch + hold + move), then hold both fists. Claude sees your selection as context.
 

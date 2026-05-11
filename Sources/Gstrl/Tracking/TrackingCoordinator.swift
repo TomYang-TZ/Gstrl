@@ -22,6 +22,7 @@ final class TrackingCoordinator {
     private let holdDuration: TimeInterval = 1.0
     private var leftHandEntryFrames: Int = 0
     private var rightHandEntryFrames: Int = 0
+    private var noHandFrames: Int = 0
     private let handEntryGraceFrames: Int = 15
 
     // Crossed fingers (X) = Ctrl+C
@@ -248,13 +249,18 @@ final class TrackingCoordinator {
         let results = handRequest.results ?? []
 
         if results.isEmpty {
+            noHandFrames += 1
             let agentBusy = agentController.isActive || agentController.isProcessing
+            let speechBusy = speechController.isActive
+            cachedLeft = false
+            cachedRight = false
+            cachedDebug = ""
             DispatchQueue.main.async { [weak self] in
                 self?.appState.trackingState = .inactive
                 self?.appState.handsCount = 0
                 self?.appState.leftHandDetected = false
                 self?.appState.rightHandDetected = false
-                if !agentBusy {
+                if !agentBusy && (!speechBusy || self?.noHandFrames ?? 0 > 10) {
                     self?.appState.gestureLabel = ""
                     self?.appState.gestureProgress = 0
                     self?.appState.gestureCountdownStart = nil
@@ -262,11 +268,14 @@ final class TrackingCoordinator {
             }
             resetLeftGesture()
             cursorDrag.reset()
-            speechController.reset()
+            if !speechBusy || noHandFrames > 10 {
+                speechController.reset()
+            }
             deleteController.reset()
             swipeDetector.reset()
             return
         }
+        noHandFrames = 0
 
         var leftHand: VNHumanHandPoseObservation?
         var rightHand: VNHumanHandPoseObservation?

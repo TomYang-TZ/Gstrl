@@ -193,21 +193,8 @@ struct MainStatusView: View {
             VStack(alignment: .leading, spacing: 8) {
                 switch appState.speechLanguage {
                 case .english:
-                    sectionHeader("QUICK", color: .green)
-                    voiceRow("enter", "↵ Enter")
-                    voiceRow("delete", "⌫ Delete")
-                    voiceRow("escape", "⎋ Escape")
-                    voiceRow("tab", "⇥ Tab")
-                    voiceRow("click", "👆 Click")
-                    voiceRow("undo / redo", "⌘Z / ⌘⇧Z")
-                    voiceRow("copy / paste", "⌘C / ⌘V")
-                    voiceRow("save", "⌘S")
-                    voiceRow("select all", "⌘A")
-                    voiceRow("go up/down/left/right", "Arrow keys")
-
-                    Divider().padding(.vertical, 4)
-
-                    sectionHeader("PREFIX", color: .cyan)
+                    sectionHeader("COMMANDS", color: .green)
+                    voiceRow("click / right click", "👆 Click / Right Click")
                     voiceRow("press + key", "Press key")
                     voiceRow("command + key", "⌘ + key")
                     voiceRow("control + key", "⌃ + key")
@@ -220,7 +207,7 @@ struct MainStatusView: View {
                     voiceRow("回车 / 确认 / 换行", "↵ Enter")
                     voiceRow("删除", "⌫ Delete")
                     voiceRow("取消", "⎋ Escape")
-                    voiceRow("点击 / 按一下", "👆 Click")
+                    voiceRow("点击 / 右键", "👆 Click / Right Click")
                     voiceRow("撤销", "⌘Z Undo")
                     voiceRow("复制 / 粘贴", "⌘C / ⌘V")
                     voiceRow("全选", "⌘A")
@@ -243,7 +230,7 @@ struct MainStatusView: View {
                     voiceRow("intro", "↵ Enter")
                     voiceRow("borrar / eliminar", "⌫ Delete")
                     voiceRow("escapar", "⎋ Escape")
-                    voiceRow("clic", "👆 Click")
+                    voiceRow("clic / clic derecho", "👆 Click / Right Click")
 
                     Divider().padding(.vertical, 4)
 

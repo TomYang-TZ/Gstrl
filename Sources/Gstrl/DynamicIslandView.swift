@@ -7,6 +7,7 @@ struct DynamicIslandView: View {
     var onAgentDismiss: (() -> Void)?
     var onStopSpeaking: (() -> Void)?
     var onAgentTerminate: (() -> Void)?
+    @State private var isPressed = false
     @State private var responseExpanded = true
 
     private var isExpanded: Bool {
@@ -76,6 +77,15 @@ struct DynamicIslandView: View {
         VStack(spacing: 0) {
             compactContent
                 .frame(height: 32)
+                .contentShape(Rectangle())
+                .scaleEffect(isPressed ? 0.95 : 1.0)
+                .animation(.easeOut(duration: 0.1), value: isPressed)
+                .onTapGesture { onTap?() }
+                .simultaneousGesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { _ in isPressed = true }
+                        .onEnded { _ in isPressed = false }
+                )
 
             if isExpanded {
                 expandedSection
@@ -216,7 +226,6 @@ struct DynamicIslandView: View {
                 symbol: "hand.raised.fill",
                 color: .orange
             )
-            .onTapGesture { onTap?() }
 
             Spacer()
 
@@ -237,7 +246,6 @@ struct DynamicIslandView: View {
                 color: .cyan
             )
             .scaleEffect(x: -1, y: 1)
-            .onTapGesture { onTap?() }
         }
         .padding(.horizontal, 20)
     }

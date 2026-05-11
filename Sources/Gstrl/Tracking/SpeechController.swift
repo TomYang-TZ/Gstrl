@@ -9,6 +9,7 @@ final class SpeechController {
     }
     private(set) var isActive = false
     private var committedLen = 0
+    private var committedSnapshot = ""
     private let holdDuration: TimeInterval = 1.0
 
     // Debounce: wait for recognizer to settle before typing
@@ -28,6 +29,7 @@ final class SpeechController {
         if startTime != nil || isActive {
             startTime = nil
             committedLen = 0
+            committedSnapshot = ""
             pendingText = ""
             flushedPrefix = nil
             debounceWork?.cancel()
@@ -56,6 +58,7 @@ final class SpeechController {
             if elapsed >= holdDuration {
                 isActive = true
                 committedLen = 0
+                committedSnapshot = ""
                 pendingText = ""
                 debounceWork?.cancel()
                 debounceWork = nil
@@ -94,6 +97,17 @@ final class SpeechController {
     private func commitPendingText() {
         guard isActive else { return }
         let text = pendingText
+        // If recognizer revised committed text, skip this frame
+        if committedLen > text.count {
+            committedLen = text.count
+            committedSnapshot = text
+            return
+        }
+        if !committedSnapshot.isEmpty && !text.hasPrefix(committedSnapshot) {
+            committedLen = text.count
+            committedSnapshot = text
+            return
+        }
         let delta = String(text.dropFirst(committedLen))
         guard !delta.trimmingCharacters(in: .whitespaces).isEmpty else {
             committedLen = text.count
@@ -104,12 +118,11 @@ final class SpeechController {
         if let prefix = flushedPrefix {
             let combined = prefix + " " + delta.trimmingCharacters(in: .whitespaces)
             if case .command(let action, _, let displayName) = VoiceCommandParser.parse(newText: combined) {
-                // Undo the flushed prefix text and fire the command
                 speechEngine.deleteChars(prefix.count)
-                InputDispatch.perform(action)
-                committedLen = text.count
+                InputDispatch.perform(action, usePhysicalModifiers: false)
                 flushedPrefix = nil
                 flashCommandFeedback(displayName)
+                resetAfterCommand()
                 return
             }
             flushedPrefix = nil
@@ -123,11 +136,10 @@ final class SpeechController {
                 let preCommandText = words.dropLast(wordCount).joined(separator: " ")
                 speechEngine.typeText(preCommandText + " ")
             }
-            InputDispatch.perform(action)
-            committedLen = text.count
+            InputDispatch.perform(action, usePhysicalModifiers: false)
             flashCommandFeedback(displayName)
+            resetAfterCommand()
         case .partial(_, _):
-            // Still waiting for keyword — extend with longer timeout
             let work = DispatchWorkItem { [weak self] in
                 self?.flushPartialAsText()
             }
@@ -138,6 +150,12 @@ final class SpeechController {
             speechEngine.typeText(delta)
             committedLen = text.count
         }
+    }
+
+    private func resetAfterCommand() {
+        committedLen = pendingText.count
+        committedSnapshot = pendingText
+        flushedPrefix = nil
     }
 
     private func flushPartialAsText() {

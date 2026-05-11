@@ -170,7 +170,6 @@ enum VoiceCommandParser {
 
     static func parse(newText: String) -> VoiceCommandResult {
         if let result = parseChineseCommand(newText) { return result }
-        if let result = parseNaturalEnglish(newText) { return result }
 
         let words = newText.split(separator: " ", omittingEmptySubsequences: true)
         guard !words.isEmpty else { return .text }
@@ -269,44 +268,24 @@ enum VoiceCommandParser {
             return .partial(prefix: lastWord, wordCount: 1)
         }
 
+        // "click" / "right click" / "clic derecho" works without prefix
+        if words.count == 2 {
+            let first = words[0].lowercased()
+            if first == "right" && lastWord == "click" {
+                return .command(.rightClick, wordCount: 2, displayName: "👆 Right Click")
+            }
+            if first == "clic" && lastWord == "derecho" {
+                return .command(.rightClick, wordCount: 2, displayName: "👆 Clic Derecho")
+            }
+        }
+        if lastWord == "click" || lastWord == "clic" {
+            return .command(.click, wordCount: 1, displayName: "👆 Click")
+        }
+
         return .text
     }
 
     // MARK: - Natural English (no prefix needed)
-
-    private static let naturalEnglishCommands: [(pattern: String, wordCount: Int, action: VoiceCommandResult)] = [
-        // Multi-word first (checked by suffix)
-        ("go up", 2, .command(.pressKey(UInt16(kVK_UpArrow)), wordCount: 2, displayName: "↑ Up")),
-        ("go down", 2, .command(.pressKey(UInt16(kVK_DownArrow)), wordCount: 2, displayName: "↓ Down")),
-        ("go left", 2, .command(.pressKey(UInt16(kVK_LeftArrow)), wordCount: 2, displayName: "← Left")),
-        ("go right", 2, .command(.pressKey(UInt16(kVK_RightArrow)), wordCount: 2, displayName: "→ Right")),
-        ("go back", 2, .command(.pressKey(UInt16(kVK_Delete)), wordCount: 2, displayName: "⌫ Delete")),
-        ("select all", 2, .command(.pressModifiedKey(0, shift: false, control: false, option: false, command: true), wordCount: 2, displayName: "⌘A Select All")),
-        // Single-word
-        ("undo", 1, .command(.pressModifiedKey(6, shift: false, control: false, option: false, command: true), wordCount: 1, displayName: "⌘Z Undo")),
-        ("redo", 1, .command(.pressModifiedKey(6, shift: true, control: false, option: false, command: true), wordCount: 1, displayName: "⌘⇧Z Redo")),
-        ("copy", 1, .command(.pressModifiedKey(8, shift: false, control: false, option: false, command: true), wordCount: 1, displayName: "⌘C Copy")),
-        ("paste", 1, .command(.pressModifiedKey(9, shift: false, control: false, option: false, command: true), wordCount: 1, displayName: "⌘V Paste")),
-        ("save", 1, .command(.pressModifiedKey(1, shift: false, control: false, option: false, command: true), wordCount: 1, displayName: "⌘S Save")),
-        ("click", 1, .command(.click, wordCount: 1, displayName: "👆 Click")),
-        ("enter", 1, .command(.pressKey(UInt16(kVK_Return)), wordCount: 1, displayName: "↵ Enter")),
-        ("escape", 1, .command(.pressKey(UInt16(kVK_Escape)), wordCount: 1, displayName: "⎋ Escape")),
-        ("delete", 1, .command(.pressKey(UInt16(kVK_Delete)), wordCount: 1, displayName: "⌫ Delete")),
-        ("tab", 1, .command(.pressKey(UInt16(kVK_Tab)), wordCount: 1, displayName: "⇥ Tab")),
-    ]
-
-    private static func parseNaturalEnglish(_ text: String) -> VoiceCommandResult? {
-        let lower = text.lowercased().trimmingCharacters(in: .whitespaces)
-        for entry in naturalEnglishCommands {
-            if lower.hasSuffix(entry.pattern) {
-                let before = lower.dropLast(entry.pattern.count)
-                if before.isEmpty || before.hasSuffix(" ") {
-                    return entry.action
-                }
-            }
-        }
-        return nil
-    }
 
     // MARK: - Chinese command parsing
 
@@ -321,6 +300,9 @@ enum VoiceCommandParser {
         ("按左", .command(.pressKey(UInt16(kVK_LeftArrow)), wordCount: 1, displayName: "← 左")),
         ("按右", .command(.pressKey(UInt16(kVK_RightArrow)), wordCount: 1, displayName: "→ 右")),
         ("点击", .command(.click, wordCount: 1, displayName: "👆 点击")),
+        ("右键", .command(.rightClick, wordCount: 1, displayName: "👆 右键")),
+        ("右击", .command(.rightClick, wordCount: 1, displayName: "👆 右击")),
+        ("右键点击", .command(.rightClick, wordCount: 1, displayName: "👆 右键")),
         ("按一下", .command(.click, wordCount: 1, displayName: "👆 点击")),
         ("回车", .command(.pressKey(UInt16(kVK_Return)), wordCount: 1, displayName: "↵ 回车")),
         ("确认", .command(.pressKey(UInt16(kVK_Return)), wordCount: 1, displayName: "↵ 确认")),
@@ -330,11 +312,15 @@ enum VoiceCommandParser {
         ("复制", .command(.pressModifiedKey(8, shift: false, control: false, option: false, command: true), wordCount: 1, displayName: "⌘C 复制")),
         ("粘贴", .command(.pressModifiedKey(9, shift: false, control: false, option: false, command: true), wordCount: 1, displayName: "⌘V 粘贴")),
         ("全选", .command(.pressModifiedKey(0, shift: false, control: false, option: false, command: true), wordCount: 1, displayName: "⌘A 全选")),
+        ("全删", .command(.pressModifiedKey(UInt16(kVK_Delete), shift: false, control: false, option: false, command: true), wordCount: 1, displayName: "⌘⌫ 全删")),
         ("保存", .command(.pressModifiedKey(1, shift: false, control: false, option: false, command: true), wordCount: 1, displayName: "⌘S 保存")),
     ]
 
     private static func parseChineseCommand(_ text: String) -> VoiceCommandResult? {
-        let trimmed = text.trimmingCharacters(in: .whitespaces)
+        var trimmed = text.trimmingCharacters(in: .whitespaces)
+        if trimmed.hasSuffix("键") {
+            trimmed = String(trimmed.dropLast())
+        }
         for entry in chinesePressKeywords {
             if trimmed.hasSuffix(entry.pattern) {
                 return entry.action

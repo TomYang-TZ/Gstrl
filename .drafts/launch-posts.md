@@ -212,7 +212,7 @@ https://tomyang-tz.github.io/Gstrl
 
 ### Post 3 — 生活方式向
 
-**标题:** 葛优躺着 vibe code 吧
+**标题:** 往椅子里一摊 用手势 vibe code 吧
 
 **正文:**
 
@@ -225,8 +225,7 @@ https://tomyang-tz.github.io/Gstrl
 ✊ 握拳 = 语音输入
 ✊✊ 双拳 = AI 对话
 
-语音支持中文/粤语/英语/西班牙语 说"回车""删除""复制"直接执行 AI 对话也支持多语言
-
+语音支持中文/粤语/Option sheets left Coennzi commandZ/西班牙语 说"回车""删除""复制"直接执行 AI 对话也支持多语言
 直接葛优躺 键盘往腿上一搁 开始 vibe coding
 
 手势和语音都在本地跑 不传数据

@@ -7,15 +7,15 @@ struct DynamicIslandView: View {
     var onAgentDismiss: (() -> Void)?
     var onStopSpeaking: (() -> Void)?
     var onAgentTerminate: (() -> Void)?
-    @State private var isPressed = false
     @State private var responseExpanded = true
 
     private var isExpanded: Bool {
-        hasTranscript || !appState.agentResponse.isEmpty || appState.agentActive
+        hasTranscript || !appState.agentResponse.isEmpty || appState.agentActive || isSpeechMode
     }
 
     private var isSpeechMode: Bool {
-        appState.gestureLabel.contains("🎤") || appState.gestureLabel.contains("⌨️")
+        !appState.gestureLabel.isEmpty &&
+        (appState.gestureLabel.contains("🎤") || appState.gestureLabel.contains("⌨️"))
     }
 
     private var isAgentMode: Bool {
@@ -76,17 +76,6 @@ struct DynamicIslandView: View {
         VStack(spacing: 0) {
             compactContent
                 .frame(height: 32)
-                .contentShape(Rectangle())
-                .scaleEffect(isPressed ? 0.95 : 1.0)
-                .animation(.easeOut(duration: 0.1), value: isPressed)
-                .simultaneousGesture(
-                    DragGesture(minimumDistance: 0)
-                        .onChanged { _ in isPressed = true }
-                        .onEnded { _ in
-                            isPressed = false
-                            onTap?()
-                        }
-                )
 
             if isExpanded {
                 expandedSection
@@ -227,6 +216,7 @@ struct DynamicIslandView: View {
                 symbol: "hand.raised.fill",
                 color: .orange
             )
+            .onTapGesture { onTap?() }
 
             Spacer()
 
@@ -247,6 +237,7 @@ struct DynamicIslandView: View {
                 color: .cyan
             )
             .scaleEffect(x: -1, y: 1)
+            .onTapGesture { onTap?() }
         }
         .padding(.horizontal, 20)
     }

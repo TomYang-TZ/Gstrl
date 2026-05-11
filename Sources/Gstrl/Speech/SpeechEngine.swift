@@ -74,7 +74,9 @@ final class SpeechEngine {
                 self?.onResult?(text)
             }
             if error != nil || (result?.isFinal ?? false) {
-                self?.stopListening()
+                DispatchQueue.main.async {
+                    self?.stopListening()
+                }
             }
         }
     }

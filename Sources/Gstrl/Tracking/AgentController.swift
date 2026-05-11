@@ -6,9 +6,11 @@ import Speech
 final class AgentController {
     private let speechEngine = SpeechEngine()
     private(set) var startTime: Date?
+    private var localeIdentifier = "en-US"
 
     func updateLocale(_ identifier: String) {
         speechEngine.updateLocale(identifier)
+        localeIdentifier = identifier
     }
     private(set) var isActive = false
     private(set) var isProcessing = false
@@ -451,13 +453,27 @@ final class AgentController {
         let speakText = text.count > 500 ? String(text.prefix(500)) + "..." : text
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/say")
-        process.arguments = [speakText]
+        var args = [String]()
+        if let voice = ttsVoice {
+            args += ["-v", voice]
+        }
+        args.append(speakText)
+        process.arguments = args
         ttsProcess = process
         process.terminationHandler = { [weak self] _ in
             DispatchQueue.main.async { self?.onSpeakingChanged?(false) }
         }
         onSpeakingChanged?(true)
         try? process.run()
+    }
+
+    private var ttsVoice: String? {
+        switch localeIdentifier {
+        case "zh-Hans": return "Tingting"
+        case "zh-HK": return "Sinji"
+        case "es-ES": return "Mónica"
+        default: return nil
+        }
     }
 
     func stopSpeaking() {

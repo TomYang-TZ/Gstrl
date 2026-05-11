@@ -262,6 +262,9 @@ final class TrackingCoordinator {
             }
             resetLeftGesture()
             cursorDrag.reset()
+            speechController.reset()
+            deleteController.reset()
+            swipeDetector.reset()
             return
         }
 
@@ -435,13 +438,22 @@ final class TrackingCoordinator {
             deleteController.reset()
             cursorDrag.reset()
             swipeDetector.reset()
+            let wasInactive = speechController.startTime == nil
             let status = speechController.process()
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
                 self.appState.progressMode = status.progressMode
                 if !status.activated, let start = self.speechController.startTime {
-                    self.appState.gestureCountdownStart = start
-                    self.appState.gestureCountdownDuration = 1.0
+                    if wasInactive {
+                        self.appState.gestureCountdownStart = nil
+                        DispatchQueue.main.async {
+                            self.appState.gestureCountdownStart = start
+                            self.appState.gestureCountdownDuration = 1.0
+                        }
+                    } else {
+                        self.appState.gestureCountdownStart = start
+                        self.appState.gestureCountdownDuration = 1.0
+                    }
                 } else if status.activated {
                     self.appState.gestureCountdownStart = nil
                 }

@@ -2,8 +2,14 @@
   <img src="Sources/Gstrl/Resources/AppIcon.iconset/icon_256x256.png" width="128" alt="Gstrl icon">
 </p>
 
-# Gstrl
+<h1 align="center">Gstrl</h1>
 
+<p align="center">
+  <img src="https://img.shields.io/badge/license-MIT-green" alt="License">
+  <img src="https://img.shields.io/badge/platform-macOS%2014%2B-blue" alt="Platform">
+  <img src="https://img.shields.io/badge/swift-5.9-orange" alt="Swift">
+  <img src="https://img.shields.io/badge/Apple%20Vision-Hand%20Tracking-black?logo=apple" alt="Apple Vision">
+</p>
 
 **Gstrl** adds gesture, voice, and AI agent control to macOS. **Pinch to move cursor. Swipe for arrows. Hold fists to talk to Claude. Circle to screenshot.** All on-device via Apple Vision + SFSpeechRecognizer.
 

@@ -191,60 +191,14 @@ struct MainStatusView: View {
     private var voiceCommandsContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 8) {
-                switch appState.speechLanguage {
-                case .english:
-                    sectionHeader("COMMANDS", color: .green)
-                    voiceRow("click / right click", "👆 Click / Right Click")
-                    voiceRow("press + key", "Press key")
-                    voiceRow("command + key", "⌘ + key")
-                    voiceRow("control + key", "⌃ + key")
-                    voiceRow("shift + direction", "Select text")
-                    voiceRow("option + direction", "Jump by word")
-                    voiceRow("command shift + key", "⌘⇧ + key")
-
-                case .chinese, .cantonese:
-                    sectionHeader("快捷指令", color: .green)
-                    voiceRow("回车 / 确认 / 换行", "↵ Enter")
-                    voiceRow("删除", "⌫ Delete")
-                    voiceRow("取消", "⎋ Escape")
-                    voiceRow("点击 / 右键", "👆 Click / Right Click")
-                    voiceRow("撤销", "⌘Z Undo")
-                    voiceRow("复制 / 粘贴", "⌘C / ⌘V")
-                    voiceRow("全选", "⌘A")
-                    voiceRow("保存", "⌘S")
-
-                    Divider().padding(.vertical, 4)
-
-                    sectionHeader("方向", color: .cyan)
-                    voiceRow("按上 / 按下 / 按左 / 按右", "Arrow keys")
-
-                    Divider().padding(.vertical, 4)
-
-                    sectionHeader("前缀指令", color: .purple)
-                    voiceRow("按 + 关键词", "按键")
-                    voiceRow("命令 + 字母", "⌘ + key")
-                    voiceRow("控制 + 字母", "⌃ + key")
-
-                case .spanish:
-                    sectionHeader("RÁPIDO", color: .green)
-                    voiceRow("intro", "↵ Enter")
-                    voiceRow("borrar / eliminar", "⌫ Delete")
-                    voiceRow("escapar", "⎋ Escape")
-                    voiceRow("clic / clic derecho", "👆 Click / Right Click")
-
-                    Divider().padding(.vertical, 4)
-
-                    sectionHeader("DIRECCIÓN", color: .cyan)
-                    voiceRow("pulsa arriba/abajo", "↑ / ↓")
-                    voiceRow("pulsa izquierda/derecha", "← / →")
-
-                    Divider().padding(.vertical, 4)
-
-                    sectionHeader("PREFIJO", color: .purple)
-                    voiceRow("pulsa / presiona + key", "Press key")
-                    voiceRow("comando + key", "⌘ + key")
-                    voiceRow("control + key", "⌃ + key")
-                }
+                sectionHeader("COMMANDS", color: .green)
+                voiceRow("click / right click", "👆 Click / Right Click")
+                voiceRow("press + key", "Press key")
+                voiceRow("command + key", "⌘ + key")
+                voiceRow("control + key", "⌃ + key")
+                voiceRow("shift + direction", "Select text")
+                voiceRow("option + direction", "Jump by word")
+                voiceRow("command shift + key", "⌘⇧ + key")
             }
             .padding(16)
         }

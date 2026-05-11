@@ -170,7 +170,7 @@ https://tomyang-tz.github.io/Gstrl
 
 捏合移动光标 画圈截图 挥手翻页 握拳语音输入 双拳跟 AI 对话
 
-语音支持中文/粤语/英语/西班牙语 说"回车""删除""复制"直接执行 AI 对话也支持多语言
+语音输入支持中文 可以直接用中文听写 语音指令用英语（say "press enter" "command z"）
 
 手势和语音都在本地跑 不传数据（AI 对话走 Claude）
 
@@ -225,7 +225,8 @@ https://tomyang-tz.github.io/Gstrl
 ✊ 握拳 = 语音输入
 ✊✊ 双拳 = AI 对话
 
-语音支持中文/粤语/Option sheets left Coennzi commandZ/西班牙语 说"回车""删除""复制"直接执行 AI 对话也支持多语言
+语音输入支持中文 语音指令用英语（"press enter" "command z" "click"）
+
 直接葛优躺 键盘往腿上一搁 开始 vibe coding
 
 手势和语音都在本地跑 不传数据

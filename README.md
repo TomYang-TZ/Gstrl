@@ -60,41 +60,23 @@ App auto-opens permission pages on first launch (Camera, Accessibility, Screen R
 
 ### Voice Commands (during speech mode)
 
-Supports **English, 中文, 粵語, and Spanish** — switch in Settings. Say "prefix + keyword" to trigger actions instead of typing:
-
-#### English:
+While speech-to-text is active, say "press" + keyword to execute actions instead of typing:
 
 | Command | Action |
 |---------|--------|
 | click / right click | Click / Right click |
 | press up/down/left/right | Arrow keys |
-| press enter / tab / escape / delete | Key press |
-| command [key] | ⌘+key (e.g. command z, command c) |
-| control [key] | ⌃+key (e.g. control c) |
-| shift + direction | Select text |
-| option + direction | Jump by word |
-| command shift [key] | ⌘⇧+key (e.g. command shift z = redo) |
+| press enter / press tab / press escape | Enter / Tab / Escape |
+| press delete | Backspace |
+| command [any letter] | Cmd+key (e.g. command t, command w) |
+| control [any letter] | Ctrl+key (e.g. control c, control z) |
+| command click | Cmd+Click |
+| shift left/right/up/down | Select text |
+| option left/right/delete | Jump/delete by word |
+| command shift [key] | Cmd+Shift+key (e.g. command shift z = redo) |
+| shift option [key] | Shift+Option+key |
 
-#### 中文:
-
-| 指令 | 动作 |
-|------|------|
-| 回车 / 确认 / 换行 | Enter |
-| 删除 | Backspace |
-| 取消 | Escape |
-| 点击 / 右键 / 右击 | Click / Right click |
-| 撤销 / 复制 / 粘贴 / 全选 / 全删 / 保存 | ⌘Z / ⌘C / ⌘V / ⌘A / ⌘⌫ / ⌘S |
-| 按上 / 按下 / 按左 / 按右 | Arrow keys |
-
-#### Español:
-
-| Comando | Acción |
-|---------|--------|
-| pulsa arriba/abajo/izquierda/derecha | Arrow keys |
-| pulsa intro / borrar / eliminar | Enter / Delete |
-| clic / clic derecho | Click / Right click |
-| comando + key | ⌘+key |
-| control + key | ⌃+key |
+Speech recognition supports multiple languages (English, 中文, 粵語, Spanish) — switch in Settings. Voice commands are English only.
 
 ### AI Agent (both fists) — requires [Claude Code CLI](https://claude.ai/claude-code)
 

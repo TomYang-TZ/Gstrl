@@ -27,26 +27,6 @@ enum VoiceCommandParser {
         "8": UInt16(kVK_ANSI_8), "eight": UInt16(kVK_ANSI_8),
         "9": UInt16(kVK_ANSI_9), "nine": UInt16(kVK_ANSI_9),
         "0": UInt16(kVK_ANSI_0), "zero": UInt16(kVK_ANSI_0),
-        // Chinese
-        "上": UInt16(kVK_UpArrow),
-        "下": UInt16(kVK_DownArrow),
-        "左": UInt16(kVK_LeftArrow),
-        "右": UInt16(kVK_RightArrow),
-        "删除": UInt16(kVK_Delete),
-        "回车": UInt16(kVK_Return),
-        "确认": UInt16(kVK_Return),
-        "换行": UInt16(kVK_Return),
-        "取消": UInt16(kVK_Escape),
-        // Spanish
-        "arriba": UInt16(kVK_UpArrow),
-        "abajo": UInt16(kVK_DownArrow),
-        "izquierda": UInt16(kVK_LeftArrow),
-        "derecha": UInt16(kVK_RightArrow),
-        "borrar": UInt16(kVK_Delete),
-        "eliminar": UInt16(kVK_Delete),
-        "intro": UInt16(kVK_Return),
-        "tabulador": UInt16(kVK_Tab),
-        "escapar": UInt16(kVK_Escape),
     ]
 
     private static let commandKeys: [String: UInt16] = [
@@ -145,9 +125,9 @@ enum VoiceCommandParser {
         return nil
     }
 
-    private static let pressAliases: Set<String> = ["press", "pres", "prex", "breast", "rest", "按", "按下", "按一下", "pulsa", "presiona"]
-    private static let commandAliases: Set<String> = ["command", "commander", "commend", "commence", "comet", "comment", "come in", "come on", "common", "comma", "命令", "指令", "comando"]
-    private static let controlAliases: Set<String> = ["control", "controls", "controlled", "ctrl", "控制"]
+    private static let pressAliases: Set<String> = ["press", "pres", "prex", "breast", "rest"]
+    private static let commandAliases: Set<String> = ["command", "commander", "commend", "commence", "comet", "comment", "come in", "come on", "common", "comma"]
+    private static let controlAliases: Set<String> = ["control", "controls", "controlled", "ctrl"]
 
     private static func normalizePrefix(_ word: String) -> String? {
         let w = word.lowercased()
@@ -161,7 +141,7 @@ enum VoiceCommandParser {
         let p = normalizePrefix(prefix) ?? prefix.lowercased()
         let k = keyword.lowercased()
         if p == "press" {
-            return pressDisplayNames[k] ?? spanishPressDisplayNames[k]
+            return pressDisplayNames[k]
         } else if p == "command" {
             return commandDisplayNames[k]
         }
@@ -169,7 +149,6 @@ enum VoiceCommandParser {
     }
 
     static func parse(newText: String) -> VoiceCommandResult {
-        if let result = parseChineseCommand(newText) { return result }
 
         let words = newText.split(separator: " ", omittingEmptySubsequences: true)
         guard !words.isEmpty else { return .text }
@@ -223,7 +202,7 @@ enum VoiceCommandParser {
             let keyword = words[words.count - 1].lowercased()
 
             if let normalized = normalizePrefix(rawPrefix) {
-                if normalized == "press" && (keyword == "click" || keyword == "clic") {
+                if normalized == "press" && keyword == "click" {
                     return .command(.click, wordCount: 2, displayName: "👆 Click")
                 }
                 if normalized == "press", let keyCode = pressCommands[keyword] {
@@ -268,79 +247,18 @@ enum VoiceCommandParser {
             return .partial(prefix: lastWord, wordCount: 1)
         }
 
-        // "click" / "right click" / "clic derecho" works without prefix
+        // "click" / "right click" works without prefix
         if words.count == 2 {
             let first = words[0].lowercased()
             if first == "right" && lastWord == "click" {
                 return .command(.rightClick, wordCount: 2, displayName: "👆 Right Click")
             }
-            if first == "clic" && lastWord == "derecho" {
-                return .command(.rightClick, wordCount: 2, displayName: "👆 Clic Derecho")
-            }
         }
-        if lastWord == "click" || lastWord == "clic" {
+        if lastWord == "click" {
             return .command(.click, wordCount: 1, displayName: "👆 Click")
         }
 
         return .text
     }
 
-    // MARK: - Natural English (no prefix needed)
-
-    // MARK: - Chinese command parsing
-
-    private static let chinesePressKeywords: [(pattern: String, action: VoiceCommandResult)] = [
-        ("按回车", .command(.pressKey(UInt16(kVK_Return)), wordCount: 1, displayName: "↵ 回车")),
-        ("按确认", .command(.pressKey(UInt16(kVK_Return)), wordCount: 1, displayName: "↵ 确认")),
-        ("按换行", .command(.pressKey(UInt16(kVK_Return)), wordCount: 1, displayName: "↵ 换行")),
-        ("按删除", .command(.pressKey(UInt16(kVK_Delete)), wordCount: 1, displayName: "⌫ 删除")),
-        ("按取消", .command(.pressKey(UInt16(kVK_Escape)), wordCount: 1, displayName: "⎋ 取消")),
-        ("按上", .command(.pressKey(UInt16(kVK_UpArrow)), wordCount: 1, displayName: "↑ 上")),
-        ("按下", .command(.pressKey(UInt16(kVK_DownArrow)), wordCount: 1, displayName: "↓ 下")),
-        ("按左", .command(.pressKey(UInt16(kVK_LeftArrow)), wordCount: 1, displayName: "← 左")),
-        ("按右", .command(.pressKey(UInt16(kVK_RightArrow)), wordCount: 1, displayName: "→ 右")),
-        ("点击", .command(.click, wordCount: 1, displayName: "👆 点击")),
-        ("右键", .command(.rightClick, wordCount: 1, displayName: "👆 右键")),
-        ("右击", .command(.rightClick, wordCount: 1, displayName: "👆 右击")),
-        ("右键点击", .command(.rightClick, wordCount: 1, displayName: "👆 右键")),
-        ("按一下", .command(.click, wordCount: 1, displayName: "👆 点击")),
-        ("回车", .command(.pressKey(UInt16(kVK_Return)), wordCount: 1, displayName: "↵ 回车")),
-        ("确认", .command(.pressKey(UInt16(kVK_Return)), wordCount: 1, displayName: "↵ 确认")),
-        ("删除", .command(.pressKey(UInt16(kVK_Delete)), wordCount: 1, displayName: "⌫ 删除")),
-        ("取消", .command(.pressKey(UInt16(kVK_Escape)), wordCount: 1, displayName: "⎋ 取消")),
-        ("撤销", .command(.pressModifiedKey(6, shift: false, control: false, option: false, command: true), wordCount: 1, displayName: "⌘Z 撤销")),
-        ("复制", .command(.pressModifiedKey(8, shift: false, control: false, option: false, command: true), wordCount: 1, displayName: "⌘C 复制")),
-        ("粘贴", .command(.pressModifiedKey(9, shift: false, control: false, option: false, command: true), wordCount: 1, displayName: "⌘V 粘贴")),
-        ("全选", .command(.pressModifiedKey(0, shift: false, control: false, option: false, command: true), wordCount: 1, displayName: "⌘A 全选")),
-        ("全删", .command(.pressModifiedKey(UInt16(kVK_Delete), shift: false, control: false, option: false, command: true), wordCount: 1, displayName: "⌘⌫ 全删")),
-        ("保存", .command(.pressModifiedKey(1, shift: false, control: false, option: false, command: true), wordCount: 1, displayName: "⌘S 保存")),
-    ]
-
-    private static func parseChineseCommand(_ text: String) -> VoiceCommandResult? {
-        var trimmed = text.trimmingCharacters(in: .whitespaces)
-        if trimmed.hasSuffix("键") {
-            trimmed = String(trimmed.dropLast())
-        }
-        for entry in chinesePressKeywords {
-            if trimmed.hasSuffix(entry.pattern) {
-                return entry.action
-            }
-        }
-        return nil
-    }
-
-    // MARK: - Spanish display names
-
-    private static let spanishPressDisplayNames: [String: String] = [
-        "arriba": "↑ Arriba",
-        "abajo": "↓ Abajo",
-        "izquierda": "← Izquierda",
-        "derecha": "→ Derecha",
-        "borrar": "⌫ Borrar",
-        "eliminar": "⌫ Eliminar",
-        "intro": "↵ Intro",
-        "tabulador": "⇥ Tab",
-        "escapar": "⎋ Escape",
-        "clic": "👆 Clic",
-    ]
 }

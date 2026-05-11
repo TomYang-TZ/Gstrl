@@ -179,6 +179,7 @@ struct MainStatusView: View {
                     sectionHeader("COMBO", color: .purple)
                     gestureRow("✊✊ Both fists (hold)", "AI Agent")
                     gestureRow("👌+✊ L pinch + R fist", "Scroll")
+                    gestureRow("🤙🤙 Both six (hold)", "Delete lines → select all")
                     gestureRow("🖐+← Open left + swipe", "Tab / Shift+Tab")
                 }
             }

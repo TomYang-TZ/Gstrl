@@ -213,9 +213,18 @@ VStack(spacing: 0) {
 
 13. **Code signature changes when bundle contents change.** Adding a resource bundle invalidates the ad-hoc signature → macOS revokes Accessibility/Camera/Screen Recording permissions. Use `tccutil reset` to re-prompt.
 
+## Completed (2026-05-12, continued)
+
+- Fix: Dock magnification now triggers during pinch-cursor (post CGEvent.mouseMoved after CGWarpMouseCursorPosition)
+- Fix: Cursor crosses to secondary screen (replaced NSScreen.main clamping with CGDisplayBounds union of all active displays — correct CG coordinate space)
+
+## Key Learnings (2026-05-12, continued)
+
+14. **NSScreen.frame uses AppKit coordinates (origin bottom-left), but CGWarpMouseCursorPosition uses CG coordinates (origin top-left).** Using NSScreen for bounds then clamping warp positions produces wrong results on multi-monitor. Use `CGGetActiveDisplayList` + `CGDisplayBounds` which are already in CG coordinate space.
+
+15. **CGWarpMouseCursorPosition doesn't generate mouseMoved events.** Apps that rely on mouseMoved (Dock magnification, hover states) won't react. Must explicitly post a `CGEvent(.mouseMoved)` after warping.
+
 ## Next Steps
 
-- Fix: Dock magnification doesn't trigger during pinch-cursor (CGWarpMouseCursorPosition doesn't post mouseMoved events — need to post a CGEvent mouseMoved after warp)
-- Fix: Cursor can't cross to secondary screen (screenW/screenH clamped to NSScreen.main — need total display bounds from NSScreen.screens or remove clamping)
 - Two-finger directional hold (ML classifier)
 - GitHub Release with pre-built .app binary

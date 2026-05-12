@@ -6,8 +6,7 @@ final class CursorDragController {
     private var anchor: CGPoint?
     private var cursorAnchor: CGPoint?
     var sensitivity: CGFloat = 2.5
-    private let screenW: CGFloat
-    private let screenH: CGFloat
+    private let totalBounds: CGRect
     private var isDragging = false
 
     private var smoothedPosition: CGPoint?
@@ -25,9 +24,15 @@ final class CursorDragController {
     var onCursorEnd: (() -> Void)?
 
     init() {
-        let screen = NSScreen.main?.frame.size ?? CGSize(width: 1512, height: 982)
-        screenW = screen.width
-        screenH = screen.height
+        var displayCount: UInt32 = 0
+        CGGetActiveDisplayList(0, nil, &displayCount)
+        if displayCount > 0 {
+            var displays = [CGDirectDisplayID](repeating: 0, count: Int(displayCount))
+            CGGetActiveDisplayList(displayCount, &displays, &displayCount)
+            totalBounds = displays.reduce(CGRect.null) { $0.union(CGDisplayBounds($1)) }
+        } else {
+            totalBounds = CGRect(x: 0, y: 0, width: 1512, height: 982)
+        }
     }
 
     func reset() {
@@ -92,10 +97,10 @@ final class CursorDragController {
                 return
             }
 
-            let deltaX = -(final.x - anc.x) * screenW * sensitivity
-            let deltaY = -(final.y - anc.y) * screenH * sensitivity
-            let newX = max(0, min(screenW, curAnc.x + deltaX))
-            let newY = max(0, min(screenH, curAnc.y + deltaY))
+            let deltaX = -(final.x - anc.x) * totalBounds.width * sensitivity
+            let deltaY = -(final.y - anc.y) * totalBounds.height * sensitivity
+            let newX = max(totalBounds.minX, min(totalBounds.maxX, curAnc.x + deltaX))
+            let newY = max(totalBounds.minY, min(totalBounds.maxY, curAnc.y + deltaY))
             let pos = CGPoint(x: newX, y: newY)
 
             pathBuffer.append(pos)
@@ -107,6 +112,9 @@ final class CursorDragController {
                 }
             }
             CGWarpMouseCursorPosition(pos)
+            if let moveEvent = CGEvent(mouseEventSource: nil, mouseType: .mouseMoved, mouseCursorPosition: pos, mouseButton: .left) {
+                moveEvent.post(tap: .cghidEventTap)
+            }
             onCursorMove?(pos)
         }
 

@@ -1,7 +1,7 @@
 import Vision
 
 enum GestureClassifier {
-    static func isPinching(_ obs: VNHumanHandPoseObservation, threshold: CGFloat = 0.06) -> Bool {
+    static func isPinching(_ obs: VNHumanHandPoseObservation, threshold: CGFloat = 0.035) -> Bool {
         guard let thumb = try? obs.recognizedPoint(.thumbTip),
               let index = try? obs.recognizedPoint(.indexTip),
               thumb.confidence > 0.3, index.confidence > 0.3 else { return false }

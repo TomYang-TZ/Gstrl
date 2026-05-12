@@ -374,6 +374,8 @@ final class TrackingCoordinator {
 
         if scrollActive {
             cursorDrag.reset()
+            scrollController.sensitivityMultiplier = appState.scrollSensitivity
+            scrollController.naturalScroll = appState.naturalScroll
             scrollController.process(leftHand!)
             DispatchQueue.main.async { [weak self] in
                 self?.appState.trackingState = .pinching
@@ -517,6 +519,7 @@ final class TrackingCoordinator {
                 swipeDetector.reset()
                 DispatchQueue.main.async { [weak self] in self?.appState.gestureCountdownStart = nil }
                 let leftPinching = leftHand != nil && GestureClassifier.isPinching(leftHand!)
+                cursorDrag.sensitivity = appState.cursorSensitivity
                 cursorDrag.process(rh, holdingClick: leftPinching)
                 if leftPinching {
                     DispatchQueue.main.async { [weak self] in

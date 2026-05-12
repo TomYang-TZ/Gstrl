@@ -106,12 +106,10 @@ final class WhipOverlay {
     }
 
     private func positionPanel() {
-        guard let panel, let screen = NSScreen.main else { return }
-        // Always read the real cursor position for smooth tracking
-        let pos = CGEvent(source: nil)?.location ?? cursorPosition
-        let screenH = screen.frame.height
+        guard let panel else { return }
+        let pos = NSEvent.mouseLocation
         let x = pos.x - displaySize / 2
-        let y = screenH - pos.y + 4
+        let y = pos.y + 4
         panel.setFrameOrigin(NSPoint(x: x, y: y))
     }
 

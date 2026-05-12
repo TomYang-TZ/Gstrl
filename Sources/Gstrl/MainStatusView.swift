@@ -130,7 +130,7 @@ struct MainStatusView: View {
 
             HStack {
                 Text("Cursor").font(.caption)
-                Slider(value: $appState.cursorSensitivity, in: 1.0...10.0, step: 0.5)
+                Slider(value: $appState.cursorSensitivity, in: 0.1...5.0)
                 Text(String(format: "%.1fx", appState.cursorSensitivity))
                     .font(.system(.caption2, design: .monospaced))
                     .frame(width: 30)
@@ -138,7 +138,7 @@ struct MainStatusView: View {
 
             HStack {
                 Text("Scroll").font(.caption)
-                Slider(value: $appState.scrollSensitivity, in: 0.5...3.0, step: 0.25)
+                Slider(value: $appState.scrollSensitivity, in: 0.5...3.0)
                 Text(String(format: "%.1fx", appState.scrollSensitivity))
                     .font(.system(.caption2, design: .monospaced))
                     .frame(width: 30)

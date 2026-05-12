@@ -114,6 +114,21 @@ struct MainStatusView: View {
             }
 
             HStack {
+                Text("Speech").font(.caption)
+                Spacer()
+                Picker("", selection: $appState.speechLanguage) {
+                    ForEach(AppState.SpeechLanguage.allCases, id: \.self) { lang in
+                        Text(lang.rawValue).tag(lang)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .frame(width: 180)
+                .onChange(of: appState.speechLanguage) { _, _ in
+                    onFPSChanged?(0)
+                }
+            }
+
+            HStack {
                 Text("Cursor").font(.caption)
                 Slider(value: $appState.cursorSensitivity, in: 1.0...10.0, step: 0.5)
                 Text(String(format: "%.1fx", appState.cursorSensitivity))
@@ -129,22 +144,12 @@ struct MainStatusView: View {
                     .frame(width: 30)
             }
 
-            Toggle("Natural scroll", isOn: $appState.naturalScroll)
-                .font(.caption)
-
             HStack {
-                Text("Speech").font(.caption)
+                Toggle("Moral support", isOn: $appState.whipEnabled)
+                    .font(.caption)
                 Spacer()
-                Picker("", selection: $appState.speechLanguage) {
-                    ForEach(AppState.SpeechLanguage.allCases, id: \.self) { lang in
-                        Text(lang.rawValue).tag(lang)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .frame(width: 180)
-                .onChange(of: appState.speechLanguage) { _, _ in
-                    onFPSChanged?(0)
-                }
+                Toggle("Natural scroll", isOn: $appState.naturalScroll)
+                    .font(.caption)
             }
         }
         .padding(16)

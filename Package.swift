@@ -8,6 +8,9 @@ let package = Package(
         .executableTarget(
             name: "Gstrl",
             path: "Sources/Gstrl",
+            resources: [
+                .copy("Resources/whip.gif")
+            ],
             linkerSettings: [
                 .linkedFramework("AVFoundation"),
                 .linkedFramework("Vision"),

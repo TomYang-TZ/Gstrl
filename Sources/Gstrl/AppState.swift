@@ -75,6 +75,7 @@ final class AppState {
     var cursorSensitivity: Double = 2.5
     var scrollSensitivity: Double = 1.0
     var naturalScroll: Bool = false
+    var whipEnabled: Bool = true
     var speechLanguage: SpeechLanguage = .english
 
     enum ProgressMode {

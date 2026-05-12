@@ -150,6 +150,14 @@ final class TrackingCoordinator {
             }
         }
 
+        let whip = (NSApp.delegate as? AppDelegate)?.whipOverlay
+        cursorDrag.onCursorStart = { [weak self] in DispatchQueue.main.async {
+            guard self?.appState.whipEnabled == true else { return }
+            whip?.show()
+        }}
+        cursorDrag.onCursorEnd = { DispatchQueue.main.async { whip?.hide() } }
+        cursorDrag.onCursorMove = { pos in DispatchQueue.main.async { whip?.updateCursor(pos) } }
+
         cursorDrag.onCircleScreenshot = { [weak self] rect in
             let tmpFile = "/tmp/gstrl-preview-\(ProcessInfo.processInfo.processIdentifier).png"
             let process = Process()
@@ -192,6 +200,9 @@ final class TrackingCoordinator {
         scrollController.naturalScroll = appState.naturalScroll
         speechController.updateLocale(appState.speechLanguage.localeIdentifier)
         agentController.updateLocale(appState.speechLanguage.localeIdentifier)
+        DispatchQueue.main.async {
+            (NSApp.delegate as? AppDelegate)?.whipOverlay.updateFPS(self.appState.fps.timescale)
+        }
     }
 
     func stop() {

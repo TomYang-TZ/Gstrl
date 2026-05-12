@@ -10,6 +10,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var mainWindow: NSWindow?
     private var islandPanel: NSPanel?
     private var statusItem: NSStatusItem?
+    let whipOverlay = WhipOverlay()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         createMainWindow()
@@ -178,6 +179,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             coordinator?.stop()
             coordinator = nil
             appState.isEnabled = false
+            appState.leftHandDetected = false
+            appState.rightHandDetected = false
+            appState.handsCount = 0
+            appState.gestureLabel = ""
+            appState.debugInfo = ""
+            appState.gestureCountdownStart = nil
+            appState.speechTranscript = ""
         } else {
             if !AXIsProcessTrusted() {
                 let options = [kAXTrustedCheckOptionPrompt.takeRetainedValue(): true] as CFDictionary

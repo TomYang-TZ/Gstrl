@@ -20,6 +20,9 @@ final class CursorDragController {
 
     private var pathBuffer: [CGPoint] = []
     var onCircleScreenshot: ((_ rect: CGRect) -> Void)?
+    var onCursorMove: ((_ pos: CGPoint) -> Void)?
+    var onCursorStart: (() -> Void)?
+    var onCursorEnd: (() -> Void)?
 
     init() {
         let screen = NSScreen.main?.frame.size ?? CGSize(width: 1512, height: 982)
@@ -37,11 +40,13 @@ final class CursorDragController {
             }
             pathBuffer.removeAll()
         }
+        let wasActive = anchor != nil
         anchor = nil
         cursorAnchor = nil
         smoothedPosition = nil
         doubleSmoothed = nil
         previousSmoothed = nil
+        if wasActive { onCursorEnd?() }
     }
 
     func process(_ obs: VNHumanHandPoseObservation, holdingClick: Bool) {
@@ -55,6 +60,7 @@ final class CursorDragController {
             doubleSmoothed = current
             previousSmoothed = current
             pathBuffer.removeAll()
+            onCursorStart?()
             if holdingClick && !isDragging {
                 pressMouseDown()
             }
@@ -101,6 +107,7 @@ final class CursorDragController {
                 }
             }
             CGWarpMouseCursorPosition(pos)
+            onCursorMove?(pos)
         }
 
         if !holdingClick && isDragging {

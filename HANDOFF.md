@@ -144,7 +144,6 @@ VStack(spacing: 0) {
 - Island tap: whole compact bar opens window, ON/OFF button only toggles
 - Island press animation restored (scale 0.95 on press)
 - Hand indicator fix: cache reset in empty-results path so indicators update after flicker
-- Launch posts drafted (.drafts/launch-posts.md): Reddit (6 subs) + RedNote (3 posts)
 
 ## Key Learnings (Speech System)
 
@@ -191,8 +190,32 @@ VStack(spacing: 0) {
 
 10. **Partial prefixes that match common words ("right", "double") add unwanted latency.** Better to rely on the debounce window (0.3s) keeping both words in the same commit, and accept occasional split-word failures.
 
+## Completed (2026-05-12)
+
+- Whip cursor overlay (`WhipOverlay.swift`):
+  - Animated GIF (willie-whip from Tenor) displayed above cursor during pinch control
+  - HSB-based chroma key removes blue sky background per frame on load
+  - Panel tracks real cursor position at 60fps (independent of camera frame rate)
+  - Debounced hide (0.15s) to prevent flicker from hand tracking drops
+  - Resource bundle added to Makefile build step
+  - "Whip cursor" toggle in Settings tab (`appState.whipEnabled`)
+- HN Show HN post drafted (`.drafts/launch-posts.md`):
+  - Title: "Show HN: I control my Mac with hand gestures using just the webcam"
+  - First comment with feature list, design choices, technical challenges
+  - Pre-written replies for common HN questions (why not mouse, latency, privacy)
+  - HN currently restricting new Show HN posts — needs karma first
+
+## Key Learnings (2026-05-12)
+
+11. **`Bundle.main` doesn't find SPM resources in executable targets.** SPM puts them in `Gstrl_Gstrl.bundle` — must look in `Bundle.main.resourceURL` subdirectory or copy the bundle into the app manually via Makefile.
+
+12. **NSPanel `orderFrontRegardless` must be called on main thread.** Camera callbacks run on `com.gstrl.camera` dispatch queue — calling AppKit UI methods from there crashes with "Must only be used from the main thread".
+
+13. **Code signature changes when bundle contents change.** Adding a resource bundle invalidates the ad-hoc signature → macOS revokes Accessibility/Camera/Screen Recording permissions. Use `tccutil reset` to re-prompt.
+
 ## Next Steps
 
+- Fix: Dock magnification doesn't trigger during pinch-cursor (CGWarpMouseCursorPosition doesn't post mouseMoved events — need to post a CGEvent mouseMoved after warp)
+- Fix: Cursor can't cross to secondary screen (screenW/screenH clamped to NSScreen.main — need total display bounds from NSScreen.screens or remove clamping)
 - Two-finger directional hold (ML classifier)
-- Video demo for launch
 - GitHub Release with pre-built .app binary

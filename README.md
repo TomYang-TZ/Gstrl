@@ -13,6 +13,10 @@
 
 **Gstrl** adds gesture, voice, and AI agent control to macOS. **Pinch to move cursor. Swipe for arrows. Hold fists to talk to Claude. Circle to screenshot.** All on-device via Apple Vision + SFSpeechRecognizer.
 
+<p align="center">
+  <img src="docs/demo.gif" width="720" alt="Gstrl demo">
+</p>
+
 For when you're lying back, vibe coding, presenting, or just tired of gripping a mouse or using trackpad all day.
 
 ## Install

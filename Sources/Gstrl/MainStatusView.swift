@@ -145,7 +145,7 @@ struct MainStatusView: View {
             }
 
             HStack {
-                Toggle("Moral support", isOn: $appState.whipEnabled)
+                Toggle("Whip", isOn: $appState.whipEnabled)
                     .font(.caption)
                 Spacer()
                 Toggle("Natural scroll", isOn: $appState.naturalScroll)

@@ -58,10 +58,10 @@ App auto-opens permission pages on first launch (Camera, Accessibility, Screen R
 | Gesture | Action |
 |---------|--------|
 | ✊✊ Both fists (hold 1s) | AI Agent (ask Claude a question) |
-| L pinch + R pinch + move | Drag and drop |
-| L pinch + R fist + move | Scroll (velocity-based, accelerates over time) |
+| L pinch + R pinch + move R hand | Drag and drop (right hand controls position, left pinch holds click) |
+| L pinch + R fist + move L hand up/down | Scroll (left hand wrist Y controls direction) |
 | L open + R swipe ←→ | Tab / Shift+Tab |
-| Both 🤙 six | Delete lines (escalates to select all) |
+| Both 🤙 six | Delete lines |
 | ✕ Both hands held together | Ctrl+C ×2 (cancel/kill) |
 
 ### Voice Commands (during speech mode)
@@ -118,7 +118,7 @@ A floating glass overlay at the top of your screen (macOS 26+ Liquid Glass):
 
 ## How It Works
 
-Gstrl uses Apple's Vision framework (`VNDetectHumanHandPoseRequest`) to detect hand landmarks from your webcam feed. A gesture classifier maps hand poses to actions — pinch detection via palm center tracking, velocity-based swipe recognition (requires open hand pose), and two-hand combo tracking. Scroll uses velocity-based joystick control. Speech mode uses Apple's `SFSpeechRecognizer` for on-device dictation and voice commands. The AI agent pipes questions to Claude Code CLI and reads responses aloud via macOS system voice. 30fps default, configurable up to 120fps. All gesture/speech processing runs locally with zero network dependency (agent mode requires internet for Claude).
+Gstrl uses Apple's Vision framework (`VNDetectHumanHandPoseRequest`) to detect hand landmarks from your webcam feed. A gesture classifier maps hand poses to actions — pinch detection via palm center tracking, velocity-based swipe recognition (requires open hand pose), and two-hand combo tracking. Scroll uses left hand wrist Y position as a joystick. Speech mode uses Apple's `SFSpeechRecognizer` for on-device dictation and voice commands. The AI agent pipes questions to Claude Code CLI and reads responses aloud via macOS system voice. 60fps default, configurable up to 120fps. All gesture/speech processing runs locally with zero network dependency (agent mode requires internet for Claude).
 
 ## License
 

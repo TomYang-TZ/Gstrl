@@ -440,9 +440,9 @@ final class TrackingCoordinator {
         } else {
             if agentController.isActive || agentController.isProcessing {
                 agentController.handsReleased()
-                return
+            } else {
+                agentController.reset()
             }
-            agentController.reset()
         }
 
         // Right hand grace period

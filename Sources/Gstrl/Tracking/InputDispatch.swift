@@ -1,6 +1,7 @@
 import Foundation
 import AppKit
 import Carbon.HIToolbox
+import IOKit.hid
 
 enum GestureAction {
     case pressKey(UInt16)
@@ -91,6 +92,30 @@ enum InputDispatch {
             down.post(tap: .cghidEventTap)
             usleep(50000)
             up.post(tap: .cghidEventTap)
+        }
+    }
+
+    static func performMediaKey(_ keyCode: UInt16) {
+        DispatchQueue.main.async {
+            func postMediaEvent(_ keyCode: UInt16, keyDown: Bool) {
+                let flags: UInt32 = keyDown ? 0xa00 : 0xb00
+                let data = (UInt32(keyCode) << 16) | UInt32(flags)
+                let event = NSEvent.otherEvent(
+                    with: .systemDefined,
+                    location: .zero,
+                    modifierFlags: NSEvent.ModifierFlags(rawValue: UInt(flags)),
+                    timestamp: 0,
+                    windowNumber: 0,
+                    context: nil,
+                    subtype: 8,
+                    data1: Int(data),
+                    data2: -1
+                )
+                event?.cgEvent?.post(tap: .cghidEventTap)
+            }
+            postMediaEvent(keyCode, keyDown: true)
+            usleep(50000)
+            postMediaEvent(keyCode, keyDown: false)
         }
     }
 }

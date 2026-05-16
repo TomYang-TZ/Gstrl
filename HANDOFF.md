@@ -8,6 +8,7 @@ Sources/Gstrl/
 ├── AppState.swift                 @Observable model — all UI-bound state
 ├── DynamicIslandView.swift        Floating glass overlay (expandable, click-through)
 ├── MainStatusView.swift           Tabbed settings window (Settings/Agent/Gestures)
+├── KeyRecorderView.swift          Key capture UI + NSEvent monitor (keys/media)
 ├── Camera/
 │   └── CameraManager.swift        AVCaptureSession @ 30fps, delivers CVPixelBuffer
 ├── Tracking/
@@ -19,7 +20,9 @@ Sources/Gstrl/
 │   ├── ScrollController.swift     Relative scroll via wrist Y tracking
 │   ├── CursorDragController.swift Right-pinch cursor drag + drag-and-drop
 │   ├── SpeechController.swift     Hold countdown + SpeechEngine + transcript fade
-│   ├── InputDispatch.swift        GestureAction enum → CGEvent
+│   ├── KeyBinding.swift            GestureSlot enum + KeyBinding struct + defaults
+│   ├── GestureActionConfig.swift  Singleton config manager (UserDefaults)
+│   ├── InputDispatch.swift        GestureAction enum → CGEvent + media keys
 │   └── TrackingState.swift        Enum: inactive | tracking | pinching
 └── Speech/
     ├── SpeechEngine.swift         SFSpeechRecognizer → CGEvent typing
@@ -224,7 +227,62 @@ VStack(spacing: 0) {
 
 15. **CGWarpMouseCursorPosition doesn't generate mouseMoved events.** Apps that rely on mouseMoved (Dock magnification, hover states) won't react. Must explicitly post a `CGEvent(.mouseMoved)` after warping.
 
+## Completed (2026-05-16) — feature/gesture-remapping branch
+
+- **Gesture action remapping system:**
+  - `KeyBinding.swift`: data model — keyCode + modifiers + isMediaKey + displayName
+  - `GestureSlot` enum: 12 remappable slots (left hand holds + right hand swipes)
+  - `GestureActionConfig.swift`: singleton config manager, UserDefaults persistence
+  - `KeyRecorderView.swift`: NSEvent monitor captures regular keys, F1-F12, media keys (play/pause/next/prev)
+  - Settings UI: Gestures tab shows all remappable slots with inline key recorder, per-slot revert button, "Reset All"
+  - `fireGesture()` and `handleSwipe()` read from config instead of hardcoded switch
+  - `InputDispatch.performMediaKey()`: NX_SYSDEFINED system event posting for media keys
+  - Smart default detection: recording the same key as default doesn't store it (no false "modified" state)
+
+- **Open palm (5 fingers) → Space key** gesture added (merged to master already in c13b453)
+
+- **Countdown UX fixes:**
+  - Dim orange border shows immediately when gesture is recognized (before countdown starts)
+  - Countdown only starts after 15-frame grace period (no more jump from nothing → midway)
+  - `leftGestureStartTime` captured as local value before async dispatch (was nil due to threading race)
+  - Grace period stability tracking for left hand (stableFrames accumulate during grace)
+  - Label shows during grace for speech (🎤), agent (🤖), and left hand gestures
+  - `CountdownBorder` has three states: idle border → dim orange border (gesture detected) → filling orange border (countdown active)
+  - `isSpeechMode` gated on `gestureCountdownStart == nil` (transcript section doesn't expand during countdown)
+
+- **Agent listening fix:** `handsReleased()` now called in the no-hands path (`results.isEmpty`). Previously agent stayed in "Listening..." forever when both hands dropped with no speech.
+
+- **`rightHandEntryFrames` increment moved before agent/speech grace checks.** Was after them — early returns during grace prevented the counter from incrementing, so grace never ended for both-fists and right-fist gestures.
+
+- **Gesture label fixes:**
+  - All labels show "L" or "R" to indicate which hand
+  - 3-finger emoji corrected to 👌 (OK sign)
+  - Swipe emoji corrected to 🖐 (open palm, not 👆)
+  - Cancel gesture labeled "✕ Cross index fingers (hold)"
+  - Delete labeled "🤙 R Thumb+pinky (hold)"
+  - Duplicate number in finger labels removed ("1☝️ 1" → "☝️ 1")
+
+### What Worked
+- Single `CountdownBorder` view handles all gesture states — one fix applies globally
+- Capturing timestamps as local values before `DispatchQueue.main.async` eliminates threading races
+- Tracking stable frames during grace so countdown starts instantly after grace ends
+
+### What Didn't Work
+- Setting `gestureCountdownStart = Date()` inside async block — by the time it runs on main, ms have passed
+- Reading `self?.leftGestureStartTime` from main thread async block — property set on background, read as nil
+- Grace period `return` before `rightHandEntryFrames += 1` — counter never progressed
+
+### Key Learnings
+
+16. **Grace period early returns block downstream state updates.** Any counter increment or state reset placed AFTER a `return` during grace will never execute. Move shared counters before conditional grace returns.
+
+17. **Threading race with timestamps:** `DispatchQueue.main.async { self?.foo }` reads `foo` later than when it was set on the background queue. Capture as `let val = foo` before the async block and pass `val` in the closure.
+
+18. **SwiftUI view identity for reactive updates from non-observable singletons:** `GestureActionConfig.shared` is not `@Observable`. Use `.id(version)` modifier with a `@State var version: Int` bumped on every mutation to force re-render.
+
 ## Next Steps
 
+- Test key recorder with media keys on external keyboard
 - Two-finger directional hold (ML classifier)
 - GitHub Release with pre-built .app binary
+- Consider: per-app gesture profiles

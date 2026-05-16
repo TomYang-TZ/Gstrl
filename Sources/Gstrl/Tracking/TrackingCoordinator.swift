@@ -23,7 +23,7 @@ final class TrackingCoordinator {
     private var leftHandEntryFrames: Int = 0
     private var rightHandEntryFrames: Int = 0
     private var noHandFrames: Int = 0
-    private let handEntryGraceFrames: Int = 15
+    private let handEntryGraceFrames: Int = 8
 
     // Crossed fingers (X) = Ctrl+C
     private var fingersCrossedStartTime: Date?
@@ -284,6 +284,9 @@ final class TrackingCoordinator {
             if !speechBusy || noHandFrames > 10 {
                 speechController.reset()
             }
+            if agentController.isActive && !agentController.isProcessing {
+                agentController.handsReleased()
+            }
             deleteController.reset()
             swipeDetector.reset()
             return
@@ -414,12 +417,27 @@ final class TrackingCoordinator {
             deleteController.resetBothHands()
         }
 
+        // Right hand grace period (must be before agent/speech checks that depend on it)
+        if rightHand != nil {
+            rightHandEntryFrames += 1
+        } else {
+            rightHandEntryFrames = 0
+        }
+
         // === AGENT: both fists ===
-        let bothFists = leftHand != nil && rightHand != nil
-            && rightHandEntryFrames > handEntryGraceFrames
+        let bothFistsShape = leftHand != nil && rightHand != nil
             && GestureClassifier.countExtendedFingers(leftHand!) == 0
             && GestureClassifier.countExtendedFingers(rightHand!) == 0
             && !GestureClassifier.isThumbPinky(leftHand!) && !GestureClassifier.isThumbPinky(rightHand!)
+        let bothFists = bothFistsShape && rightHandEntryFrames > handEntryGraceFrames
+
+        // Show agent label during grace
+        if bothFistsShape && rightHandEntryFrames <= handEntryGraceFrames {
+            DispatchQueue.main.async { [weak self] in
+                self?.appState.gestureLabel = "🤖 Agent"
+            }
+            return
+        }
 
         if bothFists {
             speechController.reset()
@@ -445,11 +463,15 @@ final class TrackingCoordinator {
             }
         }
 
-        // Right hand grace period
-        if rightHand != nil {
-            rightHandEntryFrames += 1
-        } else {
-            rightHandEntryFrames = 0
+        // Show speech label during grace (no countdown yet)
+        if rightHand != nil && leftHand == nil
+            && rightHandEntryFrames <= handEntryGraceFrames
+            && GestureClassifier.countExtendedFingers(rightHand!) == 0
+            && !GestureClassifier.isThumbPinky(rightHand!) {
+            DispatchQueue.main.async { [weak self] in
+                self?.appState.gestureLabel = "🎤 Speech"
+            }
+            return
         }
 
         // === RIGHT FIST ONLY → Speech ===
@@ -551,7 +573,66 @@ final class TrackingCoordinator {
         // === LEFT HAND ===
         if let lh = leftHand {
             leftHandEntryFrames += 1
-            guard leftHandEntryFrames > handEntryGraceFrames else { return }
+            let leftInGrace = leftHandEntryFrames <= handEntryGraceFrames
+            if leftInGrace {
+                // Track gesture stability during grace so countdown starts instantly after
+                if !GestureClassifier.isPinching(lh) {
+                    let fingerCount = GestureClassifier.countExtendedFingers(lh)
+                    let graceGesture: Int
+                    if rightHand != nil {
+                        graceGesture = -1
+                    } else if GestureClassifier.isThumbPinky(lh) {
+                        graceGesture = -2
+                    } else if fingerCount >= 4 {
+                        graceGesture = 5
+                    } else if fingerCount == 0 {
+                        graceGesture = 0
+                    } else {
+                        graceGesture = fingerCount
+                    }
+
+                    if graceGesture == leftGestureValue {
+                        leftGestureStableFrames += 1
+                    } else {
+                        leftGestureValue = graceGesture
+                        leftGestureStableFrames = 1
+                    }
+
+                    // Show label during grace
+                    let previewLabel: String? = {
+                        if graceGesture == -1 { return nil }
+                        if graceGesture == -2 {
+                            let b = GestureActionConfig.shared.binding(for: .leftThumbPinky)
+                            return "🤙 \(b.displayName)"
+                        }
+                        if graceGesture == 0 {
+                            let b = GestureActionConfig.shared.binding(for: .leftFist)
+                            return "✊ \(b.displayName)"
+                        }
+                        if graceGesture == 5 {
+                            let b = GestureActionConfig.shared.binding(for: .leftOpenPalm)
+                            return "🖐 \(b.displayName)"
+                        }
+                        let slot: GestureSlot? = switch graceGesture {
+                        case 1: .leftOneFinger
+                        case 2: .leftTwoFingers
+                        case 3: .leftThreeFingers
+                        default: nil
+                        }
+                        if let slot {
+                            let b = GestureActionConfig.shared.binding(for: slot)
+                            return "☝️ \(b.displayName)"
+                        }
+                        return nil
+                    }()
+                    if let label = previewLabel {
+                        DispatchQueue.main.async { [weak self] in
+                            self?.appState.gestureLabel = label
+                        }
+                    }
+                }
+                return
+            }
 
             if GestureClassifier.isPinching(lh) {
                 let rightIsPinching = rightHand != nil && GestureClassifier.isPinching(rightHand!)
@@ -631,47 +712,85 @@ final class TrackingCoordinator {
                 }
 
                 let rightLabelActive = self.rightHandLabelActive
-                DispatchQueue.main.async { [weak self] in
-                    self?.appState.trackingState = .tracking
-                    if rightLabelActive { return }
-                    if gestureValue == -1 {
-                        self?.appState.gestureLabel = ""
-                        self?.appState.gestureProgress = 0
-                        self?.appState.gestureCountdownStart = nil
-                    } else if gestureValue == -2 {
-                        self?.appState.gestureLabel = "🤙 Esc"
-                    } else if gestureValue == 0 {
-                        self?.appState.gestureLabel = "⏎ Enter"
-                    } else if gestureValue == 5 {
-                        self?.appState.gestureLabel = "🖐 Space"
-                    } else {
-                        self?.appState.gestureLabel = "\(gestureValue)"
+                let gestureLabel: String? = {
+                    if gestureValue == -1 { return nil }
+                    if gestureValue == -2 {
+                        let b = GestureActionConfig.shared.binding(for: .leftThumbPinky)
+                        return "🤙 \(b.displayName)"
                     }
-                }
+                    if gestureValue == 0 {
+                        let b = GestureActionConfig.shared.binding(for: .leftFist)
+                        return "✊ \(b.displayName)"
+                    }
+                    if gestureValue == 5 {
+                        let b = GestureActionConfig.shared.binding(for: .leftOpenPalm)
+                        return "🖐 \(b.displayName)"
+                    }
+                    let slot: GestureSlot? = switch gestureValue {
+                    case 1: .leftOneFinger
+                    case 2: .leftTwoFingers
+                    case 3: .leftThreeFingers
+                    default: nil
+                    }
+                    if let slot {
+                        let b = GestureActionConfig.shared.binding(for: slot)
+                        return "☝️ \(b.displayName)"
+                    }
+                    return nil
+                }()
 
                 if gestureValue == -1 {
                     resetLeftGesture()
+                    DispatchQueue.main.async { [weak self] in
+                        self?.appState.trackingState = .tracking
+                        if rightLabelActive { return }
+                        self?.appState.gestureLabel = ""
+                        self?.appState.gestureProgress = 0
+                        self?.appState.gestureCountdownStart = nil
+                    }
                 } else if gestureValue == leftGestureValue {
                     leftGestureStableFrames += 1
-                    guard leftGestureStableFrames >= stableFramesRequired else { return }
-                    if let start = leftGestureStartTime {
-                        let elapsed = Date().timeIntervalSince(start)
-                        if elapsed >= holdDuration {
-                            fireGesture(gestureValue)
-                            leftGestureStartTime = Date()
-                        } else {
-                            DispatchQueue.main.async { [weak self] in
-                                self?.appState.progressMode = .countdown
-                                self?.appState.gestureCountdownStart = start
-                                self?.appState.gestureCountdownDuration = self?.holdDuration ?? 1.0
+                    guard leftGestureStableFrames >= stableFramesRequired else {
+                        DispatchQueue.main.async { [weak self] in
+                            self?.appState.trackingState = .tracking
+                            if rightLabelActive { return }
+                            if let label = gestureLabel {
+                                self?.appState.gestureLabel = label
                             }
+                        }
+                        return
+                    }
+                    if leftGestureStartTime == nil {
+                        leftGestureStartTime = Date()
+                    }
+                    let start = leftGestureStartTime!
+                    let elapsed = Date().timeIntervalSince(start)
+                    if elapsed >= holdDuration {
+                        fireGesture(gestureValue)
+                        leftGestureStartTime = nil
+                    } else {
+                        let dur = holdDuration
+                        DispatchQueue.main.async { [weak self] in
+                            self?.appState.trackingState = .tracking
+                            if rightLabelActive { return }
+                            if let label = gestureLabel {
+                                self?.appState.gestureLabel = label
+                            }
+                            self?.appState.progressMode = .countdown
+                            self?.appState.gestureCountdownStart = start
+                            self?.appState.gestureCountdownDuration = dur
                         }
                     }
                 } else {
                     leftGestureValue = gestureValue
                     leftGestureStableFrames = 0
-                    leftGestureStartTime = Date()
+                    leftGestureStartTime = nil
                     DispatchQueue.main.async { [weak self] in
+                        self?.appState.trackingState = .tracking
+                        if rightLabelActive { return }
+                        if let label = gestureLabel {
+                            self?.appState.gestureLabel = label
+                        }
                         self?.appState.gestureCountdownStart = nil
                     }
                 }
@@ -699,45 +818,54 @@ final class TrackingCoordinator {
     }
 
     private func fireGesture(_ value: Int) {
-        switch value {
-        case -2: InputDispatch.perform(.pressKey(UInt16(kVK_Escape)))
-        case 0: InputDispatch.perform(.pressKey(UInt16(kVK_Return)))
-        case 1: InputDispatch.perform(.pressKey(UInt16(kVK_ANSI_1)))
-        case 2: InputDispatch.perform(.pressKey(UInt16(kVK_ANSI_2)))
-        case 3: InputDispatch.perform(.pressKey(UInt16(kVK_ANSI_3)))
-        case 5: InputDispatch.perform(.pressKey(UInt16(kVK_Space)))
-        default: break
+        let slot: GestureSlot? = switch value {
+        case -2: .leftThumbPinky
+        case 0: .leftFist
+        case 1: .leftOneFinger
+        case 2: .leftTwoFingers
+        case 3: .leftThreeFingers
+        case 5: .leftOpenPalm
+        default: nil
         }
+        guard let slot else { return }
+        let binding = GestureActionConfig.shared.binding(for: slot)
+        fireBinding(binding)
         startCooldownProgress()
+    }
+
+    private func fireBinding(_ binding: KeyBinding) {
+        if binding.isMediaKey {
+            InputDispatch.performMediaKey(binding.keyCode)
+        } else if binding.hasModifiers {
+            InputDispatch.perform(.pressModifiedKey(binding.keyCode, shift: binding.shift, control: binding.control, option: binding.option, command: binding.command))
+        } else {
+            InputDispatch.perform(.pressKey(binding.keyCode))
+        }
     }
 
     private func handleSwipe(_ direction: SwipeDetector.SwipeDirection, leftOpen: Bool) {
         rightHandLabelActive = true
         startCooldownProgress()
 
+        let slot: GestureSlot
         switch direction {
-        case .left:
-            if leftOpen {
-                InputDispatch.perform(.pressModifiedKey(UInt16(kVK_Tab), shift: true, control: false, option: false, command: false))
-                DispatchQueue.main.async { [weak self] in self?.appState.gestureLabel = "← Shift+Tab" }
-            } else {
-                InputDispatch.perform(.pressKey(UInt16(kVK_LeftArrow)))
-                DispatchQueue.main.async { [weak self] in self?.appState.gestureLabel = "← Left" }
-            }
-        case .right:
-            if leftOpen {
-                InputDispatch.perform(.pressKey(UInt16(kVK_Tab)))
-                DispatchQueue.main.async { [weak self] in self?.appState.gestureLabel = "→ Tab" }
-            } else {
-                InputDispatch.perform(.pressKey(UInt16(kVK_RightArrow)))
-                DispatchQueue.main.async { [weak self] in self?.appState.gestureLabel = "→ Right" }
-            }
-        case .up:
-            InputDispatch.perform(.pressKey(UInt16(kVK_UpArrow)))
-            DispatchQueue.main.async { [weak self] in self?.appState.gestureLabel = "↑ Up" }
-        case .down:
-            InputDispatch.perform(.pressKey(UInt16(kVK_DownArrow)))
-            DispatchQueue.main.async { [weak self] in self?.appState.gestureLabel = "↓ Down" }
+        case .left: slot = leftOpen ? .swipeLeftWithLeftOpen : .swipeLeft
+        case .right: slot = leftOpen ? .swipeRightWithLeftOpen : .swipeRight
+        case .up: slot = .swipeUp
+        case .down: slot = .swipeDown
+        }
+
+        let binding = GestureActionConfig.shared.binding(for: slot)
+        fireBinding(binding)
+
+        let arrow: String = switch direction {
+        case .left: "←"
+        case .right: "→"
+        case .up: "↑"
+        case .down: "↓"
+        }
+        DispatchQueue.main.async { [weak self] in
+            self?.appState.gestureLabel = "\(arrow) \(binding.displayName)"
         }
     }
 

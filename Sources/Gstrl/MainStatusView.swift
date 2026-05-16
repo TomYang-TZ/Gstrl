@@ -157,40 +157,87 @@ struct MainStatusView: View {
 
     // MARK: - Gestures Tab
 
+    @State private var recordingSlot: GestureSlot? = nil
+    @State private var bindingsVersion: Int = 0
+
     private var gesturesContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 8) {
                 Group {
-                    sectionHeader("LEFT HAND", color: .orange)
-                    gestureRow("👌 Pinch", "Click")
-                    gestureRow("☝️ 1-3 fingers (hold)", "Press 1-3")
-                    gestureRow("✊ Fist (hold)", "Enter")
-                    gestureRow("🤙 Six (hold)", "Escape")
+                    ForEach(GestureSlot.SlotSection.allCases, id: \.self) { section in
+                        if section != .leftHold {
+                            Divider().padding(.vertical, 2)
+                        }
+                        sectionHeader(section.rawValue, color: section.color)
+                        let slots = GestureSlot.allCases.filter { $0.section == section }
+                        ForEach(slots) { slot in
+                            bindingRow(slot)
+                        }
+                    }
                 }
 
                 Divider().padding(.vertical, 4)
 
                 Group {
-                    sectionHeader("RIGHT HAND", color: .blue)
-                    gestureRow("👌 Pinch + move", "Drag cursor")
-                    gestureRow("✊ Fist (hold, no left)", "Speech-to-text")
-                    gestureRow("🤙 Six (hold)", "Delete (repeats)")
-                    gestureRow("👆 Swipe ↑↓←→", "Arrow keys")
-                }
-
-                Divider().padding(.vertical, 4)
-
-                Group {
-                    sectionHeader("COMBO", color: .purple)
-                    gestureRow("✊✊ Both fists (hold)", "AI Agent")
+                    sectionHeader("FIXED", color: .blue)
+                    gestureRow("👌 L Pinch", "Click")
+                    gestureRow("👌 R Pinch + move", "Cursor")
+                    gestureRow("✊ R Fist (hold)", "Speech")
+                    gestureRow("✊✊ Both fists", "AI Agent")
                     gestureRow("👌+✊ L pinch + R fist", "Scroll")
-                    gestureRow("🤙🤙 Both six (hold)", "Delete lines → select all")
-                    gestureRow("🖐+→ Open left + swipe right", "Tab")
-                    gestureRow("🖐+← Open left + swipe left", "Shift+Tab")
+                    gestureRow("🤙 R Thumb+pinky (hold)", "Delete")
+                    gestureRow("🤙🤙 Both thumb+pinky", "Delete → Select all")
+                    gestureRow("✕ Cross index fingers (hold)", "Ctrl+C ×2 (Cancel)")
+                }
+
+                Divider().padding(.vertical, 4)
+
+                HStack {
+                    Spacer()
+                    Button("Reset All to Defaults") {
+                        GestureActionConfig.shared.resetAll()
+                        bindingsVersion += 1
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    Spacer()
                 }
             }
             .padding(16)
         }
+    }
+
+    private func bindingRow(_ slot: GestureSlot) -> some View {
+        HStack {
+            Text(slot.label)
+                .font(.system(.caption, design: .rounded))
+            Spacer()
+            if !GestureActionConfig.shared.isDefault(for: slot) {
+                Button {
+                    GestureActionConfig.shared.resetSlot(slot)
+                    bindingsVersion += 1
+                } label: {
+                    Image(systemName: "arrow.uturn.backward")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help("Reset to default")
+            }
+            KeyRecorderView(
+                slot: slot,
+                isRecording: Binding(
+                    get: { recordingSlot == slot },
+                    set: { recording in recordingSlot = recording ? slot : nil }
+                ),
+                onRecord: { binding in
+                    GestureActionConfig.shared.setBinding(binding, for: slot)
+                    bindingsVersion += 1
+                    recordingSlot = nil
+                }
+            )
+        }
+        .id("\(slot.rawValue)-\(bindingsVersion)")
     }
 
     // MARK: - Voice Commands Tab

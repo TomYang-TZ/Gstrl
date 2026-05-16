@@ -16,7 +16,8 @@ struct DynamicIslandView: View {
 
     private var isSpeechMode: Bool {
         !appState.gestureLabel.isEmpty &&
-        (appState.gestureLabel.contains("🎤") || appState.gestureLabel.contains("⌨️"))
+        (appState.gestureLabel.contains("🎤") || appState.gestureLabel.contains("⌨️")) &&
+        appState.gestureCountdownStart == nil
     }
 
     private var isAgentMode: Bool {
@@ -460,7 +461,10 @@ struct CountdownBorder: View {
                 RoundedRectangle(cornerRadius: 3)
                     .trim(from: 0, to: progress)
                     .stroke(isCountdown ? Color.orange : Color.green, lineWidth: 1.5)
-            } else if !hasGesture {
+            } else if hasGesture {
+                RoundedRectangle(cornerRadius: 3)
+                    .strokeBorder(Color.orange.opacity(0.3), lineWidth: 1.5)
+            } else {
                 RoundedRectangle(cornerRadius: 3)
                     .strokeBorder(idleColor, lineWidth: 1.5)
             }

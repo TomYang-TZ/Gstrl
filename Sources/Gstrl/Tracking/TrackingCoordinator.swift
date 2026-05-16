@@ -623,7 +623,7 @@ final class TrackingCoordinator {
                 } else if GestureClassifier.isThumbPinky(lh) {
                     gestureValue = -2
                 } else if fingerCount >= 4 {
-                    gestureValue = -1
+                    gestureValue = 5
                 } else if fingerCount == 0 {
                     gestureValue = 0
                 } else {
@@ -642,6 +642,8 @@ final class TrackingCoordinator {
                         self?.appState.gestureLabel = "🤙 Esc"
                     } else if gestureValue == 0 {
                         self?.appState.gestureLabel = "⏎ Enter"
+                    } else if gestureValue == 5 {
+                        self?.appState.gestureLabel = "🖐 Space"
                     } else {
                         self?.appState.gestureLabel = "\(gestureValue)"
                     }
@@ -703,6 +705,7 @@ final class TrackingCoordinator {
         case 1: InputDispatch.perform(.pressKey(UInt16(kVK_ANSI_1)))
         case 2: InputDispatch.perform(.pressKey(UInt16(kVK_ANSI_2)))
         case 3: InputDispatch.perform(.pressKey(UInt16(kVK_ANSI_3)))
+        case 5: InputDispatch.perform(.pressKey(UInt16(kVK_Space)))
         default: break
         }
         startCooldownProgress()
